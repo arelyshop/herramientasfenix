@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Imágenes - Plantilla Corporativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            user-select: none;
+        }
+
+        .canvas-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            background-color: white;
+        }
+
+        .custom-file-upload {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .custom-file-upload:hover {
+            border-color: #2c4c82;
+            background-color: #f8fafc;
+        }
+
+        input[type=range] {
+            accent-color: #2c4c82;
+        }
+
+        .mode-btn.active {
+            background-color: #2c4c82;
+            color: white;
+            border-color: #2c4c82;
+        }
+
+        /* Modal Styles */
+        #textModal {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">Editor de Plantilla</h1>
+            <p class="text-slate-500 mt-2">Personaliza tu producto con logos, ajustes y medidas orientadas.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Panel de Control -->
+            <div class="lg:col-span-1 space-y-5 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 h-fit">
+                
+                <!-- Modo de edición -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Herramienta</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="modeMove" class="mode-btn active flex flex-col items-center justify-center p-2 border rounded-xl text-xs font-medium transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                            </svg>
+                            Mover
+                        </button>
+                        <button id="modeMeasure" class="mode-btn flex flex-col items-center justify-center p-2 border rounded-xl text-xs font-medium transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7 7m-7-7l-2.828 2.828M11 11L7 7m4 4L7 15m4-4l4-4" />
+                            </svg>
+                            Medida
+                        </button>
+                    </div>
+                </div>
+
+                <div id="measureSettings" class="hidden space-y-2">
+                    <button id="clearMeasures" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
+                        Borrar todas las medidas
+                    </button>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">1. Imagen del Producto</label>
+                    <label class="custom-file-upload flex flex-col items-center justify-center p-3 rounded-xl cursor-pointer">
+                        <span class="text-xs text-slate-500">Subir producto</span>
+                        <input type="file" id="imageInput" class="hidden" accept="image/*">
+                    </label>
+                </div>
+
+                <div>
+                    <label class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+                        <span>2. Tamaño Imagen</span>
+                        <span id="zoomValue" class="text-xs text-slate-400">100%</span>
+                    </label>
+                    <input type="range" id="zoomInput" min="10" max="300" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">3. Logo (177x80px)</label>
+                    <label class="custom-file-upload flex flex-col items-center justify-center p-3 rounded-xl cursor-pointer">
+                        <span class="text-xs text-slate-500">Subir logo PNG</span>
+                        <input type="file" id="logoInput" class="hidden" accept="image/*">
+                    </label>
+                </div>
+
+                <div class="pt-2">
+                    <button id="downloadBtn" class="w-full bg-[#2c4c82] hover:bg-[#1e355c] text-white font-bold py-3 px-6 rounded-xl transition duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-blue-900/20">
+                        <span>Descargar</span>
+                    </button>
+                    <p id="statusMsg" class="mt-2 text-center text-[10px] font-bold hidden"></p>
+                </div>
+            </div>
+
+            <!-- Previsualización -->
+            <div class="lg:col-span-3 flex flex-col items-center">
+                <div class="w-full bg-slate-300 rounded-2xl p-4 md:p-8 flex items-center justify-center min-h-[600px]">
+                    <div id="canvasWrapper" class="canvas-container bg-white rounded shadow-2xl relative">
+                        <canvas id="editorCanvas" width="1000" height="1000"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ingresar texto de medida -->
+    <div id="textModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-80 transform transition-all border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider text-center">Ingresa la medida</h3>
+            <input type="text" id="modalInput" placeholder="Ej: 50 cm" class="w-full px-4 py-3 border border-slate-200 rounded-xl text-lg text-center focus:outline-none focus:ring-2 focus:ring-[#2c4c82] mb-4">
+            <div class="flex space-x-2">
+                <button id="cancelText" class="flex-1 px-4 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm">Cancelar</button>
+                <button id="saveText" class="flex-1 px-4 py-2 bg-[#2c4c82] text-white rounded-xl font-bold text-sm">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        const imageInput = document.getElementById('imageInput');
+        const logoInput = document.getElementById('logoInput');
+        const zoomInput = document.getElementById('zoomInput');
+        const zoomValueLabel = document.getElementById('zoomValue');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        
+        const modeMoveBtn = document.getElementById('modeMove');
+        const modeMeasureBtn = document.getElementById('modeMeasure');
+        const measureSettings = document.getElementById('measureSettings');
+        const clearMeasuresBtn = document.getElementById('clearMeasures');
+
+        // Modal elements
+        const textModal = document.getElementById('textModal');
+        const modalInput = document.getElementById('modalInput');
+        const saveTextBtn = document.getElementById('saveText');
+        const cancelTextBtn = document.getElementById('cancelText');
+
+        const CONFIG = {
+            width: 1000,
+            height: 1000,
+            barHeight: 45,
+            barColor: '#f2cd42',
+            textColor: '#2c4c82',
+            text: "Revise el producto al recibirlo. Cambios por fallas de fábrica dentro de 48 h.",
+            font: "bold 22px Inter, sans-serif",
+            measureFont: "bold 24px Inter, sans-serif",
+            logoWidth: 177,
+            logoHeight: 80,
+            logoMarginLeft: 35,
+            logoMarginBottom: 63
+        };
+
+        let mainImage = null;
+        let logoImage = null;
+        let currentMode = 'move';
+        let measures = [];
+        let activeMeasure = null;
+        let pendingMeasure = null; // Para guardar la línea mientras se pide el texto
+
+        let imgState = {
+            x: 0, y: 0, baseWidth: 0, baseHeight: 0, width: 0, height: 0, scale: 1.0,
+            isDragging: false, dragStartX: 0, dragStartY: 0
+        };
+
+        function draw() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+            
+            if (mainImage) {
+                ctx.drawImage(mainImage, imgState.x, imgState.y, imgState.width, imgState.height);
+            } else {
+                ctx.fillStyle = '#f1f5f9';
+                ctx.font = "20px Inter";
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#94a3b8";
+                ctx.fillText("Sube una imagen para comenzar", CONFIG.width / 2, CONFIG.height / 2);
+            }
+
+            // Dibujar todas las medidas guardadas
+            measures.forEach(m => drawMeasureLine(m));
+            
+            // Dibujar la medida actual que se está trazando
+            if (activeMeasure) drawMeasureLine(activeMeasure);
+
+            if (logoImage) {
+                const lx = CONFIG.logoMarginLeft;
+                const ly = CONFIG.height - CONFIG.logoMarginBottom - CONFIG.logoHeight;
+                ctx.drawImage(logoImage, lx, ly, CONFIG.logoWidth, CONFIG.logoHeight);
+            }
+
+            ctx.fillStyle = CONFIG.barColor;
+            ctx.fillRect(0, CONFIG.height - CONFIG.barHeight, CONFIG.width, CONFIG.barHeight);
+            ctx.fillStyle = CONFIG.textColor;
+            ctx.font = CONFIG.font;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(CONFIG.text, CONFIG.width / 2, CONFIG.height - (CONFIG.barHeight / 2));
+        }
+
+        function drawMeasureLine(m) {
+            const { x1, y1, x2, y2, text } = m;
+            ctx.strokeStyle = '#2c4c82';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+
+            // Línea principal
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Barras en los extremos
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const barLen = 15;
+
+            function drawBar(x, y, a) {
+                ctx.beginPath();
+                ctx.moveTo(x + Math.cos(a + Math.PI/2) * barLen, y + Math.sin(a + Math.PI/2) * barLen);
+                ctx.lineTo(x + Math.cos(a - Math.PI/2) * barLen, y + Math.sin(a - Math.PI/2) * barLen);
+                ctx.stroke();
+            }
+
+            drawBar(x1, y1, angle);
+            drawBar(x2, y2, angle);
+
+            // Texto orientado
+            if (text) {
+                const mx = (x1 + x2) / 2;
+                const my = (y1 + y2) / 2;
+                
+                ctx.save();
+                ctx.translate(mx, my);
+                
+                // Corregir ángulo para que el texto nunca esté de cabeza
+                let textAngle = angle;
+                if (textAngle > Math.PI / 2 || textAngle < -Math.PI / 2) {
+                    textAngle += Math.PI;
+                }
+                
+                ctx.rotate(textAngle);
+                
+                ctx.font = CONFIG.measureFont;
+                const textWidth = ctx.measureText(text).width + 12;
+                
+                // Fondo para el texto
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.fillRect(-textWidth/2, -18, textWidth, 36);
+                
+                // Texto
+                ctx.fillStyle = '#2c4c82';
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(text, 0, 0);
+                
+                ctx.restore();
+            }
+        }
+
+        // --- Eventos de Mouse ---
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!textModal.classList.contains('hidden')) return;
+            const pos = getMousePos(e);
+            if (currentMode === 'move') {
+                if (mainImage && pos.x >= imgState.x && pos.x <= imgState.x + imgState.width &&
+                    pos.y >= imgState.y && pos.y <= imgState.y + imgState.height) {
+                    imgState.isDragging = true;
+                    imgState.dragStartX = pos.x - imgState.x;
+                    imgState.dragStartY = pos.y - imgState.y;
+                }
+            } else if (currentMode === 'measure') {
+                activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" };
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (imgState.isDragging) {
+                const pos = getMousePos(e);
+                imgState.x = pos.x - imgState.dragStartX;
+                imgState.y = pos.y - imgState.dragStartY;
+                draw();
+            } else if (activeMeasure) {
+                const pos = getMousePos(e);
+                activeMeasure.x2 = pos.x;
+                activeMeasure.y2 = pos.y;
+                draw();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (imgState.isDragging) {
+                imgState.isDragging = false;
+            } else if (activeMeasure) {
+                const dist = Math.sqrt(Math.pow(activeMeasure.x2 - activeMeasure.x1, 2) + Math.pow(activeMeasure.y2 - activeMeasure.y1, 2));
+                if (dist > 10) {
+                    pendingMeasure = {...activeMeasure};
+                    openTextModal();
+                }
+                activeMeasure = null;
+                draw();
+            }
+        });
+
+        // --- Modal Logic ---
+
+        function openTextModal() {
+            textModal.classList.remove('hidden');
+            modalInput.value = "";
+            modalInput.focus();
+        }
+
+        function closeTextModal() {
+            textModal.classList.add('hidden');
+            pendingMeasure = null;
+        }
+
+        saveTextBtn.onclick = () => {
+            if (pendingMeasure) {
+                pendingMeasure.text = modalInput.value;
+                measures.push(pendingMeasure);
+                draw();
+            }
+            closeTextModal();
+        };
+
+        cancelTextBtn.onclick = closeTextModal;
+
+        modalInput.onkeydown = (e) => {
+            if (e.key === 'Enter') saveTextBtn.onclick();
+            if (e.key === 'Escape') closeTextModal();
+        };
+
+        // --- Controles de Modo ---
+
+        modeMoveBtn.onclick = () => {
+            currentMode = 'move';
+            modeMoveBtn.classList.add('active');
+            modeMeasureBtn.classList.remove('active');
+            measureSettings.classList.add('hidden');
+            canvas.style.cursor = 'move';
+        };
+
+        modeMeasureBtn.onclick = () => {
+            currentMode = 'measure';
+            modeMeasureBtn.classList.add('active');
+            modeMoveBtn.classList.remove('active');
+            measureSettings.classList.remove('hidden');
+            canvas.style.cursor = 'crosshair';
+        };
+
+        clearMeasuresBtn.onclick = () => {
+            measures = [];
+            draw();
+        };
+
+        // Zoom e Inputs
+        zoomInput.addEventListener('input', (e) => {
+            if (!mainImage) return;
+            const newScale = e.target.value / 100;
+            zoomValueLabel.textContent = `${e.target.value}%`;
+            const centerX = imgState.x + imgState.width / 2;
+            const centerY = imgState.y + imgState.height / 2;
+            imgState.scale = newScale;
+            imgState.width = imgState.baseWidth * imgState.scale;
+            imgState.height = imgState.baseHeight * imgState.scale;
+            imgState.x = centerX - imgState.width / 2;
+            imgState.y = centerY - imgState.height / 2;
+            draw();
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    mainImage = img;
+                    const ratio = Math.max(CONFIG.width / img.width, CONFIG.height / img.height);
+                    imgState.baseWidth = img.width * ratio;
+                    imgState.baseHeight = img.height * ratio;
+                    imgState.width = imgState.baseWidth;
+                    imgState.height = imgState.baseHeight;
+                    imgState.x = (CONFIG.width - imgState.width) / 2;
+                    imgState.y = (CONFIG.height - imgState.height) / 2;
+                    draw();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => { logoImage = img; draw(); };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        downloadBtn.onclick = () => {
+            if (!mainImage) return;
+            const link = document.createElement('a');
+            link.download = `producto-con-medidas-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+
+        window.onload = draw;
+    </script>
+</body>
+</html>
