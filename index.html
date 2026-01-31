@@ -106,7 +106,8 @@
                 <!-- Configuración Medidas -->
                 <div id="measureSettings" class="hidden space-y-2">
                     <p class="text-[10px] text-slate-400 italic mb-2 leading-tight">
-                        • Haz clic en la 'X' roja para eliminar.<br>
+                        • Mantén presionada la 'X' para mover la medida.<br>
+                        • Un clic corto en la 'X' para eliminarla.<br>
                         • Mantén <b>Shift</b> al trazar para líneas rectas.
                     </p>
                     <button id="clearMeasures" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
@@ -226,6 +227,11 @@
         let strokes = [];
         let activeStroke = null;
 
+        // Arrastre de medidas existentes a través de la X
+        let draggingMeasureIdx = -1;
+        let mDragOffset = { x: 0, y: 0 };
+        let hasMovedDraggedMeasure = false;
+
         let imgState = {
             x: 0, y: 0, baseWidth: 0, baseHeight: 0, width: 0, height: 0, scale: 1.0,
             isDragging: false, dragStartX: 0, dragStartY: 0
@@ -305,42 +311,35 @@
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
 
-            // 1. Preparar dibujo
             ctx.save();
             ctx.translate(x1, y1);
             ctx.rotate(angle);
 
-            // 2. Calcular espacio para el texto
             let gap = 0;
             let textWidth = 0;
             if (text) {
                 ctx.font = CONFIG.measureFont;
                 textWidth = ctx.measureText(text).width;
-                gap = textWidth + 30; // Padding horizontal para que la línea no toque el texto
+                gap = textWidth + 40; // Padding incrementado para asegurar transparencia detrás del texto
             }
 
-            // 3. Dibujar línea segmentada (con hueco central)
             if (text && dist > gap) {
-                // Segmento inicial
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(dist / 2 - gap / 2, 0);
                 ctx.stroke();
 
-                // Segmento final
                 ctx.beginPath();
                 ctx.moveTo(dist / 2 + gap / 2, 0);
                 ctx.lineTo(dist, 0);
                 ctx.stroke();
             } else {
-                // Línea continua si no hay texto o es muy corta
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(dist, 0);
                 ctx.stroke();
             }
 
-            // 4. Dibujar Barras en los extremos
             const barLen = 15;
             function drawBarLocal(x) {
                 ctx.beginPath();
@@ -351,16 +350,12 @@
             drawBarLocal(0);
             drawBarLocal(dist);
 
-            // 5. Dibujar Texto (sin cajón, sobre el hueco)
             if (text) {
                 ctx.save();
                 ctx.translate(dist / 2, 0);
-                
-                // Corregir orientación del texto para legibilidad
                 if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
                     ctx.rotate(Math.PI);
                 }
-                
                 ctx.fillStyle = CONFIG.measureColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
@@ -370,7 +365,6 @@
 
             ctx.restore();
 
-            // 6. Botón de eliminar (X) - Fuera de la transformación para facilitar detección
             if (index !== -1 && !isExporting) {
                 const btnX = x2;
                 const btnY = y2 - 25; 
@@ -379,7 +373,7 @@
                 ctx.save();
                 ctx.shadowColor = "rgba(0,0,0,0.3)";
                 ctx.shadowBlur = 4;
-                ctx.fillStyle = '#ef4444';
+                ctx.fillStyle = draggingMeasureIdx === index ? '#1e355c' : '#ef4444';
                 ctx.beginPath();
                 ctx.arc(btnX, btnY, CONFIG.deleteBtnRadius, 0, Math.PI * 2);
                 ctx.fill();
@@ -413,12 +407,16 @@
             if (!textModal.classList.contains('hidden')) return;
             const pos = getMousePos(e);
 
+            // Verificar si clicamos en una X de medida
             for (let i = measures.length - 1; i >= 0; i--) {
                 const m = measures[i];
                 if (m.deleteBtn) {
                     const dist = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2));
                     if (dist <= CONFIG.deleteBtnRadius + 5) {
-                        measures.splice(i, 1);
+                        draggingMeasureIdx = i;
+                        mDragOffset.x = pos.x;
+                        mDragOffset.y = pos.y;
+                        hasMovedDraggedMeasure = false;
                         draw();
                         return;
                     }
@@ -441,6 +439,25 @@
 
         window.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
+
+            // Arrastre de medida completa
+            if (draggingMeasureIdx !== -1) {
+                const dx = pos.x - mDragOffset.x;
+                const dy = pos.y - mDragOffset.y;
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMovedDraggedMeasure = true;
+
+                const m = measures[draggingMeasureIdx];
+                m.x1 += dx;
+                m.x2 += dx;
+                m.y1 += dy;
+                m.y2 += dy;
+                
+                mDragOffset.x = pos.x;
+                mDragOffset.y = pos.y;
+                draw();
+                return;
+            }
+
             if (imgState.isDragging) {
                 imgState.x = pos.x - imgState.dragStartX;
                 imgState.y = pos.y - imgState.dragStartY;
@@ -466,6 +483,17 @@
         });
 
         window.addEventListener('mouseup', () => {
+            // Finalizar arrastre de medida
+            if (draggingMeasureIdx !== -1) {
+                if (!hasMovedDraggedMeasure) {
+                    // Si no se movió, era un clic corto -> eliminar
+                    measures.splice(draggingMeasureIdx, 1);
+                }
+                draggingMeasureIdx = -1;
+                draw();
+                return;
+            }
+
             if (imgState.isDragging) {
                 imgState.isDragging = false;
             } else if (activeMeasure) {
