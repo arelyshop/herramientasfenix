@@ -208,6 +208,7 @@
             text: "Revise el producto al recibirlo. Cambios por fallas de fábrica dentro de 48 h.",
             font: "bold 22px Inter, sans-serif",
             measureFont: "bold 24px Inter, sans-serif",
+            measureColor: "#000000",
             logoWidth: 177,
             logoHeight: 80,
             logoMarginLeft: 35,
@@ -230,10 +231,9 @@
             isDragging: false, dragStartX: 0, dragStartY: 0
         };
 
-        // Carga inicial del logo
         function loadDefaultLogo() {
             const img = new Image();
-            img.crossOrigin = "anonymous"; // Para evitar problemas de CORS si se sirve desde servidor
+            img.crossOrigin = "anonymous";
             img.onload = () => {
                 logoImage = img;
                 draw();
@@ -245,11 +245,9 @@
         }
 
         function draw(isExporting = false) {
-            // 1. Fondo Blanco
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
             
-            // 2. Imagen de Producto
             if (mainImage) {
                 ctx.drawImage(mainImage, imgState.x, imgState.y, imgState.width, imgState.height);
             } else if (!isExporting) {
@@ -260,21 +258,17 @@
                 ctx.fillText("Sube una imagen para comenzar", CONFIG.width / 2, CONFIG.height / 2);
             }
 
-            // 3. Trazos de Pincel
             drawBrushStrokes();
 
-            // 4. Medidas
             measures.forEach((m, index) => drawMeasureLine(m, index, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
 
-            // 5. Logo
             if (logoImage) {
                 const lx = CONFIG.logoMarginLeft;
                 const ly = CONFIG.height - CONFIG.logoMarginBottom - CONFIG.logoHeight;
                 ctx.drawImage(logoImage, lx, ly, CONFIG.logoWidth, CONFIG.logoHeight);
             }
 
-            // 6. Barra inferior
             ctx.fillStyle = CONFIG.barColor;
             ctx.fillRect(0, CONFIG.height - CONFIG.barHeight, CONFIG.width, CONFIG.barHeight);
             ctx.fillStyle = CONFIG.textColor;
@@ -304,48 +298,79 @@
 
         function drawMeasureLine(m, index, isExporting) {
             const { x1, y1, x2, y2, text } = m;
-            ctx.strokeStyle = '#2c4c82';
+            const dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            
+            ctx.strokeStyle = CONFIG.measureColor;
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
 
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
+            // 1. Preparar dibujo
+            ctx.save();
+            ctx.translate(x1, y1);
+            ctx.rotate(angle);
 
-            const angle = Math.atan2(y2 - y1, x2 - x1);
-            const barLen = 15;
+            // 2. Calcular espacio para el texto
+            let gap = 0;
+            let textWidth = 0;
+            if (text) {
+                ctx.font = CONFIG.measureFont;
+                textWidth = ctx.measureText(text).width;
+                gap = textWidth + 30; // Padding horizontal para que la línea no toque el texto
+            }
 
-            function drawBar(x, y, a) {
+            // 3. Dibujar línea segmentada (con hueco central)
+            if (text && dist > gap) {
+                // Segmento inicial
                 ctx.beginPath();
-                ctx.moveTo(x + Math.cos(a + Math.PI/2) * barLen, y + Math.sin(a + Math.PI/2) * barLen);
-                ctx.lineTo(x + Math.cos(a - Math.PI/2) * barLen, y + Math.sin(a - Math.PI/2) * barLen);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(dist / 2 - gap / 2, 0);
+                ctx.stroke();
+
+                // Segmento final
+                ctx.beginPath();
+                ctx.moveTo(dist / 2 + gap / 2, 0);
+                ctx.lineTo(dist, 0);
+                ctx.stroke();
+            } else {
+                // Línea continua si no hay texto o es muy corta
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(dist, 0);
                 ctx.stroke();
             }
 
-            drawBar(x1, y1, angle);
-            drawBar(x2, y2, angle);
+            // 4. Dibujar Barras en los extremos
+            const barLen = 15;
+            function drawBarLocal(x) {
+                ctx.beginPath();
+                ctx.moveTo(x, -barLen);
+                ctx.lineTo(x, barLen);
+                ctx.stroke();
+            }
+            drawBarLocal(0);
+            drawBarLocal(dist);
 
+            // 5. Dibujar Texto (sin cajón, sobre el hueco)
             if (text) {
-                const mx = (x1 + x2) / 2;
-                const my = (y1 + y2) / 2;
                 ctx.save();
-                ctx.translate(mx, my);
-                let textAngle = angle;
-                if (textAngle > Math.PI / 2 || textAngle < -Math.PI / 2) textAngle += Math.PI;
-                ctx.rotate(textAngle);
-                ctx.font = CONFIG.measureFont;
-                const textWidth = ctx.measureText(text).width + 12;
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                ctx.fillRect(-textWidth/2, -18, textWidth, 36);
-                ctx.fillStyle = '#2c4c82';
+                ctx.translate(dist / 2, 0);
+                
+                // Corregir orientación del texto para legibilidad
+                if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+                    ctx.rotate(Math.PI);
+                }
+                
+                ctx.fillStyle = CONFIG.measureColor;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(text, 0, 0);
                 ctx.restore();
             }
 
-            // Solo dibujar la X si NO estamos exportando/descargando
+            ctx.restore();
+
+            // 6. Botón de eliminar (X) - Fuera de la transformación para facilitar detección
             if (index !== -1 && !isExporting) {
                 const btnX = x2;
                 const btnY = y2 - 25; 
@@ -371,7 +396,6 @@
                 ctx.stroke();
                 ctx.restore();
             } else if (isExporting) {
-                // Durante la exportación, eliminamos la referencia del botón para evitar detecciones fantasma
                 m.deleteBtn = null;
             }
         }
@@ -577,17 +601,11 @@
 
         downloadBtn.onclick = () => {
             if (!mainImage) return;
-            
-            // 1. Redibujamos ocultando las 'X'
             draw(true);
-            
-            // 2. Capturamos el canvas
             const link = document.createElement('a');
             link.download = `producto-fenix-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
-            
-            // 3. Restauramos las 'X' para el editor
             draw(false);
         };
 
