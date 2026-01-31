@@ -58,32 +58,53 @@
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-3xl font-bold text-slate-800">Editor de Plantilla</h1>
-            <p class="text-slate-500 mt-2">Personaliza tu producto con logos, ajustes y medidas orientadas.</p>
+            <p class="text-slate-500 mt-2">Personaliza tu producto con logos, ajustes, medidas y retoques.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <!-- Panel de Control -->
             <div class="lg:col-span-1 space-y-5 bg-white p-5 rounded-2xl shadow-sm border border-slate-100 h-fit">
                 
-                <!-- Modo de edición -->
+                <!-- Herramientas Principales -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-semibold text-slate-700">Herramienta</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="modeMove" class="mode-btn active flex flex-col items-center justify-center p-2 border rounded-xl text-xs font-medium transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <label class="block text-sm font-semibold text-slate-700">Herramientas</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="modeMove" title="Mover Imagen" class="mode-btn active flex flex-col items-center justify-center p-2 border rounded-xl text-[10px] font-medium transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
                             </svg>
                             Mover
                         </button>
-                        <button id="modeMeasure" class="mode-btn flex flex-col items-center justify-center p-2 border rounded-xl text-xs font-medium transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button id="modeMeasure" title="Trazar Medida" class="mode-btn flex flex-col items-center justify-center p-2 border rounded-xl text-[10px] font-medium transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7 7m-7-7l-2.828 2.828M11 11L7 7m4 4L7 15m4-4l4-4" />
                             </svg>
                             Medida
                         </button>
+                        <button id="modeBrush" title="Pincel/Borrador" class="mode-btn flex flex-col items-center justify-center p-2 border rounded-xl text-[10px] font-medium transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Pincel
+                        </button>
                     </div>
                 </div>
 
+                <!-- Configuración Pincel -->
+                <div id="brushSettings" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-100 animate-in slide-in-from-top duration-200">
+                    <div>
+                        <label class="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>Grosor del Pincel</span>
+                            <span id="brushSizeVal">20px</span>
+                        </label>
+                        <input type="range" id="brushSize" min="5" max="100" value="20" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <button id="clearBrush" class="w-full py-1.5 text-[10px] bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+                        Limpiar todos los trazos
+                    </button>
+                </div>
+
+                <!-- Configuración Medidas -->
                 <div id="measureSettings" class="hidden space-y-2">
                     <button id="clearMeasures" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
                         Borrar todas las medidas
@@ -118,7 +139,7 @@
 
                 <div class="pt-2">
                     <button id="downloadBtn" class="w-full bg-[#2c4c82] hover:bg-[#1e355c] text-white font-bold py-3 px-6 rounded-xl transition duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-blue-900/20">
-                        <span>Descargar</span>
+                        <span>Descargar Imagen</span>
                     </button>
                     <p id="statusMsg" class="mt-2 text-center text-[10px] font-bold hidden"></p>
                 </div>
@@ -159,6 +180,13 @@
         
         const modeMoveBtn = document.getElementById('modeMove');
         const modeMeasureBtn = document.getElementById('modeMeasure');
+        const modeBrushBtn = document.getElementById('modeBrush');
+        
+        const brushSettings = document.getElementById('brushSettings');
+        const brushSizeInput = document.getElementById('brushSize');
+        const brushSizeValLabel = document.getElementById('brushSizeVal');
+        const clearBrushBtn = document.getElementById('clearBrush');
+
         const measureSettings = document.getElementById('measureSettings');
         const clearMeasuresBtn = document.getElementById('clearMeasures');
 
@@ -185,10 +213,14 @@
 
         let mainImage = null;
         let logoImage = null;
-        let currentMode = 'move';
+        let currentMode = 'move'; // move, measure, brush
         let measures = [];
         let activeMeasure = null;
-        let pendingMeasure = null; // Para guardar la línea mientras se pide el texto
+        let pendingMeasure = null;
+
+        // Brush state
+        let strokes = []; // { size: number, points: [{x, y}] }
+        let activeStroke = null;
 
         let imgState = {
             x: 0, y: 0, baseWidth: 0, baseHeight: 0, width: 0, height: 0, scale: 1.0,
@@ -196,9 +228,11 @@
         };
 
         function draw() {
+            // 1. Fondo Blanco
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
             
+            // 2. Imagen de Producto
             if (mainImage) {
                 ctx.drawImage(mainImage, imgState.x, imgState.y, imgState.width, imgState.height);
             } else {
@@ -209,18 +243,21 @@
                 ctx.fillText("Sube una imagen para comenzar", CONFIG.width / 2, CONFIG.height / 2);
             }
 
-            // Dibujar todas las medidas guardadas
+            // 3. Trazos de Pincel (Encima de la imagen para borrarla/pintarla)
+            drawBrushStrokes();
+
+            // 4. Medidas
             measures.forEach(m => drawMeasureLine(m));
-            
-            // Dibujar la medida actual que se está trazando
             if (activeMeasure) drawMeasureLine(activeMeasure);
 
+            // 5. Logo
             if (logoImage) {
                 const lx = CONFIG.logoMarginLeft;
                 const ly = CONFIG.height - CONFIG.logoMarginBottom - CONFIG.logoHeight;
                 ctx.drawImage(logoImage, lx, ly, CONFIG.logoWidth, CONFIG.logoHeight);
             }
 
+            // 6. Barra inferior
             ctx.fillStyle = CONFIG.barColor;
             ctx.fillRect(0, CONFIG.height - CONFIG.barHeight, CONFIG.width, CONFIG.barHeight);
             ctx.fillStyle = CONFIG.textColor;
@@ -230,19 +267,37 @@
             ctx.fillText(CONFIG.text, CONFIG.width / 2, CONFIG.height - (CONFIG.barHeight / 2));
         }
 
+        function drawBrushStrokes() {
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#ffffff'; // Color blanco por defecto
+
+            const allStrokes = [...strokes];
+            if (activeStroke) allStrokes.push(activeStroke);
+
+            allStrokes.forEach(stroke => {
+                if (stroke.points.length < 2) return;
+                ctx.lineWidth = stroke.size;
+                ctx.beginPath();
+                ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                for (let i = 1; i < stroke.points.length; i++) {
+                    ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                }
+                ctx.stroke();
+            });
+        }
+
         function drawMeasureLine(m) {
             const { x1, y1, x2, y2, text } = m;
             ctx.strokeStyle = '#2c4c82';
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
 
-            // Línea principal
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
             ctx.stroke();
 
-            // Barras en los extremos
             const angle = Math.atan2(y2 - y1, x2 - x1);
             const barLen = 15;
 
@@ -256,35 +311,22 @@
             drawBar(x1, y1, angle);
             drawBar(x2, y2, angle);
 
-            // Texto orientado
             if (text) {
                 const mx = (x1 + x2) / 2;
                 const my = (y1 + y2) / 2;
-                
                 ctx.save();
                 ctx.translate(mx, my);
-                
-                // Corregir ángulo para que el texto nunca esté de cabeza
                 let textAngle = angle;
-                if (textAngle > Math.PI / 2 || textAngle < -Math.PI / 2) {
-                    textAngle += Math.PI;
-                }
-                
+                if (textAngle > Math.PI / 2 || textAngle < -Math.PI / 2) textAngle += Math.PI;
                 ctx.rotate(textAngle);
-                
                 ctx.font = CONFIG.measureFont;
                 const textWidth = ctx.measureText(text).width + 12;
-                
-                // Fondo para el texto
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
                 ctx.fillRect(-textWidth/2, -18, textWidth, 36);
-                
-                // Texto
                 ctx.fillStyle = '#2c4c82';
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText(text, 0, 0);
-                
                 ctx.restore();
             }
         }
@@ -295,14 +337,15 @@
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+            const clientY = (e.touches ? e.touches[0].clientY : e.clientY);
             return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
         }
 
         canvas.addEventListener('mousedown', (e) => {
             if (!textModal.classList.contains('hidden')) return;
             const pos = getMousePos(e);
+            
             if (currentMode === 'move') {
                 if (mainImage && pos.x >= imgState.x && pos.x <= imgState.x + imgState.width &&
                     pos.y >= imgState.y && pos.y <= imgState.y + imgState.height) {
@@ -312,19 +355,23 @@
                 }
             } else if (currentMode === 'measure') {
                 activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" };
+            } else if (currentMode === 'brush') {
+                activeStroke = { size: parseInt(brushSizeInput.value), points: [pos] };
             }
         });
 
         window.addEventListener('mousemove', (e) => {
+            const pos = getMousePos(e);
             if (imgState.isDragging) {
-                const pos = getMousePos(e);
                 imgState.x = pos.x - imgState.dragStartX;
                 imgState.y = pos.y - imgState.dragStartY;
                 draw();
             } else if (activeMeasure) {
-                const pos = getMousePos(e);
                 activeMeasure.x2 = pos.x;
                 activeMeasure.y2 = pos.y;
+                draw();
+            } else if (activeStroke) {
+                activeStroke.points.push(pos);
                 draw();
             }
         });
@@ -340,6 +387,10 @@
                 }
                 activeMeasure = null;
                 draw();
+            } else if (activeStroke) {
+                strokes.push(activeStroke);
+                activeStroke = null;
+                draw();
             }
         });
 
@@ -351,43 +402,55 @@
             modalInput.focus();
         }
 
-        function closeTextModal() {
-            textModal.classList.add('hidden');
-            pendingMeasure = null;
-        }
-
         saveTextBtn.onclick = () => {
             if (pendingMeasure) {
                 pendingMeasure.text = modalInput.value;
                 measures.push(pendingMeasure);
                 draw();
             }
-            closeTextModal();
+            textModal.classList.add('hidden');
+            pendingMeasure = null;
         };
 
-        cancelTextBtn.onclick = closeTextModal;
-
-        modalInput.onkeydown = (e) => {
-            if (e.key === 'Enter') saveTextBtn.onclick();
-            if (e.key === 'Escape') closeTextModal();
+        cancelTextBtn.onclick = () => {
+            textModal.classList.add('hidden');
+            pendingMeasure = null;
+            draw();
         };
 
         // --- Controles de Modo ---
 
-        modeMoveBtn.onclick = () => {
-            currentMode = 'move';
-            modeMoveBtn.classList.add('active');
-            modeMeasureBtn.classList.remove('active');
+        function setMode(mode) {
+            currentMode = mode;
+            [modeMoveBtn, modeMeasureBtn, modeBrushBtn].forEach(btn => btn.classList.remove('active'));
             measureSettings.classList.add('hidden');
-            canvas.style.cursor = 'move';
+            brushSettings.classList.add('hidden');
+            
+            if (mode === 'move') {
+                modeMoveBtn.classList.add('active');
+                canvas.style.cursor = 'move';
+            } else if (mode === 'measure') {
+                modeMeasureBtn.classList.add('active');
+                measureSettings.classList.remove('hidden');
+                canvas.style.cursor = 'crosshair';
+            } else if (mode === 'brush') {
+                modeBrushBtn.classList.add('active');
+                brushSettings.classList.remove('hidden');
+                canvas.style.cursor = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjciIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==") 8 8, auto';
+            }
+        }
+
+        modeMoveBtn.onclick = () => setMode('move');
+        modeMeasureBtn.onclick = () => setMode('measure');
+        modeBrushBtn.onclick = () => setMode('brush');
+
+        brushSizeInput.oninput = (e) => {
+            brushSizeValLabel.textContent = e.target.value + "px";
         };
 
-        modeMeasureBtn.onclick = () => {
-            currentMode = 'measure';
-            modeMeasureBtn.classList.add('active');
-            modeMoveBtn.classList.remove('active');
-            measureSettings.classList.remove('hidden');
-            canvas.style.cursor = 'crosshair';
+        clearBrushBtn.onclick = () => {
+            strokes = [];
+            draw();
         };
 
         clearMeasuresBtn.onclick = () => {
@@ -395,7 +458,7 @@
             draw();
         };
 
-        // Zoom e Inputs
+        // Inputs carga
         zoomInput.addEventListener('input', (e) => {
             if (!mainImage) return;
             const newScale = e.target.value / 100;
@@ -447,7 +510,7 @@
         downloadBtn.onclick = () => {
             if (!mainImage) return;
             const link = document.createElement('a');
-            link.download = `producto-con-medidas-${Date.now()}.png`;
+            link.download = `producto-final-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         };
