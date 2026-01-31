@@ -47,7 +47,7 @@
             border-color: #2c4c82;
         }
 
-        /* Modal Styles */
+        /* Estilos del Modal */
         #textModal {
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
@@ -106,6 +106,10 @@
 
                 <!-- Configuración Medidas -->
                 <div id="measureSettings" class="hidden space-y-2">
+                    <p class="text-[10px] text-slate-400 italic mb-2 leading-tight">
+                        • Haz clic en la 'X' roja para eliminar.<br>
+                        • Mantén <b>Shift</b> al trazar para líneas rectas.
+                    </p>
                     <button id="clearMeasures" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold border border-red-100 hover:bg-red-100 transition-colors">
                         Borrar todas las medidas
                     </button>
@@ -190,7 +194,7 @@
         const measureSettings = document.getElementById('measureSettings');
         const clearMeasuresBtn = document.getElementById('clearMeasures');
 
-        // Modal elements
+        // Elementos del Modal
         const textModal = document.getElementById('textModal');
         const modalInput = document.getElementById('modalInput');
         const saveTextBtn = document.getElementById('saveText');
@@ -208,18 +212,19 @@
             logoWidth: 177,
             logoHeight: 80,
             logoMarginLeft: 35,
-            logoMarginBottom: 63
+            logoMarginBottom: 63,
+            deleteBtnRadius: 14
         };
 
         let mainImage = null;
         let logoImage = null;
-        let currentMode = 'move'; // move, measure, brush
-        let measures = [];
+        let currentMode = 'move';
+        let measures = []; // { x1, y1, x2, y2, text, deleteBtn: {x, y} }
         let activeMeasure = null;
         let pendingMeasure = null;
 
-        // Brush state
-        let strokes = []; // { size: number, points: [{x, y}] }
+        // Estado del Pincel
+        let strokes = [];
         let activeStroke = null;
 
         let imgState = {
@@ -228,11 +233,9 @@
         };
 
         function draw() {
-            // 1. Fondo Blanco
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
             
-            // 2. Imagen de Producto
             if (mainImage) {
                 ctx.drawImage(mainImage, imgState.x, imgState.y, imgState.width, imgState.height);
             } else {
@@ -243,21 +246,17 @@
                 ctx.fillText("Sube una imagen para comenzar", CONFIG.width / 2, CONFIG.height / 2);
             }
 
-            // 3. Trazos de Pincel (Encima de la imagen para borrarla/pintarla)
             drawBrushStrokes();
 
-            // 4. Medidas
-            measures.forEach(m => drawMeasureLine(m));
-            if (activeMeasure) drawMeasureLine(activeMeasure);
+            measures.forEach((m, index) => drawMeasureLine(m, index));
+            if (activeMeasure) drawMeasureLine(activeMeasure, -1);
 
-            // 5. Logo
             if (logoImage) {
                 const lx = CONFIG.logoMarginLeft;
                 const ly = CONFIG.height - CONFIG.logoMarginBottom - CONFIG.logoHeight;
                 ctx.drawImage(logoImage, lx, ly, CONFIG.logoWidth, CONFIG.logoHeight);
             }
 
-            // 6. Barra inferior
             ctx.fillStyle = CONFIG.barColor;
             ctx.fillRect(0, CONFIG.height - CONFIG.barHeight, CONFIG.width, CONFIG.barHeight);
             ctx.fillStyle = CONFIG.textColor;
@@ -270,11 +269,9 @@
         function drawBrushStrokes() {
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.strokeStyle = '#ffffff'; // Color blanco por defecto
-
+            ctx.strokeStyle = '#ffffff';
             const allStrokes = [...strokes];
             if (activeStroke) allStrokes.push(activeStroke);
-
             allStrokes.forEach(stroke => {
                 if (stroke.points.length < 2) return;
                 ctx.lineWidth = stroke.size;
@@ -287,7 +284,7 @@
             });
         }
 
-        function drawMeasureLine(m) {
+        function drawMeasureLine(m, index) {
             const { x1, y1, x2, y2, text } = m;
             ctx.strokeStyle = '#2c4c82';
             ctx.lineWidth = 3;
@@ -311,6 +308,7 @@
             drawBar(x1, y1, angle);
             drawBar(x2, y2, angle);
 
+            // Dibujar Texto
             if (text) {
                 const mx = (x1 + x2) / 2;
                 const my = (y1 + y2) / 2;
@@ -329,9 +327,35 @@
                 ctx.fillText(text, 0, 0);
                 ctx.restore();
             }
-        }
 
-        // --- Eventos de Mouse ---
+            // Dibujar Botón de eliminar (X) al final del trazo (punto 2)
+            if (index !== -1) {
+                const btnX = x2;
+                const btnY = y2 - 25; 
+                
+                m.deleteBtn = { x: btnX, y: btnY };
+
+                ctx.save();
+                ctx.shadowColor = "rgba(0,0,0,0.3)";
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.arc(btnX, btnY, CONFIG.deleteBtnRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const s = 5;
+                ctx.moveTo(btnX - s, btnY - s);
+                ctx.lineTo(btnX + s, btnY + s);
+                ctx.moveTo(btnX + s, btnY - s);
+                ctx.lineTo(btnX - s, btnY + s);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
 
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
@@ -345,6 +369,19 @@
         canvas.addEventListener('mousedown', (e) => {
             if (!textModal.classList.contains('hidden')) return;
             const pos = getMousePos(e);
+
+            // Verificar botones de eliminar primero
+            for (let i = measures.length - 1; i >= 0; i--) {
+                const m = measures[i];
+                if (m.deleteBtn) {
+                    const dist = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2));
+                    if (dist <= CONFIG.deleteBtnRadius + 5) {
+                        measures.splice(i, 1);
+                        draw();
+                        return;
+                    }
+                }
+            }
             
             if (currentMode === 'move') {
                 if (mainImage && pos.x >= imgState.x && pos.x <= imgState.x + imgState.width &&
@@ -367,8 +404,22 @@
                 imgState.y = pos.y - imgState.dragStartY;
                 draw();
             } else if (activeMeasure) {
-                activeMeasure.x2 = pos.x;
-                activeMeasure.y2 = pos.y;
+                // Lógica de Snapping (Shift presionado)
+                if (e.shiftKey) {
+                    const dx = pos.x - activeMeasure.x1;
+                    const dy = pos.y - activeMeasure.y1;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx);
+                    
+                    // Ajustar a incrementos de 45 grados (PI / 4)
+                    const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+                    
+                    activeMeasure.x2 = activeMeasure.x1 + Math.cos(snapAngle) * dist;
+                    activeMeasure.y2 = activeMeasure.y1 + Math.sin(snapAngle) * dist;
+                } else {
+                    activeMeasure.x2 = pos.x;
+                    activeMeasure.y2 = pos.y;
+                }
                 draw();
             } else if (activeStroke) {
                 activeStroke.points.push(pos);
@@ -394,7 +445,21 @@
             }
         });
 
-        // --- Modal Logic ---
+        function updateBrushCursor() {
+            if (currentMode !== 'brush') return;
+            const size = parseInt(brushSizeInput.value);
+            const rect = canvas.getBoundingClientRect();
+            const scale = rect.width / CONFIG.width;
+            const displaySize = Math.max(Math.floor(size * scale), 4);
+            const r = displaySize / 2;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${displaySize}" height="${displaySize}"><circle cx="${r}" cy="${r}" r="${r-1}" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1"/><circle cx="${r}" cy="${r}" r="${r-2}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1"/></svg>`;
+            canvas.style.cursor = `url("data:image/svg+xml;base64,${btoa(svg)}") ${r} ${r}, auto`;
+        }
+
+        brushSizeInput.oninput = (e) => {
+            brushSizeValLabel.textContent = e.target.value + "px";
+            updateBrushCursor();
+        };
 
         function openTextModal() {
             textModal.classList.remove('hidden');
@@ -418,14 +483,16 @@
             draw();
         };
 
-        // --- Controles de Modo ---
+        modalInput.onkeydown = (e) => {
+            if (e.key === 'Enter') saveTextBtn.onclick();
+            if (e.key === 'Escape') cancelTextBtn.onclick();
+        };
 
         function setMode(mode) {
             currentMode = mode;
             [modeMoveBtn, modeMeasureBtn, modeBrushBtn].forEach(btn => btn.classList.remove('active'));
             measureSettings.classList.add('hidden');
             brushSettings.classList.add('hidden');
-            
             if (mode === 'move') {
                 modeMoveBtn.classList.add('active');
                 canvas.style.cursor = 'move';
@@ -436,29 +503,16 @@
             } else if (mode === 'brush') {
                 modeBrushBtn.classList.add('active');
                 brushSettings.classList.remove('hidden');
-                canvas.style.cursor = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiI+PGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjciIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==") 8 8, auto';
+                updateBrushCursor();
             }
         }
 
         modeMoveBtn.onclick = () => setMode('move');
         modeMeasureBtn.onclick = () => setMode('measure');
         modeBrushBtn.onclick = () => setMode('brush');
+        clearBrushBtn.onclick = () => { strokes = []; draw(); };
+        clearMeasuresBtn.onclick = () => { measures = []; draw(); };
 
-        brushSizeInput.oninput = (e) => {
-            brushSizeValLabel.textContent = e.target.value + "px";
-        };
-
-        clearBrushBtn.onclick = () => {
-            strokes = [];
-            draw();
-        };
-
-        clearMeasuresBtn.onclick = () => {
-            measures = [];
-            draw();
-        };
-
-        // Inputs carga
         zoomInput.addEventListener('input', (e) => {
             if (!mainImage) return;
             const newScale = e.target.value / 100;
@@ -510,7 +564,7 @@
         downloadBtn.onclick = () => {
             if (!mainImage) return;
             const link = document.createElement('a');
-            link.download = `producto-final-${Date.now()}.png`;
+            link.download = `imagen-final-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         };
