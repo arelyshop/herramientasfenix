@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Sellos de Marca 1:1</title>
+    <title>Fenix Editor Pro - Sellos con Posición Fija</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -110,13 +110,7 @@
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Ayuda de Teclado</p>
                 <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 space-y-2">
                     <p class="text-[11px] text-slate-300 leading-relaxed">
-                        <span class="text-sky-400 font-bold underline">Shift + Mover:</span> Snap a centros y bordes.
-                    </p>
-                    <p class="text-[11px] text-slate-300 leading-relaxed">
-                        <span class="text-sky-400 font-bold underline">Shift + Rotar:</span> Snap a 45°/90°.
-                    </p>
-                    <p class="text-[11px] text-slate-300 leading-relaxed">
-                        <span class="text-sky-400 font-bold underline">Shift + Escalar:</span> Snap a bordes 1000px.
+                        <span class="text-sky-400 font-bold underline">Shift:</span> Imanta la imagen a centros, bordes y ángulos de 45°.
                     </p>
                 </div>
             </div>
@@ -228,9 +222,9 @@
          * Añade una capa de imagen.
          * @param {string} data - URL o Base64 de la imagen.
          * @param {string} name - Nombre descriptivo.
-         * @param {boolean} useOriginalSize - Si es true, ignora el escalado inicial y usa el tamaño real del archivo.
+         * @param {string} brandKey - Si viene de addBrand, indica qué marca es para posicionar.
          */
-        function addLayer(data, name = "Capa", useOriginalSize = false) {
+        function addLayer(data, name = "Capa", brandKey = null) {
             const layer = {
                 id: createId(),
                 name: name,
@@ -244,22 +238,51 @@
             const img = new Image();
             img.onload = () => {
                 layer.aspectRatio = img.width / img.height;
-                
-                if (useOriginalSize) {
-                    // Los logos de marca se cargan 1:1 (1000x1000 si así es el archivo)
-                    layer.width = img.width;
-                    layer.height = img.height;
+                layer.width = img.width;
+                layer.height = img.height;
+                layer.content = img;
+
+                // POSICIONAMIENTO POR DEFECTO SEGÚN REGLAS DE NEGOCIO
+                if (brandKey) {
+                    switch (brandKey) {
+                        case 'ugreen':
+                            // MARGEN SUPERIOR CENTRADO
+                            layer.x = (CANVAS_WIDTH - layer.width) / 2;
+                            layer.y = 0;
+                            break;
+                        case 'anker':
+                            // SUPERIOR A 55PX DEL IZQUIERDO
+                            layer.x = 55;
+                            layer.y = 0;
+                            break;
+                        case 'dimax':
+                            // IZQUIERDO A 85PX DEL INFERIOR
+                            layer.x = 0;
+                            layer.y = CANVAS_HEIGHT - layer.height - 85;
+                            break;
+                        case 'baseus':
+                            // SUPERIOR A 45PX DEL IZQUIERDO
+                            layer.x = 45;
+                            layer.y = 0;
+                            break;
+                        case 'havit':
+                            // IZQUIERDO A 95PX DEL INFERIOR
+                            layer.x = 0;
+                            layer.y = CANVAS_HEIGHT - layer.height - 95;
+                            break;
+                        default:
+                            layer.x = (CANVAS_WIDTH - layer.width) / 2;
+                            layer.y = (CANVAS_HEIGHT - layer.height) / 2;
+                    }
                 } else {
-                    // Imágenes locales se escalan al 60% inicial para manejo cómodo
-                    const ratio = Math.min(CANVAS_WIDTH * 0.6 / img.width, CANVAS_HEIGHT * 0.6 / img.height);
+                    // Imágenes locales: tamaño relativo y centradas
+                    const ratio = Math.min(CANVAS_WIDTH * 0.7 / img.width, CANVAS_HEIGHT * 0.7 / img.height);
                     layer.width = img.width * ratio;
                     layer.height = img.height * ratio;
+                    layer.x = (CANVAS_WIDTH - layer.width) / 2;
+                    layer.y = (CANVAS_HEIGHT - layer.height) / 2;
                 }
 
-                layer.x = (CANVAS_WIDTH - layer.width) / 2;
-                layer.y = (CANVAS_HEIGHT - layer.height) / 2;
-                layer.content = img;
-                
                 layers.unshift(layer);
                 setActiveLayer(layer.id);
                 render();
@@ -270,9 +293,8 @@
         function addBrand(brand) {
             const path = `images/marcas/logo-${brand}.png`;
             const label = brand.charAt(0).toUpperCase() + brand.slice(1);
-            // Usamos 'true' para cargar el logo a su tamaño original 1000x1000
-            addLayer(path, `Logo ${label}`, true);
-            showToast(`Sello ${label} añadido al tamaño original`);
+            addLayer(path, `Logo ${label}`, brand);
+            showToast(`${label} ubicado en su posición estándar`);
         }
 
         function setActiveLayer(id) {
@@ -295,7 +317,7 @@
                 layer.y = (CANVAS_HEIGHT - layer.height) / 2;
                 layer.rotation = 0;
                 render();
-                showToast("Ajustado al lienzo");
+                showToast("Ajustado proporcionalmente");
             }
         }
 
@@ -310,7 +332,7 @@
                         <img src="${l.content.src}" class="w-full h-full object-cover opacity-50">
                     </div>
                     <span class="text-xs font-medium flex-1 truncate">${l.name}</span>
-                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white transition-colors">
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white">
                         ${l.visible ? '👁️' : '🕶️'}
                     </button>
                 `;
@@ -476,7 +498,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (ev) => addLayer(ev.target.result, file.name, false);
+                    reader.onload = (ev) => addLayer(ev.target.result, file.name, null);
                     reader.readAsDataURL(file);
                     fileInput.value = ""; 
                 }
