@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fenix Editor Pro - Sellos de Marca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            overflow: hidden; 
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            height: 100vh;
+        }
+
+        .canvas-area {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2rem;
+            overflow: hidden; 
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%; 
+            width: 100%;
+        }
+
+        canvas {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background-color: white;
+            cursor: default;
+            max-height: 85vh; 
+            max-width: 100%;  
+            height: auto;
+            width: auto;
+            aspect-ratio: 1 / 1; 
+            object-fit: contain;
+        }
+
+        .layer-item.active {
+            background-color: #334155;
+            border-left: 4px solid #38bdf8;
+        }
+
+        .brand-btn:hover {
+            background-color: #1e293b;
+            border-color: #38bdf8;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body>
+
+    <div class="editor-container">
+        <!-- Barra de Herramientas Izquierda -->
+        <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 overflow-y-auto">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center font-bold text-slate-900">F</div>
+                <h1 class="text-lg font-bold tracking-tight">Fenix Pro</h1>
+            </div>
+
+            <!-- Sección de Marcas (Recursos) -->
+            <div class="space-y-3">
+                <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Recursos / Marcas</p>
+                <div class="grid grid-cols-1 gap-2 px-1">
+                    <button onclick="addBrand('ugreen')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">UG</div>
+                        <span class="text-xs font-semibold">Ugreen</span>
+                    </button>
+                    <button onclick="addBrand('anker')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">AN</div>
+                        <span class="text-xs font-semibold">Anker</span>
+                    </button>
+                    <button onclick="addBrand('dimax')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">DX</div>
+                        <span class="text-xs font-semibold">Dimax</span>
+                    </button>
+                    <button onclick="addBrand('baseus')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">BS</div>
+                        <span class="text-xs font-semibold">Baseus</span>
+                    </button>
+                    <button onclick="addBrand('havit')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">HV</div>
+                        <span class="text-xs font-semibold">Havit</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Ayuda de Teclado</p>
+                <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 space-y-2">
+                    <p class="text-[11px] text-slate-300 leading-relaxed">
+                        <span class="text-sky-400 font-bold underline">Shift + Mover:</span> Snap a centros y bordes.
+                    </p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed">
+                        <span class="text-sky-400 font-bold underline">Shift + Rotar:</span> Snap a 45°/90°.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 space-y-4">
+                <label class="block group cursor-pointer">
+                    <div class="bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-sky-500/20">
+                        Añadir Imagen Local
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*">
+                </label>
+                <button onclick="exportImage()" class="w-full border border-slate-700 hover:bg-slate-800 py-3 rounded-xl text-sm font-medium transition-all text-slate-300">
+                    Exportar PNG
+                </button>
+            </div>
+        </aside>
+
+        <!-- Área Central del Canvas -->
+        <main class="canvas-area relative">
+            <div id="canvas-wrapper">
+                <canvas id="mainCanvas" width="1000" height="1000"></canvas>
+            </div>
+        </main>
+
+        <!-- Panel de Capas y Propiedades -->
+        <aside class="bg-slate-900 border-l border-slate-800 flex flex-col">
+            <!-- Propiedades -->
+            <div class="p-6 border-b border-slate-800">
+                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4">Propiedades de Capa</p>
+                
+                <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa para editar</div>
+                
+                <div id="layer-props" class="hidden space-y-5">
+                    <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-xs font-bold transition-all">
+                        Ajustar al Lienzo
+                    </button>
+
+                    <div>
+                        <label class="flex justify-between text-xs text-slate-400 mb-2">
+                            <span>Opacidad</span>
+                            <span id="opacity-val">100%</span>
+                        </label>
+                        <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-sky-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2">Modo de Fusión</label>
+                        <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs outline-none focus:ring-1 focus:ring-sky-500 text-white">
+                            <option value="source-over">Normal</option>
+                            <option value="multiply">Multiplicar</option>
+                            <option value="screen">Trama (Screen)</option>
+                            <option value="overlay">Superponer</option>
+                            <option value="darken">Oscurecer</option>
+                            <option value="lighten">Aclarar</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="deleteActiveLayer()" class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all">Eliminar</button>
+                        <div class="flex gap-1">
+                            <button onclick="moveLayerUp()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg text-xs" title="Subir Capa">↑</button>
+                            <button onclick="moveLayerDown()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg text-xs" title="Bajar Capa">↓</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Capas -->
+            <div class="flex-1 p-6 overflow-y-auto">
+                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4">Capas</p>
+                <div id="layer-list" class="space-y-2">
+                    <!-- Las capas se inyectan aquí -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Feedback Visual -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">
+        Mensaje aquí
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const layerListEl = document.getElementById('layer-list');
+        const fileInput = document.getElementById('fileInput');
+        
+        const CANVAS_WIDTH = 1000;
+        const CANVAS_HEIGHT = 1000;
+
+        let layers = [];
+        let activeLayerId = null;
+        let isMouseDown = false;
+        let dragOffset = { x: 0, y: 0 };
+        let shiftPressed = false;
+
+        function init() {
+            render();
+            setupEventListeners();
+        }
+
+        window.addEventListener('keydown', (e) => { if(e.key === 'Shift') shiftPressed = true; });
+        window.addEventListener('keyup', (e) => { if(e.key === 'Shift') shiftPressed = false; });
+
+        function createId() { return Math.random().toString(36).substr(2, 9); }
+
+        function addLayer(data, name = "Capa") {
+            const layer = {
+                id: createId(),
+                name: name,
+                visible: true,
+                opacity: 100,
+                blend: 'source-over',
+                x: 0, y: 0, width: 0, height: 0, rotation: 0, aspectRatio: 1, 
+                content: null,
+            };
+
+            const img = new Image();
+            img.onload = () => {
+                layer.aspectRatio = img.width / img.height;
+                const ratio = Math.min(CANVAS_WIDTH * 0.4 / img.width, CANVAS_HEIGHT * 0.4 / img.height);
+                layer.width = img.width * ratio;
+                layer.height = img.height * ratio;
+                layer.x = (CANVAS_WIDTH - layer.width) / 2;
+                layer.y = (CANVAS_HEIGHT - layer.height) / 2;
+                layer.content = img;
+                layers.unshift(layer);
+                setActiveLayer(layer.id);
+                render();
+            };
+            img.src = data;
+        }
+
+        // Función para añadir marca específica desde el servidor
+        function addBrand(brand) {
+            const path = `images/marcas/logo-${brand}.png`;
+            const label = brand.charAt(0).toUpperCase() + brand.slice(1);
+            addLayer(path, `Logo ${label}`);
+            showToast(`Sello ${label} añadido`);
+        }
+
+        function setActiveLayer(id) {
+            activeLayerId = id;
+            updateUI();
+            render();
+        }
+
+        function fitActiveLayerToCanvas() {
+            const layer = layers.find(l => l.id === activeLayerId);
+            if (layer) {
+                if (layer.aspectRatio > 1) {
+                    layer.height = CANVAS_HEIGHT;
+                    layer.width = CANVAS_HEIGHT * layer.aspectRatio;
+                } else {
+                    layer.width = CANVAS_WIDTH;
+                    layer.height = CANVAS_WIDTH / layer.aspectRatio;
+                }
+                layer.x = (CANVAS_WIDTH - layer.width) / 2;
+                layer.y = (CANVAS_HEIGHT - layer.height) / 2;
+                layer.rotation = 0;
+                render();
+                showToast("Ajustado al lienzo");
+            }
+        }
+
+        function updateUI() {
+            layerListEl.innerHTML = '';
+            layers.forEach(l => {
+                const div = document.createElement('div');
+                div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/50 ${activeLayerId === l.id ? 'active' : ''}`;
+                div.onclick = () => setActiveLayer(l.id);
+                div.innerHTML = `
+                    <div class="w-8 h-8 bg-slate-800 rounded overflow-hidden border border-slate-700">
+                        <img src="${l.content.src}" class="w-full h-full object-cover opacity-50">
+                    </div>
+                    <span class="text-xs font-medium flex-1 truncate">${l.name}</span>
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white">
+                        ${l.visible ? '👁️' : '🕶️'}
+                    </button>
+                `;
+                layerListEl.appendChild(div);
+            });
+
+            const propsEl = document.getElementById('layer-props');
+            const noLayerEl = document.getElementById('no-layer-msg');
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+
+            if (activeLayer) {
+                propsEl.classList.remove('hidden');
+                noLayerEl.classList.add('hidden');
+                document.getElementById('prop-opacity').value = activeLayer.opacity;
+                document.getElementById('opacity-val').textContent = activeLayer.opacity + '%';
+                document.getElementById('prop-blend').value = activeLayer.blend;
+            } else {
+                propsEl.classList.add('hidden');
+                noLayerEl.classList.remove('hidden');
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            [...layers].reverse().forEach(l => {
+                if (!l.visible) return;
+                ctx.save();
+                const centerX = l.x + l.width / 2;
+                const centerY = l.y + l.height / 2;
+                ctx.translate(centerX, centerY);
+                ctx.rotate(l.rotation);
+                ctx.globalAlpha = l.opacity / 100;
+                ctx.globalCompositeOperation = l.blend;
+                ctx.drawImage(l.content, -l.width / 2, -l.height / 2, l.width, l.height);
+
+                if (l.id === activeLayerId) {
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -l.height / 2);
+                    ctx.lineTo(0, -l.height / 2 - 30);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(0, -l.height / 2 - 35, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            });
+
+            if (activeLayerId && shiftPressed && isMouseDown) {
+                const layer = layers.find(l => l.id === activeLayerId);
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+                const lX = layer.x, lY = layer.y, lR = layer.x + layer.width, lB = layer.y + layer.height;
+                const lCX = layer.x + layer.width / 2, lCY = layer.y + layer.height / 2;
+                if (Math.abs(lX - 0) < 1) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 1000); ctx.stroke(); }
+                if (Math.abs(lCX - 500) < 1) { ctx.beginPath(); ctx.moveTo(500, 0); ctx.lineTo(500, 1000); ctx.stroke(); }
+                if (Math.abs(lR - 1000) < 1) { ctx.beginPath(); ctx.moveTo(1000, 0); ctx.lineTo(1000, 1000); ctx.stroke(); }
+                if (Math.abs(lY - 0) < 1) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1000, 0); ctx.stroke(); }
+                if (Math.abs(lCY - 500) < 1) { ctx.beginPath(); ctx.moveTo(0, 500); ctx.lineTo(1000, 500); ctx.stroke(); }
+                if (Math.abs(lB - 1000) < 1) { ctx.beginPath(); ctx.moveTo(0, 1000); ctx.lineTo(1000, 1000); ctx.stroke(); }
+                ctx.setLineDash([]);
+            }
+        }
+
+        function setupEventListeners() {
+            canvas.addEventListener('mousedown', e => {
+                const pos = getMousePos(e);
+                const activeLayer = layers.find(l => l.id === activeLayerId);
+                if (activeLayer) {
+                    const centerX = activeLayer.x + activeLayer.width / 2;
+                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    const dx = pos.x - centerX, dy = pos.y - centerY;
+                    const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation);
+                    const localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
+
+                    if (Math.sqrt(Math.pow(localX - 0, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) {
+                        activeLayer.isRotating = true;
+                    } else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) {
+                        activeLayer.isResizing = true;
+                    } else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) {
+                        activeLayer.isDragging = true;
+                        dragOffset.x = pos.x - activeLayer.x;
+                        dragOffset.y = pos.y - activeLayer.y;
+                    }
+                    if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
+                }
+            });
+
+            window.addEventListener('mousemove', e => {
+                if (!isMouseDown) return;
+                const pos = getMousePos(e);
+                const activeLayer = layers.find(l => l.id === activeLayerId);
+                if (activeLayer) {
+                    const centerX = activeLayer.x + activeLayer.width / 2;
+                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    if (activeLayer.isRotating) {
+                        let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2;
+                        if (shiftPressed) {
+                            const deg = (angle * 180 / Math.PI);
+                            angle = (Math.round(deg / 45) * 45) * Math.PI / 180;
+                        }
+                        activeLayer.rotation = angle;
+                    } else if (activeLayer.isResizing) {
+                        const dx = pos.x - centerX, dy = pos.y - centerY;
+                        const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation);
+                        let newWidth = Math.max(20, localX * 2);
+                        if (shiftPressed) {
+                            const snapThreshold = 40;
+                            if (Math.abs(newWidth - 1000) < snapThreshold) newWidth = 1000;
+                            const potentialHeight = newWidth / activeLayer.aspectRatio;
+                            if (Math.abs(potentialHeight - 1000) < snapThreshold) newWidth = 1000 * activeLayer.aspectRatio;
+                        }
+                        const newHeight = newWidth / activeLayer.aspectRatio;
+                        activeLayer.width = newWidth;
+                        activeLayer.height = newHeight;
+                        activeLayer.x = centerX - newWidth / 2;
+                        activeLayer.y = centerY - newHeight / 2;
+                    } else if (activeLayer.isDragging) {
+                        let newX = pos.x - dragOffset.x, newY = pos.y - dragOffset.y;
+                        if (shiftPressed) {
+                            const threshold = 35;
+                            if (Math.abs(newX - 0) < threshold) newX = 0;
+                            else if (Math.abs((newX + activeLayer.width/2) - 500) < threshold) newX = 500 - activeLayer.width / 2;
+                            else if (Math.abs((newX + activeLayer.width) - 1000) < threshold) newX = 1000 - activeLayer.width;
+                            if (Math.abs(newY - 0) < threshold) newY = 0;
+                            else if (Math.abs((newY + activeLayer.height/2) - 500) < threshold) newY = 500 - activeLayer.height / 2;
+                            else if (Math.abs((newY + activeLayer.height) - 1000) < threshold) newY = 1000 - activeLayer.height;
+                        }
+                        activeLayer.x = newX; activeLayer.y = newY;
+                    }
+                    render();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                isMouseDown = false;
+                layers.forEach(l => { l.isDragging = l.isResizing = l.isRotating = false; });
+                render();
+            });
+
+            document.getElementById('prop-opacity').oninput = (e) => {
+                const layer = layers.find(l => l.id === activeLayerId);
+                if (layer) { 
+                    layer.opacity = e.target.value; 
+                    document.getElementById('opacity-val').textContent = e.target.value + '%';
+                    render(); 
+                }
+            };
+
+            document.getElementById('prop-blend').onchange = (e) => {
+                const layer = layers.find(l => l.id === activeLayerId);
+                if (layer) { layer.blend = e.target.value; render(); }
+            };
+
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => addLayer(ev.target.result, file.name);
+                    reader.readAsDataURL(file);
+                    fileInput.value = ""; 
+                }
+            };
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        }
+
+        function toggleVisibility(id) {
+            const layer = layers.find(l => l.id === id);
+            if (layer) { layer.visible = !layer.visible; render(); updateUI(); }
+        }
+
+        function deleteActiveLayer() {
+            layers = layers.filter(l => l.id !== activeLayerId);
+            activeLayerId = layers.length > 0 ? layers[0].id : null;
+            render(); updateUI();
+        }
+
+        function moveLayerUp() {
+            const idx = layers.findIndex(l => l.id === activeLayerId);
+            if (idx > 0) { [layers[idx], layers[idx-1]] = [layers[idx-1], layers[idx]]; render(); updateUI(); }
+        }
+
+        function moveLayerDown() {
+            const idx = layers.findIndex(l => l.id === activeLayerId);
+            if (idx !== -1 && idx < layers.length - 1) { [layers[idx], layers[idx+1]] = [layers[idx+1], layers[idx]]; render(); updateUI(); }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('opacity-100');
+            setTimeout(() => toast.classList.remove('opacity-100'), 2000);
+        }
+
+        function exportImage() {
+            const oldId = activeLayerId; activeLayerId = null; render();
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.download = 'fenix-master-' + Date.now() + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast("Diseño exportado correctamente");
+                setActiveLayer(oldId);
+            }, 100);
+        }
+
+        init();
+    </script>
+</body>
+</html>
