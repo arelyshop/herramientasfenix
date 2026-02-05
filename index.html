@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Sellos de Marca</title>
+    <title>Fenix Editor Pro - Sellos de Marca 1:1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -115,6 +115,9 @@
                     <p class="text-[11px] text-slate-300 leading-relaxed">
                         <span class="text-sky-400 font-bold underline">Shift + Rotar:</span> Snap a 45°/90°.
                     </p>
+                    <p class="text-[11px] text-slate-300 leading-relaxed">
+                        <span class="text-sky-400 font-bold underline">Shift + Escalar:</span> Snap a bordes 1000px.
+                    </p>
                 </div>
             </div>
 
@@ -221,7 +224,13 @@
 
         function createId() { return Math.random().toString(36).substr(2, 9); }
 
-        function addLayer(data, name = "Capa") {
+        /**
+         * Añade una capa de imagen.
+         * @param {string} data - URL o Base64 de la imagen.
+         * @param {string} name - Nombre descriptivo.
+         * @param {boolean} useOriginalSize - Si es true, ignora el escalado inicial y usa el tamaño real del archivo.
+         */
+        function addLayer(data, name = "Capa", useOriginalSize = false) {
             const layer = {
                 id: createId(),
                 name: name,
@@ -235,12 +244,22 @@
             const img = new Image();
             img.onload = () => {
                 layer.aspectRatio = img.width / img.height;
-                const ratio = Math.min(CANVAS_WIDTH * 0.4 / img.width, CANVAS_HEIGHT * 0.4 / img.height);
-                layer.width = img.width * ratio;
-                layer.height = img.height * ratio;
+                
+                if (useOriginalSize) {
+                    // Los logos de marca se cargan 1:1 (1000x1000 si así es el archivo)
+                    layer.width = img.width;
+                    layer.height = img.height;
+                } else {
+                    // Imágenes locales se escalan al 60% inicial para manejo cómodo
+                    const ratio = Math.min(CANVAS_WIDTH * 0.6 / img.width, CANVAS_HEIGHT * 0.6 / img.height);
+                    layer.width = img.width * ratio;
+                    layer.height = img.height * ratio;
+                }
+
                 layer.x = (CANVAS_WIDTH - layer.width) / 2;
                 layer.y = (CANVAS_HEIGHT - layer.height) / 2;
                 layer.content = img;
+                
                 layers.unshift(layer);
                 setActiveLayer(layer.id);
                 render();
@@ -248,12 +267,12 @@
             img.src = data;
         }
 
-        // Función para añadir marca específica desde el servidor
         function addBrand(brand) {
             const path = `images/marcas/logo-${brand}.png`;
             const label = brand.charAt(0).toUpperCase() + brand.slice(1);
-            addLayer(path, `Logo ${label}`);
-            showToast(`Sello ${label} añadido`);
+            // Usamos 'true' para cargar el logo a su tamaño original 1000x1000
+            addLayer(path, `Logo ${label}`, true);
+            showToast(`Sello ${label} añadido al tamaño original`);
         }
 
         function setActiveLayer(id) {
@@ -291,7 +310,7 @@
                         <img src="${l.content.src}" class="w-full h-full object-cover opacity-50">
                     </div>
                     <span class="text-xs font-medium flex-1 truncate">${l.name}</span>
-                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white">
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white transition-colors">
                         ${l.visible ? '👁️' : '🕶️'}
                     </button>
                 `;
@@ -352,6 +371,7 @@
                 ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
                 const lX = layer.x, lY = layer.y, lR = layer.x + layer.width, lB = layer.y + layer.height;
                 const lCX = layer.x + layer.width / 2, lCY = layer.y + layer.height / 2;
+                
                 if (Math.abs(lX - 0) < 1) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 1000); ctx.stroke(); }
                 if (Math.abs(lCX - 500) < 1) { ctx.beginPath(); ctx.moveTo(500, 0); ctx.lineTo(500, 1000); ctx.stroke(); }
                 if (Math.abs(lR - 1000) < 1) { ctx.beginPath(); ctx.moveTo(1000, 0); ctx.lineTo(1000, 1000); ctx.stroke(); }
@@ -456,7 +476,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (ev) => addLayer(ev.target.result, file.name);
+                    reader.onload = (ev) => addLayer(ev.target.result, file.name, false);
                     reader.readAsDataURL(file);
                     fileInput.value = ""; 
                 }
