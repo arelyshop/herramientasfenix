@@ -12,7 +12,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #0f172a;
             color: #f8fafc;
-            overflow: hidden;
+            overflow: hidden; /* Evita el scroll global */
         }
 
         .editor-container {
@@ -27,17 +27,33 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: auto; /* Permite scroll si el canvas de 1000px es más grande que la pantalla */
             position: relative;
+            padding: 2rem;
+            overflow: hidden; /* El canvas se ajustará, no necesita scroll interno */
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Asegura que el contenedor respete el alto del canvas escalado */
+            height: 100%; 
+            width: 100%;
         }
 
         canvas {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             background-color: white;
             cursor: crosshair;
-            /* El tamaño visual se mantiene contenido pero el interno es 1000x1000 */
-            max-width: 100%;
+            
+            /* AJUSTE DINÁMICO AL ALTO DE PANTALLA */
+            max-height: 85vh; /* Se ajusta al 85% del alto de la ventana */
+            max-width: 100%;  /* No se sale por los lados */
             height: auto;
+            width: auto;
+            aspect-ratio: 1 / 1; /* Mantiene la proporción 1000x1000 */
+            object-fit: contain;
         }
 
         .layer-item.active {
@@ -97,9 +113,9 @@
         </aside>
 
         <!-- Área Central del Canvas (Mesa de Trabajo) -->
-        <main class="canvas-area relative p-12">
-            <div id="canvas-wrapper" class="relative">
-                <!-- Mesa de trabajo fijada a 1000x1000 -->
+        <main class="canvas-area relative">
+            <div id="canvas-wrapper">
+                <!-- Resolución interna fija de 1000x1000 -->
                 <canvas id="mainCanvas" width="1000" height="1000"></canvas>
                 <div id="crop-guide" class="absolute border-2 border-dashed border-sky-400 bg-sky-400/10 pointer-events-none hidden"></div>
             </div>
@@ -131,8 +147,10 @@
                     </div>
                     <div class="flex gap-2">
                         <button onclick="deleteActiveLayer()" class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg text-xs font-bold transition-all">Eliminar</button>
-                        <button onclick="moveLayerUp()" class="bg-slate-800 p-2 rounded-lg text-xs" title="Subir">↑</button>
-                        <button onclick="moveLayerDown()" class="bg-slate-800 p-2 rounded-lg text-xs" title="Bajar">↓</button>
+                        <div class="flex flex-col gap-1">
+                            <button onclick="moveLayerUp()" class="bg-slate-800 p-1 px-2 rounded text-[10px]" title="Subir">↑</button>
+                            <button onclick="moveLayerDown()" class="bg-slate-800 p-1 px-2 rounded text-[10px]" title="Bajar">↓</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -141,7 +159,7 @@
             <div class="flex-1 p-6 overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <p class="text-[10px] font-bold text-slate-500 uppercase">Capas</p>
-                    <button onclick="addNewDrawingLayer()" class="text-sky-500 hover:text-sky-400 text-[10px] font-bold">+ NUEVA CAPA DIBUJO</button>
+                    <button onclick="addNewDrawingLayer()" class="text-sky-500 hover:text-sky-400 text-[10px] font-bold">+ DIBUJO</button>
                 </div>
                 <div id="layer-list" class="space-y-2">
                     <!-- Las capas se inyectan aquí -->
@@ -151,7 +169,7 @@
     </div>
 
     <!-- Feedback Visual -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">
         Mensaje aquí
     </div>
 
@@ -189,8 +207,8 @@
                 visible: true,
                 opacity: 100,
                 blend: 'source-over',
-                x: 100, // Coordenada inicial más centrada en 1000x1000
-                y: 100,
+                x: 150, 
+                y: 150,
                 width: 0,
                 height: 0,
                 content: data,
@@ -199,7 +217,7 @@
             if (type === 'image') {
                 const img = new Image();
                 img.onload = () => {
-                    const ratio = Math.min(CANVAS_WIDTH * 0.8 / img.width, CANVAS_HEIGHT * 0.8 / img.height);
+                    const ratio = Math.min(CANVAS_WIDTH * 0.7 / img.width, CANVAS_HEIGHT * 0.7 / img.height);
                     layer.width = img.width * ratio;
                     layer.height = img.height * ratio;
                     layer.content = img;
@@ -284,7 +302,7 @@
                     ctx.lineWidth = 2;
                     ctx.strokeRect(l.x, l.y, l.width, l.height);
                     ctx.fillStyle = '#38bdf8';
-                    ctx.fillRect(l.x + l.width - 6, l.y + l.height - 6, 12, 12);
+                    ctx.fillRect(l.x + l.width - 8, l.y + l.height - 8, 16, 16);
                 }
                 
                 ctx.restore();
@@ -301,10 +319,10 @@
                 const activeLayer = layers.find(l => l.id === activeLayerId);
 
                 if (currentMode === 'select' && activeLayer) {
-                    const isResizing = (pos.x >= activeLayer.x + activeLayer.width - 15 && 
-                                       pos.x <= activeLayer.x + activeLayer.width + 15 &&
-                                       pos.y >= activeLayer.y + activeLayer.height - 15 && 
-                                       pos.y <= activeLayer.y + activeLayer.height + 15);
+                    const isResizing = (pos.x >= activeLayer.x + activeLayer.width - 20 && 
+                                       pos.x <= activeLayer.x + activeLayer.width + 20 &&
+                                       pos.y >= activeLayer.y + activeLayer.height - 20 && 
+                                       pos.y <= activeLayer.y + activeLayer.height + 20);
                     
                     if (isResizing) {
                         activeLayer.isResizing = true;
@@ -327,8 +345,8 @@
 
                 if (currentMode === 'select' && activeLayer) {
                     if (activeLayer.isResizing) {
-                        activeLayer.width = pos.x - activeLayer.x;
-                        activeLayer.height = pos.y - activeLayer.y;
+                        activeLayer.width = Math.max(10, pos.x - activeLayer.x);
+                        activeLayer.height = Math.max(10, pos.y - activeLayer.y);
                     } else if (activeLayer.isDragging) {
                         activeLayer.x = pos.x - dragOffset.x;
                         activeLayer.y = pos.y - dragOffset.y;
@@ -381,10 +399,12 @@
                     const reader = new FileReader();
                     reader.onload = (ev) => addLayer('image', ev.target.result, file.name);
                     reader.readAsDataURL(file);
+                    fileInput.value = ""; // Reset for same file
                 }
             };
         }
 
+        // Función crítica: traduce coordenadas visuales escaladas a coordenadas internas 1000x1000
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -436,12 +456,11 @@
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
-            if (confirm("¿Aplicar recorte? Esto combinará las capas y mantendrá el lienzo en 1000x1000.")) {
+            if (confirm("¿Deseas aplicar el recorte? Esto combinará las capas en una sola de 1000x1000.")) {
                 const croppedData = tempCanvas.toDataURL();
                 layers = [];
-                // Al añadir la nueva capa, se ajustará al 80% de los 1000px como de costumbre
-                addLayer('image', croppedData, 'Imagen Recortada');
-                showToast("Área recortada con éxito");
+                addLayer('image', croppedData, 'Resultado Recorte');
+                showToast("Recorte finalizado.");
             }
 
             cropGuide.classList.add('hidden');
@@ -493,10 +512,10 @@
             setActiveLayer(null);
             setTimeout(() => {
                 const link = document.createElement('a');
-                link.download = 'fenix-1000x1000-' + Date.now() + '.png';
+                link.download = 'fenix-master-' + Date.now() + '.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                showToast("Exportado a 1000x1000px");
+                showToast("Archivo exportado a 1000x1000px");
             }, 100);
         }
 
