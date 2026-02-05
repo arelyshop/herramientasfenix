@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Sellos con Posición Fija</title>
+    <title>Fenix Editor Pro - Capas Drag & Drop</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -53,9 +53,19 @@
             object-fit: contain;
         }
 
+        /* Estilos de Capas */
         .layer-item.active {
-            background-color: #334155;
+            background-color: #1e293b;
             border-left: 4px solid #38bdf8;
+        }
+
+        .layer-item.dragging {
+            opacity: 0.5;
+            background-color: #334155;
+        }
+
+        .layer-item.drag-over {
+            border-top: 2px solid #38bdf8;
         }
 
         .brand-btn:hover {
@@ -79,28 +89,28 @@
                 <h1 class="text-lg font-bold tracking-tight">Fenix Pro</h1>
             </div>
 
-            <!-- Sección de Marcas (Recursos) -->
+            <!-- Sección de Marcas -->
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Recursos / Marcas</p>
                 <div class="grid grid-cols-1 gap-2 px-1">
                     <button onclick="addBrand('ugreen')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
-                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">UG</div>
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">UG</div>
                         <span class="text-xs font-semibold">Ugreen</span>
                     </button>
                     <button onclick="addBrand('anker')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
-                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">AN</div>
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">AN</div>
                         <span class="text-xs font-semibold">Anker</span>
                     </button>
                     <button onclick="addBrand('dimax')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
-                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">DX</div>
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">DX</div>
                         <span class="text-xs font-semibold">Dimax</span>
                     </button>
                     <button onclick="addBrand('baseus')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
-                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">BS</div>
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">BS</div>
                         <span class="text-xs font-semibold">Baseus</span>
                     </button>
                     <button onclick="addBrand('havit')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
-                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold">HV</div>
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">HV</div>
                         <span class="text-xs font-semibold">Havit</span>
                     </button>
                 </div>
@@ -108,10 +118,8 @@
 
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Ayuda de Teclado</p>
-                <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 space-y-2">
-                    <p class="text-[11px] text-slate-300 leading-relaxed">
-                        <span class="text-sky-400 font-bold underline">Shift:</span> Imanta la imagen a centros, bordes y ángulos de 45°.
-                    </p>
+                <div class="p-3 bg-slate-800/50 rounded-xl border border-slate-700 space-y-2 text-[11px] text-slate-300">
+                    <p><span class="text-sky-400 font-bold underline">Shift:</span> Imanta a centros, bordes y ángulos de 45°.</p>
                 </div>
             </div>
 
@@ -139,9 +147,9 @@
         <aside class="bg-slate-900 border-l border-slate-800 flex flex-col">
             <!-- Propiedades -->
             <div class="p-6 border-b border-slate-800">
-                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4">Propiedades de Capa</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
                 
-                <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa para editar</div>
+                <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
                 
                 <div id="layer-props" class="hidden space-y-5">
                     <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-xs font-bold transition-all">
@@ -168,21 +176,15 @@
                         </select>
                     </div>
 
-                    <div class="flex gap-2 pt-2">
-                        <button onclick="deleteActiveLayer()" class="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all">Eliminar</button>
-                        <div class="flex gap-1">
-                            <button onclick="moveLayerUp()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg text-xs" title="Subir Capa">↑</button>
-                            <button onclick="moveLayerDown()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg text-xs" title="Bajar Capa">↓</button>
-                        </div>
-                    </div>
+                    <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all">Eliminar Capa</button>
                 </div>
             </div>
 
             <!-- Lista de Capas -->
             <div class="flex-1 p-6 overflow-y-auto">
-                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4">Capas</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas (Arrastra para ordenar)</p>
                 <div id="layer-list" class="space-y-2">
-                    <!-- Las capas se inyectan aquí -->
+                    <!-- Inyectado por JS -->
                 </div>
             </div>
         </aside>
@@ -207,6 +209,7 @@
         let isMouseDown = false;
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
+        let draggedItemIdx = null; // Para Drag & Drop de la lista
 
         function init() {
             render();
@@ -218,12 +221,6 @@
 
         function createId() { return Math.random().toString(36).substr(2, 9); }
 
-        /**
-         * Añade una capa de imagen.
-         * @param {string} data - URL o Base64 de la imagen.
-         * @param {string} name - Nombre descriptivo.
-         * @param {string} brandKey - Si viene de addBrand, indica qué marca es para posicionar.
-         */
         function addLayer(data, name = "Capa", brandKey = null) {
             const layer = {
                 id: createId(),
@@ -242,31 +239,25 @@
                 layer.height = img.height;
                 layer.content = img;
 
-                // POSICIONAMIENTO POR DEFECTO SEGÚN REGLAS DE NEGOCIO
                 if (brandKey) {
                     switch (brandKey) {
                         case 'ugreen':
-                            // MARGEN SUPERIOR CENTRADO
                             layer.x = (CANVAS_WIDTH - layer.width) / 2;
                             layer.y = 0;
                             break;
                         case 'anker':
-                            // SUPERIOR A 55PX DEL IZQUIERDO
                             layer.x = 55;
                             layer.y = 0;
                             break;
                         case 'dimax':
-                            // IZQUIERDO A 85PX DEL INFERIOR
                             layer.x = 0;
                             layer.y = CANVAS_HEIGHT - layer.height - 85;
                             break;
                         case 'baseus':
-                            // SUPERIOR A 45PX DEL IZQUIERDO
                             layer.x = 45;
                             layer.y = 0;
                             break;
                         case 'havit':
-                            // IZQUIERDO A 95PX DEL INFERIOR
                             layer.x = 0;
                             layer.y = CANVAS_HEIGHT - layer.height - 95;
                             break;
@@ -275,7 +266,6 @@
                             layer.y = (CANVAS_HEIGHT - layer.height) / 2;
                     }
                 } else {
-                    // Imágenes locales: tamaño relativo y centradas
                     const ratio = Math.min(CANVAS_WIDTH * 0.7 / img.width, CANVAS_HEIGHT * 0.7 / img.height);
                     layer.width = img.width * ratio;
                     layer.height = img.height * ratio;
@@ -293,8 +283,8 @@
         function addBrand(brand) {
             const path = `images/marcas/logo-${brand}.png`;
             const label = brand.charAt(0).toUpperCase() + brand.slice(1);
-            addLayer(path, `Logo ${label}`, brand);
-            showToast(`${label} ubicado en su posición estándar`);
+            addLayer(path, `${label}`, brand);
+            showToast(`${label} añadido`);
         }
 
         function setActiveLayer(id) {
@@ -321,19 +311,52 @@
             }
         }
 
+        // --- GESTIÓN DE UI Y DRAG & DROP DE LISTA ---
+
         function updateUI() {
             layerListEl.innerHTML = '';
-            layers.forEach(l => {
+            layers.forEach((l, index) => {
                 const div = document.createElement('div');
-                div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/50 ${activeLayerId === l.id ? 'active' : ''}`;
+                div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${activeLayerId === l.id ? 'active' : ''}`;
+                div.draggable = true;
+                div.dataset.index = index;
+
+                // Eventos Drag & Drop de la lista
+                div.ondragstart = (e) => {
+                    draggedItemIdx = index;
+                    div.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                };
+                div.ondragover = (e) => {
+                    e.preventDefault();
+                    div.classList.add('drag-over');
+                };
+                div.ondragleave = () => div.classList.remove('drag-over');
+                div.ondrop = (e) => {
+                    e.preventDefault();
+                    div.classList.remove('drag-over');
+                    const targetIdx = index;
+                    if (draggedItemIdx !== null && draggedItemIdx !== targetIdx) {
+                        const movedItem = layers.splice(draggedItemIdx, 1)[0];
+                        layers.splice(targetIdx, 0, movedItem);
+                        render();
+                        updateUI();
+                    }
+                };
+                div.ondragend = () => div.classList.remove('dragging');
+
                 div.onclick = () => setActiveLayer(l.id);
+                
                 div.innerHTML = `
-                    <div class="w-8 h-8 bg-slate-800 rounded overflow-hidden border border-slate-700">
-                        <img src="${l.content.src}" class="w-full h-full object-cover opacity-50">
+                    <div class="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3z"/></svg>
                     </div>
-                    <span class="text-xs font-medium flex-1 truncate">${l.name}</span>
-                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="text-slate-500 hover:text-white">
-                        ${l.visible ? '👁️' : '🕶️'}
+                    <div class="w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0">
+                        <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? 'opacity-80' : 'opacity-20 grayscale'}">
+                    </div>
+                    <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600 italic' : ''}">${l.name}</span>
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 text-slate-500 hover:text-white transition-colors">
+                        ${l.visible ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>'}
                     </button>
                 `;
                 layerListEl.appendChild(div);
@@ -355,9 +378,12 @@
             }
         }
 
+        // --- RENDERIZADO DEL LIENZO ---
+
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Dibujamos de atrás (final de array) hacia adelante (inicio de array)
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
@@ -373,8 +399,10 @@
                     ctx.strokeStyle = '#38bdf8';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
+                    // Manejador redimensión
                     ctx.fillStyle = '#38bdf8';
                     ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
+                    // Manejador rotación
                     ctx.beginPath();
                     ctx.moveTo(0, -l.height / 2);
                     ctx.lineTo(0, -l.height / 2 - 30);
@@ -386,6 +414,7 @@
                 ctx.restore();
             });
 
+            // Guías de alineación (Snap Visual)
             if (activeLayerId && shiftPressed && isMouseDown) {
                 const layer = layers.find(l => l.id === activeLayerId);
                 ctx.setLineDash([5, 5]);
@@ -403,6 +432,8 @@
                 ctx.setLineDash([]);
             }
         }
+
+        // --- EVENTOS DEL MOUSE PARA EL LIENZO ---
 
         function setupEventListeners() {
             canvas.addEventListener('mousedown', e => {
@@ -523,16 +554,6 @@
             render(); updateUI();
         }
 
-        function moveLayerUp() {
-            const idx = layers.findIndex(l => l.id === activeLayerId);
-            if (idx > 0) { [layers[idx], layers[idx-1]] = [layers[idx-1], layers[idx]]; render(); updateUI(); }
-        }
-
-        function moveLayerDown() {
-            const idx = layers.findIndex(l => l.id === activeLayerId);
-            if (idx !== -1 && idx < layers.length - 1) { [layers[idx], layers[idx+1]] = [layers[idx+1], layers[idx]]; render(); updateUI(); }
-        }
-
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.textContent = msg;
@@ -544,10 +565,10 @@
             const oldId = activeLayerId; activeLayerId = null; render();
             setTimeout(() => {
                 const link = document.createElement('a');
-                link.download = 'fenix-master-' + Date.now() + '.png';
+                link.download = 'fenix-design-' + Date.now() + '.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                showToast("Diseño exportado correctamente");
+                showToast("Exportado correctamente");
                 setActiveLayer(oldId);
             }, 100);
         }
