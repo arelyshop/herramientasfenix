@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Máscaras y Orden Corregido</title>
+    <title>Fenix Editor Pro - Exportación Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -88,7 +88,6 @@
             outline-offset: 4px;
         }
 
-        /* Estilo para botón de herramienta activa */
         .tool-active {
             background-color: #38bdf8 !important;
             color: #0f172a !important;
@@ -141,8 +140,8 @@
 
             <div id="mask-help-box" class="hidden space-y-3 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
                 <p class="text-[10px] font-bold text-red-400 uppercase tracking-tighter">Editando Máscara</p>
-                <p class="text-[11px] text-slate-300 leading-tight">Haz clic y arrastra sobre la imagen para recortar.</p>
-                <button onclick="exitMaskMode()" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg transition-all">TERMINAR EDICIÓN</button>
+                <p class="text-[11px] text-slate-300 leading-tight">Usa el mouse para pintar o seleccionar el área de recorte.</p>
+                <button onclick="exitMaskMode()" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg transition-all">SALIR DE MÁSCARA</button>
             </div>
 
             <div class="mt-auto pt-4 space-y-4">
@@ -152,9 +151,20 @@
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept="image/*">
                 </label>
-                <button onclick="exportImage()" class="w-full border border-slate-700 hover:bg-slate-800 py-3 rounded-xl text-sm font-medium transition-all text-slate-300">
-                    Exportar PNG
-                </button>
+                
+                <div class="space-y-2 border-t border-slate-800 pt-4">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-2 tracking-widest">Descargar</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportImage('png')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
+                            <span class="text-[10px] font-bold text-sky-400">PNG</span>
+                            <span class="text-[8px] text-slate-500 uppercase">Transparente</span>
+                        </button>
+                        <button onclick="exportImage('jpeg')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
+                            <span class="text-[10px] font-bold text-emerald-400">JPG</span>
+                            <span class="text-[8px] text-slate-500 uppercase">Fondo Blanco</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -178,12 +188,12 @@
                     <div class="space-y-3">
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
-                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
+                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Pincel</button>
+                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Rectángulo</button>
                         </div>
                         <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
                             <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-400">ACCIÓN:</span>
+                                <span class="text-[10px] text-slate-400 uppercase">Acción:</span>
                                 <div class="flex gap-1">
                                     <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
                                     <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded">Ocultar</button>
@@ -193,7 +203,7 @@
                                 <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
                                 <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-sky-500">
                             </div>
-                            <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 font-bold uppercase hover:bg-red-500/10 rounded">Borrar Máscara</button>
+                            <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 font-bold uppercase transition-all">Reiniciar Máscara</button>
                         </div>
                     </div>
 
@@ -344,15 +354,13 @@
             document.getElementById('mask-controls-panel').classList.remove('hidden');
             document.getElementById('mask-help-box').classList.remove('hidden');
             canvas.classList.add('mask-active-canvas');
-            
-            // Actualizar botones de herramienta
             document.getElementById('btn-mask-brush').classList.remove('tool-active');
             document.getElementById('btn-mask-rect').classList.remove('tool-active');
             if (mode === 'brush') {
                 document.getElementById('btn-mask-brush').classList.add('tool-active');
                 brushCursor.style.display = 'block';
                 updateBrushCursorVisual();
-            } else if (mode === 'rect') {
+            } else {
                 document.getElementById('btn-mask-rect').classList.add('tool-active');
                 brushCursor.style.display = 'none';
             }
@@ -364,11 +372,8 @@
             document.getElementById('mask-controls-panel').classList.add('hidden');
             document.getElementById('mask-help-box').classList.add('hidden');
             canvas.classList.remove('mask-active-canvas');
-            
-            // Limpiar estilos de botones
             document.getElementById('btn-mask-brush').classList.remove('tool-active');
             document.getElementById('btn-mask-rect').classList.remove('tool-active');
-            
             brushCursor.style.display = 'none';
             selectionGuide.style.display = 'none';
             render();
@@ -432,8 +437,15 @@
             render();
         }
 
-        function render() {
+        function render(drawBackground = false) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Si es JPG, dibujamos fondo blanco primero
+            if (drawBackground) {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
@@ -449,7 +461,7 @@
                 mbfCtx.globalCompositeOperation = 'destination-in';
                 mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
                 ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
-                if (l.id === activeLayerId && !maskMode) {
+                if (l.id === activeLayerId && !maskMode && !drawBackground) {
                     ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
                     ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
                     ctx.fillStyle = '#38bdf8'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
@@ -459,7 +471,7 @@
                 ctx.restore();
             });
 
-            if (activeLayerId && shiftPressed && isMouseDown && !maskMode) {
+            if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !drawBackground) {
                 const layer = layers.find(l => l.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
                 const lX = layer.x, lCX = layer.x + layer.width/2, lR = layer.x + layer.width;
@@ -497,7 +509,6 @@
                     }
                     return;
                 }
-
                 if (Math.sqrt(Math.pow(localX - 0, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) { activeLayer.isRotating = true; }
                 else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) { activeLayer.isResizing = true; }
                 else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) {
@@ -673,12 +684,36 @@
             setTimeout(() => toast.classList.remove('opacity-100'), 2000);
         }
 
-        function exportImage() {
-            const oldId = activeLayerId; activeLayerId = null; render();
+        /**
+         * Exporta la imagen en el formato deseado.
+         * @param {string} format - 'png' o 'jpeg'
+         */
+        function exportImage(format = 'png') {
+            // Desactivar temporalmente selección y modo máscara para exportación limpia
+            const oldId = activeLayerId;
+            const oldMaskMode = maskMode;
+            activeLayerId = null;
+            maskMode = false;
+
+            // Renderizar con fondo blanco si es JPEG
+            render(format === 'jpeg');
+
             setTimeout(() => {
-                const link = document.createElement('a'); link.download = 'fenix-master-' + Date.now() + '.png';
-                link.href = canvas.toDataURL('image/png'); link.click();
-                setActiveLayer(oldId);
+                const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const quality = format === 'jpeg' ? 0.92 : 1.0;
+                
+                const link = document.createElement('a');
+                link.download = `fenix-design-${Date.now()}.${format}`;
+                link.href = canvas.toDataURL(mimeType, quality);
+                link.click();
+                
+                showToast(`Exportado como ${format.toUpperCase()}`);
+                
+                // Restaurar estado anterior
+                activeLayerId = oldId;
+                maskMode = oldMaskMode;
+                render();
+                updateUI();
             }, 100);
         }
 
