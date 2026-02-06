@@ -53,9 +53,15 @@
             object-fit: contain;
         }
 
+        /* Estilo de Capa Seleccionada */
         .layer-item.active {
-            background-color: #1e293b;
+            background-color: #334155 !important;
             border-left: 4px solid #f43f5e;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .layer-item.active .thumb-container {
+            border-color: #f43f5e;
         }
 
         /* Indicador de Pincel */
@@ -92,13 +98,14 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        
+        input[type=range] { accent-color: #f43f5e; }
     </style>
 </head>
 <body>
 
     <div id="brush-cursor"></div>
 
-    <!-- Modal para ingresar texto de medida -->
     <div id="textModal" class="fixed inset-0 flex items-center justify-center hidden">
         <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl w-80 border border-slate-700">
             <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Ingresa la medida</h3>
@@ -118,7 +125,7 @@
                 <h1 class="text-lg font-bold tracking-tight text-slate-100">Arelyshop Pro</h1>
             </div>
 
-            <!-- Herramientas Principales -->
+            <!-- Herramientas -->
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest">Herramientas</p>
                 <div class="grid grid-cols-2 gap-2">
@@ -130,7 +137,6 @@
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" class="mb-1"><path d="M680-280q-72 0-127-45.5T484-440H272q-12 27-37 43.5T180-380q-42 0-71-29t-29-71q0-42 29-71t71-29q30 0 55 16.5t37 43.5h212q14-69 69-114.5T680-680q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280Zm85-115q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Z"/></svg>
                         <span class="text-[9px] font-bold uppercase">Medida</span>
                     </button>
-                    <!-- Nueva Herramienta Estilos con Nuevo Icono -->
                     <button onclick="setEditorMode('styles')" id="btn-mode-styles" class="col-span-2 flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
                         <span class="text-[9px] font-bold uppercase">Estilos (Color)</span>
@@ -206,29 +212,43 @@
             <div class="p-6 border-b border-slate-800">
                 <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
                 
-                <!-- Panel de Medidas -->
+                <!-- Panel Medidas -->
                 <div id="measure-props" class="hidden space-y-4">
                     <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
                     <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
-                    <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all">Borrar medidas</button>
+                    <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all uppercase">Borrar medidas</button>
                 </div>
 
-                <!-- Panel de Estilos (Niveles) -->
-                <div id="styles-props" class="hidden space-y-4">
+                <!-- Panel Estilos -->
+                <div id="styles-props" class="hidden space-y-6">
                     <div class="space-y-4">
-                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Niveles</p>
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">HUE / Color</p>
+                        <div class="space-y-4 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                            <div>
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Tono (Hue) <span id="val-hue">0°</span></label>
+                                <input type="range" id="input-hue" min="-180" max="180" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Saturación <span id="val-sat">100%</span></label>
+                                <input type="range" id="input-sat" min="0" max="200" value="100" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="h-px bg-slate-800"></div>
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Niveles</p>
                         <div class="space-y-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
                             <div>
                                 <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Negros <span id="val-lv-black">0</span></label>
-                                <input type="range" id="input-lv-black" min="0" max="250" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                                <input type="range" id="input-lv-black" min="0" max="250" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                             </div>
                             <div>
                                 <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Medios <span id="val-lv-mid">1.0</span></label>
-                                <input type="range" id="input-lv-mid" min="0.1" max="3" step="0.1" value="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                                <input type="range" id="input-lv-mid" min="0.1" max="3" step="0.1" value="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                             </div>
                             <div>
                                 <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Blancos <span id="val-lv-white">255</span></label>
-                                <input type="range" id="input-lv-white" min="5" max="255" value="255" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                                <input type="range" id="input-lv-white" min="5" max="255" value="255" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                             </div>
                         </div>
                     </div>
@@ -237,63 +257,57 @@
                 <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
                 
                 <div id="layer-props" class="hidden space-y-6">
-                    <!-- Máscara (Dentro de Editor) -->
-                    <div class="space-y-3">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
-                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
-                        </div>
-                        <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
-                                <div class="flex gap-1">
-                                    <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
-                                    <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
+                    <div id="editor-specific-props">
+                        <div class="space-y-3">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
+                                <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
+                            </div>
+                            <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
+                                    <div class="flex gap-1">
+                                        <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
+                                        <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
+                                    </div>
                                 </div>
+                                <div>
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
+                                    <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-rose-500">
+                                </div>
+                                <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 font-bold uppercase transition-all">Reiniciar</button>
+                            </div>
+                        </div>
+                        <div class="h-px bg-slate-800 my-6"></div>
+                        <div class="space-y-4">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Transformación</p>
+                            <div>
+                                <label class="flex justify-between text-xs text-slate-400 mb-2 italic"><span>Escala</span><span id="scale-val">100%</span></label>
+                                <input type="range" id="prop-scale" min="5" max="200" value="100" class="w-full accent-rose-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Ajustar Lienzo</button>
+                        </div>
+                        <div class="h-px bg-slate-800 my-6"></div>
+                        <div class="space-y-4">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Apariencia</p>
+                            <div>
+                                <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
+                                <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-rose-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                             </div>
                             <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
-                                <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-rose-500">
+                                <label class="block text-xs text-slate-400 mb-2">Fusión</label>
+                                <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-rose-500 text-white">
+                                    <option value="source-over">Normal</option>
+                                    <option value="multiply">Multiplicar</option>
+                                    <option value="screen">Trama</option>
+                                    <option value="overlay">Superponer</option>
+                                    <option value="darken">Oscurecer</option>
+                                    <option value="lighten">Aclarar</option>
+                                </select>
                             </div>
-                            <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 font-bold uppercase transition-all">Reiniciar</button>
                         </div>
                     </div>
-
-                    <div class="h-px bg-slate-800"></div>
-
-                    <!-- Transformaciones -->
-                    <div class="space-y-4">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Transformación</p>
-                        <div>
-                            <label class="flex justify-between text-xs text-slate-400 mb-2 italic"><span>Escala</span><span id="scale-val">100%</span></label>
-                            <input type="range" id="prop-scale" min="5" max="200" value="100" class="w-full accent-rose-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        </div>
-                        <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Ajustar Lienzo</button>
-                    </div>
-
-                    <div class="h-px bg-slate-800"></div>
-
-                    <!-- Apariencia -->
-                    <div class="space-y-4">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Apariencia</p>
-                        <div>
-                            <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
-                            <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-rose-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-2">Fusión</label>
-                            <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-rose-500 text-white">
-                                <option value="source-over">Normal</option>
-                                <option value="multiply">Multiplicar</option>
-                                <option value="screen">Trama</option>
-                                <option value="overlay">Superponer</option>
-                                <option value="darken">Oscurecer</option>
-                                <option value="lighten">Aclarar</option>
-                            </select>
-                        </div>
-                    </div>
-
                     <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
                 </div>
             </div>
@@ -324,7 +338,7 @@
 
         let layers = [];
         let activeLayerId = null;
-        let editorMode = 'move'; // 'move', 'measure', 'styles'
+        let editorMode = 'move'; 
         let isMouseDown = false;
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
@@ -369,6 +383,7 @@
                 content: null,
                 maskCanvas: null,
                 levels: { black: 0, gamma: 1.0, white: 255 },
+                hsl: { hue: 0, saturation: 1.0 },
                 processedCanvas: document.createElement('canvas')
             };
 
@@ -402,7 +417,7 @@
                     layer.x = (CANVAS_WIDTH-layer.width)/2; layer.y = (CANVAS_HEIGHT-layer.height)/2;
                 }
 
-                applyLevels(layer);
+                applyEffects(layer);
                 layers.unshift(layer);
                 setActiveLayer(layer.id);
                 render();
@@ -410,13 +425,14 @@
             img.src = data;
         }
 
-        function applyLevels(layer) {
+        function applyEffects(layer) {
             if (!layer.content) return;
             const pCtx = layer.processedCanvas.getContext('2d');
             pCtx.drawImage(layer.content, 0, 0);
             const imageData = pCtx.getImageData(0, 0, layer.processedCanvas.width, layer.processedCanvas.height);
             const data = imageData.data;
             const { black, gamma, white } = layer.levels;
+            const { hue, saturation } = layer.hsl;
             const range = white - black;
             const lut = new Uint8ClampedArray(256);
             for (let i = 0; i < 256; i++) {
@@ -426,14 +442,21 @@
                 lut[i] = v * 255;
             }
             for (let i = 0; i < data.length; i += 4) {
-                data[i] = lut[data[i]]; data[i+1] = lut[data[i+1]]; data[i+2] = lut[data[i+2]];
+                let r = lut[data[i]], g = lut[data[i+1]], b = lut[data[i+2]];
+                if (hue !== 0 || saturation !== 1.0) {
+                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                    r = gray + saturation * (r - gray); g = gray + saturation * (g - gray); b = gray + saturation * (b - gray);
+                    if (hue !== 0) {
+                        const a = hue * Math.PI / 180, u = Math.cos(a), w = Math.sin(a);
+                        const nr = (.299+.701*u+.168*w)*r + (.587-.587*u+.330*w)*g + (.114-.114*u-.497*w)*b;
+                        const ng = (.299-.299*u-.328*w)*r + (.587+.413*u+.035*w)*g + (.114-.114*u+.292*w)*b;
+                        const nb = (.299-.3*u-1.25*w)*r + (.587-.588*u-1.05*w)*g + (.114+.886*u-.203*w)*b;
+                        r = nr; g = ng; b = nb;
+                    }
+                }
+                data[i] = r; data[i+1] = g; data[i+2] = b;
             }
             pCtx.putImageData(imageData, 0, 0);
-        }
-
-        function addBrand(brand) {
-            const path = `images/marcas/logo-${brand}.png`;
-            addLayer(path, `${brand.toUpperCase()}`, brand);
         }
 
         function setActiveLayer(id) {
@@ -448,12 +471,11 @@
             document.getElementById('btn-mode-move').className = mode === 'move' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-measure').className = mode === 'measure' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-styles').className = mode === 'styles' ? 'tool-active flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all' : 'flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
-            
             document.getElementById('measure-props').classList.toggle('hidden', mode !== 'measure');
             document.getElementById('styles-props').classList.toggle('hidden', mode !== 'styles');
-            
+            document.getElementById('editor-specific-props').classList.toggle('hidden', mode !== 'move');
             if (mode === 'measure') { activeLayerId = null; exitMaskMode(); }
-            if (mode === 'styles') { exitMaskMode(); }
+            if (mode === 'styles') exitMaskMode();
             updateUI();
             render();
         }
@@ -490,8 +512,8 @@
 
         function setMaskAction(action) {
             maskAction = action;
-            document.getElementById('m-action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
-            document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
+            document.getElementById('m-action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
+            document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
         }
 
         function resetMask() {
@@ -521,8 +543,7 @@
             const layer = layers.find(l => l.id === activeLayerId);
             if (!layer) return;
             const mCtx = layer.maskCanvas.getContext('2d');
-            const imgX1 = (x1 / layer.width) * layer.maskCanvas.width, imgY1 = (y1 / layer.height) * layer.maskCanvas.height;
-            const imgX2 = (x2 / layer.width) * layer.maskCanvas.width, imgY2 = (y2 / layer.height) * layer.maskCanvas.height;
+            const imgX1 = (x1 / layer.width) * layer.maskCanvas.width, imgY1 = (y1 / layer.height) * layer.maskCanvas.height, imgX2 = (x2 / layer.width) * layer.maskCanvas.width, imgY2 = (y2 / layer.height) * layer.maskCanvas.height;
             mCtx.save(); mCtx.globalCompositeOperation = maskAction === 'reveal' ? 'source-over' : 'destination-out';
             mCtx.fillStyle = 'white'; mCtx.fillRect(imgX1, imgY1, imgX2 - imgX1, imgY2 - imgY1);
             mCtx.restore(); render();
@@ -535,32 +556,20 @@
             ctx.save();
             ctx.strokeStyle = '#000000'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
             ctx.translate(x1, y1); ctx.rotate(angle);
-            let gap = 0;
-            if (text) { ctx.font = "29px Inter, sans-serif"; gap = ctx.measureText(text).width + 30; }
+            let gap = 0; if (text) { ctx.font = "29px Inter, sans-serif"; gap = ctx.measureText(text).width + 30; }
             if (text && dist > gap) {
                 ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(dist/2 - gap/2, 0); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(dist/2 + gap/2, 0); ctx.lineTo(dist, 0); ctx.stroke();
             } else { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(dist, 0); ctx.stroke(); }
-            const barLen = 15; ctx.beginPath(); ctx.moveTo(0, -barLen); ctx.lineTo(0, barLen); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(dist, -barLen); ctx.lineTo(dist, barLen); ctx.stroke();
-            if (text) {
-                ctx.save(); ctx.translate(dist / 2, 0);
-                if (angle > Math.PI / 2 || angle < -Math.PI / 2) ctx.rotate(Math.PI);
-                ctx.fillStyle = '#000000'; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                ctx.fillText(text, 0, 0); ctx.restore();
-            }
+            const bl = 15; ctx.beginPath(); ctx.moveTo(0,-bl); ctx.lineTo(0,bl); ctx.moveTo(dist,-bl); ctx.lineTo(dist,bl); ctx.stroke();
+            if (text) { ctx.save(); ctx.translate(dist / 2, 0); if (angle > Math.PI / 2 || angle < -Math.PI / 2) ctx.rotate(Math.PI); ctx.fillStyle = '#000000'; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, 0, 0); ctx.restore(); }
             ctx.restore();
             if (index !== -1 && !isExporting) {
-                const btnX = x2, btnY = y2 - 30;
-                m.deleteBtn = { x: btnX, y: btnY };
-                ctx.save();
-                const isActive = (draggingMeasureIdx === index || hoveredMeasureIdx === index);
-                ctx.fillStyle = isActive ? '#ef4444' : '#475569';
-                ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = isActive ? 8 : 0;
-                ctx.beginPath(); ctx.arc(btnX, btnY, 14, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath();
-                ctx.moveTo(btnX-5, btnY-5); ctx.lineTo(btnX+5, btnY+5); ctx.moveTo(btnX+5, btnY-5); ctx.lineTo(btnX-5, btnY+5); ctx.stroke();
-                ctx.restore();
+                const bx = x2, by = y2 - 30; m.deleteBtn = { x: bx, y: by }; ctx.save();
+                const act = (draggingMeasureIdx === index || hoveredMeasureIdx === index);
+                ctx.fillStyle = act ? '#ef4444' : '#475569';
+                ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx-5, by-5); ctx.lineTo(bx+5, by+5); ctx.moveTo(bx+5, by-5); ctx.lineTo(bx-5, by+5); ctx.stroke(); ctx.restore();
             }
         }
 
@@ -577,12 +586,10 @@
                 ctx.translate(centerX, centerY); ctx.rotate(l.rotation);
                 ctx.globalAlpha = l.opacity / 100; ctx.globalCompositeOperation = l.blend;
                 maskBuffer.width = l.width; maskBuffer.height = l.height;
-                mbfCtx.clearRect(0, 0, l.width, l.height);
-                mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
-                mbfCtx.globalCompositeOperation = 'destination-in';
-                mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
+                mbfCtx.clearRect(0, 0, l.width, l.height); mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
+                mbfCtx.globalCompositeOperation = 'destination-in'; mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
                 ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
-                if (l.id === activeLayerId && !maskMode && !isExporting) {
+                if (l.id === activeLayerId && editorMode === 'move' && !maskMode && !isExporting) {
                     ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
                     ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
                     ctx.beginPath(); ctx.moveTo(0, -l.height / 2); ctx.lineTo(0, -l.height / 2 - 30); ctx.stroke();
@@ -593,11 +600,11 @@
             measures.forEach((m, i) => drawMeasureLine(m, i, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
             if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !isExporting) {
-                const layer = layers.find(l => l.id === activeLayerId);
+                const l = layers.find(lay => lay.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
-                if (Math.abs(layer.x) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,1000); ctx.stroke(); }
-                if (Math.abs((layer.x + layer.width/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,1000); ctx.stroke(); }
-                if (Math.abs((layer.x + layer.width)-1000) < 1) { ctx.beginPath(); ctx.moveTo(1000,0); ctx.lineTo(1000,1000); ctx.stroke(); }
+                if (Math.abs(l.x) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,1000); ctx.stroke(); }
+                if (Math.abs((l.x + l.width/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,1000); ctx.stroke(); }
+                if (Math.abs((l.x + l.width)-1000) < 1) { ctx.beginPath(); ctx.moveTo(1000,0); ctx.lineTo(1000,1000); ctx.stroke(); }
                 ctx.setLineDash([]);
             }
         }
@@ -607,38 +614,31 @@
                 const pos = getMousePos(e);
                 if (editorMode === 'measure') {
                     for (let i = measures.length - 1; i >= 0; i--) {
-                        const m = measures[i];
-                        if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { draggingMeasureIdx = i; mDragOffset.x = pos.x; mDragOffset.y = pos.y; hasMovedDraggedMeasure = false; isMouseDown = true; return; } }
+                        const m = measures[i]; if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { draggingMeasureIdx = i; mDragOffset.x = pos.x; mDragOffset.y = pos.y; hasMovedDraggedMeasure = false; isMouseDown = true; return; } }
                     }
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
-                const activeLayer = layers.find(l => l.id === activeLayerId);
-                if (!activeLayer) return;
-                const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                const dx = pos.x - centerX, dy = pos.y - centerY;
-                const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
+                const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
+                const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
+                const lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
                 if (maskMode) {
-                    isMouseDown = true; maskStartX = (localX + activeLayer.width / 2); maskStartY = (localY + activeLayer.height / 2);
+                    isMouseDown = true; maskStartX = (lx + activeLayer.width / 2); maskStartY = (ly + activeLayer.height / 2);
                     if (maskMode === 'brush') paintOnMask(maskStartX, maskStartY, true);
                     else if (maskMode === 'rect') { maskWorldStartX = pos.x; maskWorldStartY = pos.y; selectionGuide.style.display = 'block'; updateSelectionGuide(pos.x, pos.y, pos.x, pos.y); }
                     return;
                 }
-                if (Math.sqrt(Math.pow(localX - 0, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
-                else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) activeLayer.isResizing = true;
-                else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
+                if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
+                else if (Math.abs(lx - activeLayer.width/2) < 20 && Math.abs(ly - activeLayer.height/2) < 20) activeLayer.isResizing = true;
+                else if (Math.abs(lx) < activeLayer.width/2 && Math.abs(ly) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
                 if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
             });
 
             window.addEventListener('mousemove', e => {
-                const pos = getMousePos(e);
-                if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
+                const pos = getMousePos(e); if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
                 if (editorMode === 'measure') {
-                    let foundHover = -1;
-                    for (let i = 0; i < measures.length; i++) {
-                        const m = measures[i];
-                        if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { foundHover = i; break; } }
-                    }
-                    if (hoveredMeasureIdx !== foundHover) { hoveredMeasureIdx = foundHover; render(); }
+                    let fHover = -1;
+                    for (let i = 0; i < measures.length; i++) { const m = measures[i]; if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { fHover = i; break; } } }
+                    if (hoveredMeasureIdx !== fHover) { hoveredMeasureIdx = fHover; render(); }
                 }
                 if (!isMouseDown) return;
                 if (editorMode === 'measure') {
@@ -649,20 +649,17 @@
                     }
                     render(); return;
                 }
-                const activeLayer = layers.find(l => l.id === activeLayerId);
-                if (!activeLayer) return;
+                const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
                 if (maskMode) {
-                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                    const dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
+                    const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
                     if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); }
                     else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
                 }
-                if (activeLayer.isRotating) { const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; }
-                else if (activeLayer.isResizing) { const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2, dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation); let nw = Math.max(20, lx * 2); activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = centerX - nw / 2; activeLayer.y = centerY - activeLayer.height / 2; syncScaleUI(activeLayer); }
+                if (activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; }
+                else if (activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation); let nw = Math.max(20, lx * 2); activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); }
                 else if (activeLayer.isDragging) {
-                    let nx = pos.x - dragOffset.x, ny = pos.y - dragOffset.y;
-                    if (shiftPressed) { const t = 35; if (Math.abs(nx) < t) nx = 0; else if (Math.abs(nx+activeLayer.width/2-500) < t) nx = 500-activeLayer.width/2; else if (Math.abs(nx+activeLayer.width-1000) < t) nx = 1000-activeLayer.width; if (Math.abs(ny) < t) ny = 0; else if (Math.abs(ny+activeLayer.height/2-500) < t) ny = 500-activeLayer.height/2; else if (Math.abs(ny+activeLayer.height-1000) < t) ny = 1000-activeLayer.height; }
+                    let nx = pos.x - dragOffset.x, ny = pos.y - dragOffset.y; if (shiftPressed) { const t = 35; if (Math.abs(nx) < t) nx = 0; else if (Math.abs(nx+activeLayer.width/2-500) < t) nx = 500-activeLayer.width/2; else if (Math.abs(nx+activeLayer.width-1000) < t) nx = 1000-activeLayer.width; if (Math.abs(ny) < t) ny = 0; else if (Math.abs(ny+activeLayer.height/2-500) < t) ny = 500-activeLayer.height/2; else if (Math.abs(ny+activeLayer.height-1000) < t) ny = 1000-activeLayer.height; }
                     activeLayer.x = nx; activeLayer.y = ny;
                 }
                 render();
@@ -681,9 +678,11 @@
                 render();
             });
 
-            document.getElementById('input-lv-black').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.black = parseInt(e.target.value); document.getElementById('val-lv-black').textContent = e.target.value; applyLevels(l); render(); } };
-            document.getElementById('input-lv-mid').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.gamma = parseFloat(e.target.value); document.getElementById('val-lv-mid').textContent = e.target.value; applyLevels(l); render(); } };
-            document.getElementById('input-lv-white').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.white = parseInt(e.target.value); document.getElementById('val-lv-white').textContent = e.target.value; applyLevels(l); render(); } };
+            document.getElementById('input-lv-black').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.black = parseInt(e.target.value); document.getElementById('val-lv-black').textContent = e.target.value; applyEffects(l); render(); } };
+            document.getElementById('input-lv-mid').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.gamma = parseFloat(e.target.value); document.getElementById('val-lv-mid').textContent = e.target.value; applyEffects(l); render(); } };
+            document.getElementById('input-lv-white').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.white = parseInt(e.target.value); document.getElementById('val-lv-white').textContent = e.target.value; applyEffects(l); render(); } };
+            document.getElementById('input-hue').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.hsl.hue = parseInt(e.target.value); document.getElementById('val-hue').textContent = e.target.value + '°'; applyEffects(l); render(); } };
+            document.getElementById('input-sat').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.hsl.saturation = parseInt(e.target.value)/100; document.getElementById('val-sat').textContent = e.target.value + '%'; applyEffects(l); render(); } };
             MODAL.save.onclick = () => { if(pendingMeasure) { pendingMeasure.text = MODAL.input.value; measures.push(pendingMeasure); pendingMeasure = null; } MODAL.el.classList.add('hidden'); render(); };
             MODAL.cancel.onclick = () => { pendingMeasure = null; MODAL.el.classList.add('hidden'); render(); };
             document.getElementById('input-brush-size').oninput = (e) => { maskBrushSize = e.target.value; document.getElementById('val-brush-size').textContent = e.target.value + 'px'; if(maskMode === 'brush') updateBrushCursorVisual(); };
@@ -699,19 +698,30 @@
         function updateUI() {
             layerListEl.innerHTML = '';
             layers.forEach((l, index) => {
+                const isActive = activeLayerId === l.id;
                 const div = document.createElement('div');
-                div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${activeLayerId === l.id ? 'active' : ''}`;
+                div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${isActive ? 'active' : ''}`;
                 div.draggable = true;
                 div.ondragstart = (e) => { draggedItemIdx = index; div.classList.add('dragging'); };
                 div.ondrop = (e) => { e.preventDefault(); const movedItem = layers.splice(draggedItemIdx, 1)[0]; layers.splice(index, 0, movedItem); render(); updateUI(); };
                 div.ondragover = (e) => e.preventDefault();
                 div.onclick = () => { if(editorMode !== 'measure') setActiveLayer(l.id); };
+                
                 div.innerHTML = `
                     <div class="cursor-grab active:cursor-grabbing text-slate-500 hover:text-rose-400 py-1 px-1">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3z"/></svg>
                     </div>
-                    <div class="w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0"><img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}"></div>
-                    <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : ''}">${l.name}</span>
+                    <div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0 transition-colors">
+                        <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}">
+                    </div>
+                    <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
+                    
+                    ${isActive ? `
+                        <div class="text-rose-500 mr-1">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                    ` : ''}
+
                     <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
                             <path d="M607.5-372.5Q660-425 660-500t-52.5-127.5Q555-680 480-680t-127.5 52.5Q300-575 300-500t52.5 127.5Q405-320 480-320t127.5-52.5Zm-204-51Q372-455 372-500t31.5-76.5Q435-608 480-608t76.5 31.5Q588-545 588-500t-31.5 76.5Q525-392 480-392t-76.5-31.5ZM214-281.5Q94-363 40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200q-146 0-266-81.5ZM480-500Zm207.5 160.5Q782-399 832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280q113 0 207.5-59.5Z"/>
@@ -735,20 +745,24 @@
                 document.getElementById('val-lv-mid').textContent = activeLayer.levels.gamma;
                 document.getElementById('input-lv-white').value = activeLayer.levels.white;
                 document.getElementById('val-lv-white').textContent = activeLayer.levels.white;
+                document.getElementById('input-hue').value = activeLayer.hsl.hue;
+                document.getElementById('val-hue').textContent = activeLayer.hsl.hue + '°';
+                document.getElementById('input-sat').value = Math.round(activeLayer.hsl.saturation * 100);
+                document.getElementById('val-sat').textContent = Math.round(activeLayer.hsl.saturation * 100) + '%';
             } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
         }
 
-        function getMousePos(e) { const r = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - r.left) * (CANVAS_WIDTH / r.width), y: (cy - r.top) * (CANVAS_HEIGHT / r.height) }; }
+        function getMousePos(e) { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (CANVAS_WIDTH / r.width), y: (cy - r.top) * (CANVAS_HEIGHT / r.height) }; }
 
         function fitActiveLayerToCanvas() {
-            const l = layers.find(l => l.id === activeLayerId);
+            const l = layers.find(lay => lay.id === activeLayerId);
             if (l) {
                 if (l.aspectRatio > 1) { l.height = 1000; l.width = 1000 * l.aspectRatio; } else { l.width = 1000; l.height = 1000 / l.aspectRatio; }
                 l.x = (1000 - l.width)/2; l.y = (1000 - l.height)/2; l.rotation = 0; syncScaleUI(l); render();
             }
         }
 
-        function toggleVisibility(id) { const l = layers.find(l => l.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
+        function toggleVisibility(id) { const l = layers.find(lay => lay.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
         function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
 
