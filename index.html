@@ -760,19 +760,56 @@
                     }
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
-                const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
-                const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
-                const lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
-                if (maskMode) {
-                    isMouseDown = true; maskStartX = (lx + activeLayer.width / 2); maskStartY = (ly + activeLayer.height / 2);
+
+                // Obtener capa activa actual para verificar sus manejadores primero
+                const currentActiveLayer = layers.find(l => l.id === activeLayerId);
+                
+                if (currentActiveLayer && !maskMode) {
+                    const cx = currentActiveLayer.x + currentActiveLayer.width / 2, cy = currentActiveLayer.y + currentActiveLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
+                    const lx = dx * Math.cos(-currentActiveLayer.rotation) - dy * Math.sin(-currentActiveLayer.rotation), ly = dx * Math.sin(-currentActiveLayer.rotation) + dy * Math.cos(-currentActiveLayer.rotation);
+                    
+                    // Prioridad 1: Manejador de rotación
+                    if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-currentActiveLayer.height/2 - 35), 2)) < 20) {
+                        currentActiveLayer.isRotating = true; isMouseDown = true; return;
+                    }
+                    // Prioridad 2: Manejador de escala
+                    if (Math.abs(lx - currentActiveLayer.width/2) < 20 && Math.abs(ly - currentActiveLayer.height/2) < 20) {
+                        currentActiveLayer.isResizing = true; isMouseDown = true; return;
+                    }
+                }
+
+                // Prioridad 3: Seleccionar una nueva capa haciendo clic directo (de arriba hacia abajo)
+                if (editorMode === 'move' && !maskMode) {
+                    for (let i = 0; i < layers.length; i++) {
+                        const l = layers[i];
+                        if (!l.visible) continue;
+
+                        const cx = l.x + l.width / 2, cy = l.y + l.height / 2, dx = pos.x - cx, dy = pos.y - cy;
+                        const lx = dx * Math.cos(-l.rotation) - dy * Math.sin(-l.rotation), ly = dx * Math.sin(-l.rotation) + dy * Math.cos(-l.rotation);
+
+                        // Si el clic está dentro del rectángulo de la capa
+                        if (Math.abs(lx) <= l.width / 2 && Math.abs(ly) <= l.height / 2) {
+                            setActiveLayer(l.id);
+                            l.isDragging = true;
+                            dragOffset.x = pos.x - l.x;
+                            dragOffset.y = pos.y - l.y;
+                            isMouseDown = true;
+                            render();
+                            return;
+                        }
+                    }
+                }
+
+                // Prioridad 4: Modo Máscara
+                if (maskMode && currentActiveLayer) {
+                    isMouseDown = true; 
+                    const cx = currentActiveLayer.x + currentActiveLayer.width / 2, cy = currentActiveLayer.y + currentActiveLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
+                    const lx = dx * Math.cos(-currentActiveLayer.rotation) - dy * Math.sin(-currentActiveLayer.rotation), ly = dx * Math.sin(-currentActiveLayer.rotation) + dy * Math.cos(-currentActiveLayer.rotation);
+                    maskStartX = (lx + currentActiveLayer.width / 2); maskStartY = (ly + currentActiveLayer.height / 2);
                     if (maskMode === 'brush') paintOnMask(maskStartX, maskStartY, true);
                     else if (maskMode === 'rect') { maskWorldStartX = pos.x; maskWorldStartY = pos.y; selectionGuide.style.display = 'block'; updateSelectionGuide(pos.x, pos.y, pos.x, pos.y); }
                     return;
                 }
-                if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
-                else if (Math.abs(lx - activeLayer.width/2) < 20 && Math.abs(ly - activeLayer.height/2) < 20) activeLayer.isResizing = true;
-                else if (Math.abs(lx) < activeLayer.width/2 && Math.abs(ly) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
-                if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
             });
 
             window.addEventListener('mousemove', e => {
