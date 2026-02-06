@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arelyshop Pro - Editor de Fotos Pro</title>
+    <title>Arelyshop Pro - Editor de Fotos</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="images/favicon.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -37,11 +36,11 @@
             overflow: hidden; 
         }
 
-        /* Efecto visual al arrastrar archivo */
-        .drag-active-zone {
-            background-color: rgba(244, 63, 94, 0.1) !important;
-            outline: 4px dashed #f43f5e !important;
-            outline-offset: -10px;
+        /* Efecto visual al arrastrar archivo sobre el canvas */
+        .canvas-area.drag-active {
+            background-color: rgba(244, 63, 94, 0.1);
+            outline: 4px dashed #f43f5e;
+            outline-offset: -20px;
         }
 
         #canvas-wrapper {
@@ -65,7 +64,6 @@
             object-fit: contain;
         }
 
-        /* Estilo de Capa Seleccionada */
         .layer-item.active {
             background-color: #334155 !important;
             border-left: 4px solid #f43f5e;
@@ -120,7 +118,6 @@
 
     <div id="brush-cursor"></div>
 
-    <!-- Modal Medidas -->
     <div id="textModal" class="fixed inset-0 flex items-center justify-center hidden">
         <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl w-80 border border-slate-700">
             <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Ingresa la medida</h3>
@@ -136,9 +133,9 @@
         <!-- Barra Lateral Izquierda -->
         <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 sidebar-scrollable">
             <div class="flex items-center gap-3 px-2">
-                <!-- Icono Logo: Solo Drag & Drop, sin evento de clic -->
-                <div id="main-logo-icon" title="Arrastra una imagen aquí para añadirla" class="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden border border-slate-700 shadow-lg transition-all">
-                    <img src="images/favicon.png" alt="Logo" class="w-6 h-6 object-contain pointer-events-none" onerror="this.src='https://via.placeholder.com/24?text=A'">
+                <!-- Logo con imagen favicon.png -->
+                <div id="logo-container" class="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-rose-500/20 bg-slate-800 flex items-center justify-center">
+                    <img src="images/favicon.png" alt="Logo" class="w-full h-full object-contain" onerror="handleLogoError(this)">
                 </div>
                 <h1 class="text-lg font-bold tracking-tight text-slate-100">Arelyshop Pro</h1>
             </div>
@@ -162,7 +159,7 @@
                 </div>
             </div>
 
-            <!-- Recursos -->
+            <!-- Marcas -->
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest">Recursos / Marcas</p>
                 <div class="grid grid-cols-1 gap-2 px-1">
@@ -285,8 +282,8 @@
                                     <div class="flex items-center justify-between">
                                         <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
                                         <div class="flex gap-1">
-                                            <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all">Mostrar</button>
-                                            <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all">Ocultar</button>
+                                            <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
+                                            <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
                                         </div>
                                     </div>
                                     <div>
@@ -329,7 +326,6 @@
                     </div>
                 </div>
 
-                <!-- Capas -->
                 <div>
                     <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
                     <div id="layer-list" class="space-y-2 pb-10"></div>
@@ -341,14 +337,26 @@
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">Mensaje</div>
 
     <script>
+        /**
+         * Manejador de error para el logo (favicon.png)
+         * Se asegura de que el elemento padre exista antes de intentar modificarlo.
+         */
+        function handleLogoError(img) {
+            const parent = img.parentElement || document.getElementById('logo-container');
+            if (parent) {
+                img.style.display = 'none';
+                parent.innerText = 'A';
+                parent.classList.add('bg-rose-500', 'font-bold', 'text-white');
+            }
+        }
+
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
         const layerListEl = document.getElementById('layer-list');
         const fileInput = document.getElementById('fileInput');
         const selectionGuide = document.getElementById('selection-guide');
         const brushCursor = document.getElementById('brush-cursor');
-        const canvasDropzone = document.getElementById('canvas-dropzone');
-        const logoIconZone = document.getElementById('main-logo-icon');
+        const dropZone = document.getElementById('canvas-dropzone');
         
         const maskBuffer = document.createElement('canvas');
         const mbfCtx = maskBuffer.getContext('2d');
@@ -363,7 +371,7 @@
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
         let draggedItemIdx = null;
-        let layerClipboard = null; 
+        let layerClipboard = null; // Portapapeles para copiar/pegar
 
         let maskMode = false; 
         let maskAction = 'hide'; 
@@ -393,97 +401,79 @@
             setupDragAndDrop();
         }
 
-        /**
-         * getMousePos segura para evitar clientY is not defined
-         */
-        function getMousePos(e) {
-            const rect = canvas.getBoundingClientRect();
-            let clientX = 0, clientY = 0;
-
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else if (e.clientX !== undefined && e.clientY !== undefined) {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            return {
-                x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width),
-                y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height)
-            };
-        }
-
         function createId() { return Math.random().toString(36).substr(2, 9); }
 
         /**
-         * Lógica de Drag and Drop: Ahora extendida al Logo (sin clic)
+         * Lógica de Arrastrar y Soltar Archivos
          */
         function setupDragAndDrop() {
-            const zones = [canvasDropzone, logoIconZone];
-            
-            zones.forEach(zone => {
-                zone.addEventListener('dragenter', (e) => {
-                    e.preventDefault();
-                    zone.classList.add('drag-active-zone');
-                });
-                zone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    zone.classList.add('drag-active-zone');
-                });
-                zone.addEventListener('dragleave', () => {
-                    zone.classList.remove('drag-active-zone');
-                });
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    zone.classList.remove('drag-active-zone');
-                    const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => addLayer(ev.target.result, file.name);
-                        reader.readAsDataURL(file);
-                        showToast("Añadiendo imagen...");
-                    }
-                });
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
             });
+
+            dropZone.addEventListener('dragenter', () => dropZone.classList.add('drag-active'), false);
+            dropZone.addEventListener('dragover', () => dropZone.classList.add('drag-active'), false);
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'), false);
+            
+            dropZone.addEventListener('drop', (e) => {
+                dropZone.classList.remove('drag-active');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => addLayer(ev.target.result, file.name);
+                    reader.readAsDataURL(file);
+                    showToast("Cargando imagen soltada...");
+                }
+            }, false);
         }
 
+        /**
+         * Lógica de Atajos de Teclado (Copiar / Pegar / Suprimir)
+         */
         function setupKeyboardShortcuts() {
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Shift') shiftPressed = true;
+                
+                // Ignorar si el usuario está escribiendo en el modal
                 if (!MODAL.el.classList.contains('hidden')) return;
 
-                // Ctrl+C
+                // Ctrl+C (Copiar)
                 if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
                     const active = layers.find(l => l.id === activeLayerId);
                     if (active) {
                         layerClipboard = JSON.parse(JSON.stringify(active));
+                        // Re-adjuntar objetos no serializables
                         layerClipboard.content = active.content;
-                        showToast("Capa copiada");
+                        showToast("Capa copiada al portapapeles");
                     }
                 }
-                // Ctrl+V
+
+                // Ctrl+V (Pegar)
                 if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-                    if (layerClipboard) pasteLayer();
+                    if (layerClipboard) {
+                        pasteLayer();
+                    }
                 }
-                // Suprimir
+
+                // Suprimir (Borrar)
                 if (e.key === 'Delete' || e.key === 'Backspace') {
-                    if (activeLayerId && editorMode === 'move' && !maskMode) deleteActiveLayer();
+                    if (activeLayerId && editorMode === 'move' && !maskMode) {
+                        deleteActiveLayer();
+                    }
                 }
             });
+
             window.addEventListener('keyup', (e) => { if(e.key === 'Shift') shiftPressed = false; });
         }
 
         function pasteLayer() {
-            if (!layerClipboard) {
-                showToast("Portapapeles vacío");
-                return;
-            }
             const newLayer = JSON.parse(JSON.stringify(layerClipboard));
             newLayer.id = createId();
-            newLayer.x += 25; newLayer.y += 25;
+            newLayer.x += 30; // Desfase para que se vea el duplicado
+            newLayer.y += 30;
             newLayer.content = layerClipboard.content;
             
+            // Re-procesar lienzos internos
             newLayer.processedCanvas = document.createElement('canvas');
             newLayer.processedCanvas.width = newLayer.content.width;
             newLayer.processedCanvas.height = newLayer.content.height;
@@ -492,8 +482,9 @@
             newLayer.maskCanvas.width = newLayer.content.width;
             newLayer.maskCanvas.height = newLayer.content.height;
             
+            // Copiar estado de la máscara si existe en el original
             const originalLayer = layers.find(l => l.id === activeLayerId);
-            if (originalLayer && originalLayer.maskCanvas) {
+            if (originalLayer) {
                 newLayer.maskCanvas.getContext('2d').drawImage(originalLayer.maskCanvas, 0, 0);
             } else {
                 const mCtx = newLayer.maskCanvas.getContext('2d');
@@ -503,7 +494,7 @@
             applyEffects(newLayer);
             layers.unshift(newLayer);
             setActiveLayer(newLayer.id);
-            showToast("Capa duplicada");
+            showToast("Capa pegada");
         }
 
         function addLayer(data, name = "Capa", brandKey = null) {
@@ -597,6 +588,13 @@
             addLayer(path, `${brand.toUpperCase()}`, brand);
         }
 
+        function setActiveLayer(id) {
+            if (maskMode) return; 
+            activeLayerId = id;
+            updateUI();
+            render();
+        }
+
         function setEditorMode(mode) {
             editorMode = mode;
             document.getElementById('btn-mode-move').className = mode === 'move' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
@@ -607,7 +605,8 @@
             document.getElementById('editor-specific-props').classList.toggle('hidden', mode !== 'move');
             if (mode === 'measure') { activeLayerId = null; exitMaskMode(); }
             if (mode === 'styles') exitMaskMode();
-            updateUI(); render();
+            updateUI();
+            render();
         }
 
         function enterMaskMode(mode) {
@@ -616,6 +615,8 @@
             document.getElementById('mask-controls-panel').classList.remove('hidden');
             document.getElementById('mask-help-box').classList.remove('hidden');
             canvas.classList.add('mask-active-canvas');
+            document.getElementById('btn-mask-brush').classList.toggle('tool-active', mode === 'brush');
+            document.getElementById('btn-mask-rect').classList.toggle('tool-active', mode === 'rect');
             if (mode === 'brush') { brushCursor.style.display = 'block'; updateBrushCursorVisual(); }
             else { brushCursor.style.display = 'none'; }
             updateUI();
@@ -626,6 +627,8 @@
             document.getElementById('mask-controls-panel').classList.add('hidden');
             document.getElementById('mask-help-box').classList.add('hidden');
             canvas.classList.remove('mask-active-canvas');
+            document.getElementById('btn-mask-brush').classList.remove('tool-active');
+            document.getElementById('btn-mask-rect').classList.remove('tool-active');
             brushCursor.style.display = 'none'; selectionGuide.style.display = 'none';
             render();
         }
@@ -695,7 +698,8 @@
                 const act = (draggingMeasureIdx === index || hoveredMeasureIdx === index);
                 ctx.fillStyle = act ? '#ef4444' : '#475569';
                 ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx-5, by-5); ctx.lineTo(bx+5, by+5); ctx.moveTo(bx+5, by-5); ctx.lineTo(bx-5, by+5); ctx.stroke(); ctx.restore();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath();
+                ctx.moveTo(bx-5, by-5); ctx.lineTo(bx+5, by+5); ctx.moveTo(bx+5, by-5); ctx.lineTo(bx-5, by+5); ctx.stroke(); ctx.restore();
             }
         }
 
@@ -736,6 +740,15 @@
                 if (Math.abs((layer.y + layer.height)-1000) < 1) { ctx.beginPath(); ctx.moveTo(0,1000); ctx.lineTo(1000,1000); ctx.stroke(); }
                 ctx.setLineDash([]);
             }
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
+            } else { clientX = e.clientX; clientY = e.clientY; }
+            return { x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width), y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height) };
         }
 
         function setupEventListeners() {
@@ -845,7 +858,11 @@
                     </div>
                     <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
                     
-                    ${isActive ? `<div class="text-rose-500 mr-1 animate-pulse"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div>` : ''}
+                    ${isActive ? `
+                        <div class="text-rose-500 mr-1 animate-pulse">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                    ` : ''}
 
                     <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
@@ -896,8 +913,7 @@
                 const link = document.createElement('a');
                 link.download = `arelyshop-photo-${Date.now()}.${format}`;
                 link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92);
-                link.click();
-                showToast(`Exportado como ${format.toUpperCase()}`);
+                link.click(); showToast(`Exportado como ${format.toUpperCase()}`);
                 activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI();
             }, 100);
         }
