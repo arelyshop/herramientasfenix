@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Exportación Pro</title>
+    <title>Fenix Editor Pro - Control de Escala</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -188,8 +188,8 @@
                     <div class="space-y-3">
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Pincel</button>
-                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Rectángulo</button>
+                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
+                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
                         </div>
                         <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
                             <div class="flex items-center justify-between">
@@ -209,25 +209,44 @@
 
                     <div class="h-px bg-slate-800"></div>
 
-                    <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-xs font-bold transition-all">
-                        Ajustar al Lienzo
-                    </button>
+                    <!-- Transformaciones -->
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Transformación</p>
+                        
+                        <div>
+                            <label class="flex justify-between text-xs text-slate-400 mb-2 italic">
+                                <span>Escala (Tamaño)</span>
+                                <span id="scale-val">100%</span>
+                            </label>
+                            <input type="range" id="prop-scale" min="5" max="200" value="100" class="w-full accent-sky-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
 
-                    <div>
-                        <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
-                        <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-sky-500">
+                        <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">
+                            Ajustar al Lienzo
+                        </button>
                     </div>
-                    
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-2">Modo de Fusión</label>
-                        <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs outline-none focus:ring-1 focus:ring-sky-500 text-white">
-                            <option value="source-over">Normal</option>
-                            <option value="multiply">Multiplicar</option>
-                            <option value="screen">Trama</option>
-                            <option value="overlay">Superponer</option>
-                            <option value="darken">Oscurecer</option>
-                            <option value="lighten">Aclarar</option>
-                        </select>
+
+                    <div class="h-px bg-slate-800"></div>
+
+                    <!-- Estilo -->
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Apariencia</p>
+                        <div>
+                            <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
+                            <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-sky-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2">Modo de Fusión</label>
+                            <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-sky-500 text-white">
+                                <option value="source-over">Normal</option>
+                                <option value="multiply">Multiplicar</option>
+                                <option value="screen">Trama</option>
+                                <option value="overlay">Superponer</option>
+                                <option value="darken">Oscurecer</option>
+                                <option value="lighten">Aclarar</option>
+                            </select>
+                        </div>
                     </div>
 
                     <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all">Eliminar Capa</button>
@@ -439,13 +458,9 @@
 
         function render(drawBackground = false) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Si es JPG, dibujamos fondo blanco primero
             if (drawBackground) {
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
-
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
@@ -523,8 +538,7 @@
                 if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
                 if (!isMouseDown || !activeLayer) return;
                 if (maskMode) {
-                    const centerX = activeLayer.x + activeLayer.width / 2;
-                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
                     const dx = pos.x - centerX, dy = pos.y - centerY;
                     const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2;
                     const localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
@@ -533,19 +547,22 @@
                     return;
                 }
                 if (activeLayer.isRotating) {
-                    const centerX = activeLayer.x + activeLayer.width / 2;
-                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
                     let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2;
                     if (shiftPressed) { angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; }
                     activeLayer.rotation = angle;
                 } else if (activeLayer.isResizing) {
-                    const centerX = activeLayer.x + activeLayer.width / 2;
-                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
                     const dx = pos.x - centerX, dy = pos.y - centerY;
                     const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation);
                     let newWidth = Math.max(20, localX * 2);
+                    if (shiftPressed) {
+                        if (Math.abs(newWidth - 1000) < 40) newWidth = 1000;
+                        if (Math.abs(newWidth/activeLayer.aspectRatio - 1000) < 40) newWidth = 1000 * activeLayer.aspectRatio;
+                    }
                     activeLayer.width = newWidth; activeLayer.height = newWidth / activeLayer.aspectRatio;
                     activeLayer.x = centerX - activeLayer.width / 2; activeLayer.y = centerY - activeLayer.height / 2;
+                    syncScaleUI(activeLayer);
                 } else if (activeLayer.isDragging) {
                     let newX = pos.x - dragOffset.x, newY = pos.y - dragOffset.y;
                     if (shiftPressed) {
@@ -564,10 +581,8 @@
 
             window.addEventListener('mouseup', e => {
                 if (maskMode === 'rect' && isMouseDown) {
-                    const pos = getMousePos(e);
-                    const activeLayer = layers.find(l => l.id === activeLayerId);
-                    const centerX = activeLayer.x + activeLayer.width / 2;
-                    const centerY = activeLayer.y + activeLayer.height / 2;
+                    const pos = getMousePos(e), activeLayer = layers.find(l => l.id === activeLayerId);
+                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
                     const startDx = maskWorldStartX - centerX, startDy = maskWorldStartY - centerY;
                     const startLocalX = startDx * Math.cos(-activeLayer.rotation) - startDy * Math.sin(-activeLayer.rotation) + activeLayer.width/2;
                     const startLocalY = startDx * Math.sin(-activeLayer.rotation) + startDy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
@@ -581,6 +596,7 @@
                 render();
             });
 
+            // Inputs Sincronización
             document.getElementById('input-brush-size').oninput = (e) => {
                 maskBrushSize = e.target.value; document.getElementById('val-brush-size').textContent = e.target.value + 'px';
                 if(maskMode === 'brush') updateBrushCursorVisual();
@@ -588,6 +604,19 @@
             document.getElementById('prop-opacity').oninput = (e) => {
                 const layer = layers.find(l => l.id === activeLayerId);
                 if (layer) { layer.opacity = e.target.value; document.getElementById('opacity-val').textContent = e.target.value + '%'; render(); }
+            };
+            document.getElementById('prop-scale').oninput = (e) => {
+                const layer = layers.find(l => l.id === activeLayerId);
+                if (layer) {
+                    const centerX = layer.x + layer.width / 2, centerY = layer.y + layer.height / 2;
+                    const newWidth = 1000 * (e.target.value / 100);
+                    layer.width = newWidth;
+                    layer.height = newWidth / layer.aspectRatio;
+                    layer.x = centerX - layer.width / 2;
+                    layer.y = centerY - layer.height / 2;
+                    document.getElementById('scale-val').textContent = e.target.value + '%';
+                    render();
+                }
             };
             document.getElementById('prop-blend').onchange = (e) => {
                 const layer = layers.find(l => l.id === activeLayerId);
@@ -604,13 +633,17 @@
             };
         }
 
+        function syncScaleUI(layer) {
+            const scale = Math.round((layer.width / 1000) * 100);
+            document.getElementById('prop-scale').value = scale;
+            document.getElementById('scale-val').textContent = scale + '%';
+        }
+
         function updateSelectionGuide(x1, y1, x2, y2) {
-            const rect = canvas.getBoundingClientRect();
-            const scale = rect.width / CANVAS_WIDTH;
+            const rect = canvas.getBoundingClientRect(), scale = rect.width / CANVAS_WIDTH;
             const left = (Math.min(x1, x2) * scale) + canvas.offsetLeft;
             const top = (Math.min(y1, y2) * scale) + canvas.offsetTop;
-            const width = Math.abs(x1 - x2) * scale;
-            const height = Math.abs(y1 - y2) * scale;
+            const width = Math.abs(x1 - x2) * scale, height = Math.abs(y1 - y2) * scale;
             selectionGuide.style.left = left + 'px'; selectionGuide.style.top = top + 'px';
             selectionGuide.style.width = width + 'px'; selectionGuide.style.height = height + 'px';
         }
@@ -639,7 +672,7 @@
                         <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? 'opacity-80' : 'opacity-20 grayscale'}">
                     </div>
                     <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600 italic' : ''}">${l.name}</span>
-                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 text-slate-500 hover:text-white transition-colors">
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 text-slate-500 hover:text-white">
                         ${l.visible ? '👁️' : '🕶️'}
                     </button>
                 `;
@@ -653,6 +686,7 @@
                 document.getElementById('opacity-val').textContent = activeLayer.opacity + '%';
                 document.getElementById('prop-opacity').value = activeLayer.opacity;
                 document.getElementById('prop-blend').value = activeLayer.blend;
+                syncScaleUI(activeLayer);
             } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
         }
 
@@ -666,7 +700,8 @@
             if (layer) {
                 if (layer.aspectRatio > 1) { layer.height = 1000; layer.width = 1000 * layer.aspectRatio; }
                 else { layer.width = 1000; layer.height = 1000 / layer.aspectRatio; }
-                layer.x = (1000 - layer.width)/2; layer.y = (1000 - layer.height)/2; layer.rotation = 0; render();
+                layer.x = (1000 - layer.width)/2; layer.y = (1000 - layer.height)/2; layer.rotation = 0;
+                syncScaleUI(layer); render();
             }
         }
 
@@ -684,36 +719,19 @@
             setTimeout(() => toast.classList.remove('opacity-100'), 2000);
         }
 
-        /**
-         * Exporta la imagen en el formato deseado.
-         * @param {string} format - 'png' o 'jpeg'
-         */
         function exportImage(format = 'png') {
-            // Desactivar temporalmente selección y modo máscara para exportación limpia
-            const oldId = activeLayerId;
-            const oldMaskMode = maskMode;
-            activeLayerId = null;
-            maskMode = false;
-
-            // Renderizar con fondo blanco si es JPEG
+            const oldId = activeLayerId, oldMaskMode = maskMode;
+            activeLayerId = null; maskMode = false;
             render(format === 'jpeg');
-
             setTimeout(() => {
                 const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
                 const quality = format === 'jpeg' ? 0.92 : 1.0;
-                
                 const link = document.createElement('a');
-                link.download = `fenix-design-${Date.now()}.${format}`;
+                link.download = `fenix-master-${Date.now()}.${format}`;
                 link.href = canvas.toDataURL(mimeType, quality);
                 link.click();
-                
                 showToast(`Exportado como ${format.toUpperCase()}`);
-                
-                // Restaurar estado anterior
-                activeLayerId = oldId;
-                maskMode = oldMaskMode;
-                render();
-                updateUI();
+                activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI();
             }, 100);
         }
 
