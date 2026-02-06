@@ -12,6 +12,7 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #0f172a;
             color: #f8fafc;
+            height: 100vh;
             overflow: hidden; 
         }
 
@@ -19,6 +20,7 @@
             display: grid;
             grid-template-columns: 280px 1fr 300px;
             height: 100vh;
+            width: 100vw;
         }
 
         .canvas-area {
@@ -100,12 +102,19 @@
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
         
         input[type=range] { accent-color: #f43f5e; }
+
+        /* Barra lateral scrollable */
+        .sidebar-scrollable {
+            overflow-y: auto;
+            max-height: 100vh;
+        }
     </style>
 </head>
 <body>
 
     <div id="brush-cursor"></div>
 
+    <!-- Modal para ingresar texto de medida -->
     <div id="textModal" class="fixed inset-0 flex items-center justify-center hidden">
         <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl w-80 border border-slate-700">
             <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Ingresa la medida</h3>
@@ -118,8 +127,8 @@
     </div>
 
     <div class="editor-container">
-        <!-- Barra Lateral Izquierda -->
-        <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 overflow-y-auto">
+        <!-- Barra Lateral Izquierda (Scrollable) -->
+        <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 sidebar-scrollable">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 bg-rose-500 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-rose-500/20">A</div>
                 <h1 class="text-lg font-bold tracking-tight text-slate-100">Arelyshop Pro</h1>
@@ -184,7 +193,7 @@
                     <input type="file" id="fileInput" class="hidden" accept="image/*">
                 </label>
                 
-                <div class="space-y-2 border-t border-slate-800 pt-4">
+                <div class="space-y-2 border-t border-slate-800 pt-4 pb-4">
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="exportImage('png')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
                             <span class="text-[10px] font-bold text-rose-400">PNG</span>
@@ -207,115 +216,117 @@
             </div>
         </main>
 
-        <!-- Barra Lateral Derecha -->
-        <aside class="bg-slate-900 border-l border-slate-800 flex flex-col">
-            <div class="p-6 border-b border-slate-800">
-                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
-                
-                <!-- Panel Medidas -->
-                <div id="measure-props" class="hidden space-y-4">
-                    <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
-                    <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
-                    <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all uppercase">Borrar medidas</button>
-                </div>
-
-                <!-- Panel Estilos -->
-                <div id="styles-props" class="hidden space-y-6">
-                    <div class="space-y-4">
-                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">HUE / Color</p>
-                        <div class="space-y-4 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-                            <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Tono (Hue) <span id="val-hue">0°</span></label>
-                                <input type="range" id="input-hue" min="-180" max="180" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Saturación <span id="val-sat">100%</span></label>
-                                <input type="range" id="input-sat" min="0" max="200" value="100" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
+        <!-- Barra Lateral Derecha (Scrollable) -->
+        <aside class="bg-slate-900 border-l border-slate-800 flex flex-col sidebar-scrollable">
+            <div class="p-6 flex flex-col gap-6">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
+                    
+                    <!-- Panel Medidas -->
+                    <div id="measure-props" class="hidden space-y-4">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
+                        <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
+                        <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all uppercase">Borrar medidas</button>
                     </div>
-                    <div class="h-px bg-slate-800"></div>
-                    <div class="space-y-4">
-                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Niveles</p>
-                        <div class="space-y-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
-                            <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Negros <span id="val-lv-black">0</span></label>
-                                <input type="range" id="input-lv-black" min="0" max="250" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Medios <span id="val-lv-mid">1.0</span></label>
-                                <input type="range" id="input-lv-mid" min="0.1" max="3" step="0.1" value="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Blancos <span id="val-lv-white">255</span></label>
-                                <input type="range" id="input-lv-white" min="5" max="255" value="255" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
-                
-                <div id="layer-props" class="hidden space-y-6">
-                    <div id="editor-specific-props">
-                        <div class="space-y-3">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
-                                <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
-                            </div>
-                            <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
-                                    <div class="flex gap-1">
-                                        <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
-                                        <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
-                                    </div>
+                    <!-- Panel Estilos -->
+                    <div id="styles-props" class="hidden space-y-6">
+                        <div class="space-y-4">
+                            <p class="text-[10px] font-bold text-rose-400 uppercase italic">HUE / Color</p>
+                            <div class="space-y-4 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                                <div>
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Tono (Hue) <span id="val-hue">0°</span></label>
+                                    <input type="range" id="input-hue" min="-180" max="180" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                                 </div>
                                 <div>
-                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
-                                    <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-rose-500">
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Saturación <span id="val-sat">100%</span></label>
+                                    <input type="range" id="input-sat" min="0" max="200" value="100" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
                                 </div>
-                                <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 font-bold uppercase transition-all">Reiniciar</button>
                             </div>
                         </div>
-                        <div class="h-px bg-slate-800 my-6"></div>
+                        <div class="h-px bg-slate-800"></div>
                         <div class="space-y-4">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Transformación</p>
-                            <div>
-                                <label class="flex justify-between text-xs text-slate-400 mb-2 italic"><span>Escala</span><span id="scale-val">100%</span></label>
-                                <input type="range" id="prop-scale" min="5" max="200" value="100" class="w-full accent-rose-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Ajustar Lienzo</button>
-                        </div>
-                        <div class="h-px bg-slate-800 my-6"></div>
-                        <div class="space-y-4">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Apariencia</p>
-                            <div>
-                                <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
-                                <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-rose-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-2">Fusión</label>
-                                <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-rose-500 text-white">
-                                    <option value="source-over">Normal</option>
-                                    <option value="multiply">Multiplicar</option>
-                                    <option value="screen">Trama</option>
-                                    <option value="overlay">Superponer</option>
-                                    <option value="darken">Oscurecer</option>
-                                    <option value="lighten">Aclarar</option>
-                                </select>
+                            <p class="text-[10px] font-bold text-rose-400 uppercase italic">Niveles</p>
+                            <div class="space-y-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                                <div>
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Negros <span id="val-lv-black">0</span></label>
+                                    <input type="range" id="input-lv-black" min="0" max="250" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Medios <span id="val-lv-mid">1.0</span></label>
+                                    <input type="range" id="input-lv-mid" min="0.1" max="3" step="0.1" value="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Blancos <span id="val-lv-white">255</span></label>
+                                    <input type="range" id="input-lv-white" min="5" max="255" value="255" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
-                </div>
-            </div>
 
-            <!-- Lista de Capas -->
-            <div class="flex-1 p-6 overflow-y-auto">
-                <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
-                <div id="layer-list" class="space-y-2"></div>
+                    <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
+                    
+                    <div id="layer-props" class="hidden space-y-6">
+                        <div id="editor-specific-props">
+                            <div class="space-y-3">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
+                                    <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
+                                </div>
+                                <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
+                                        <div class="flex gap-1">
+                                            <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all">Mostrar</button>
+                                            <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all">Ocultar</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
+                                        <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-rose-500">
+                                    </div>
+                                    <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 font-bold uppercase transition-all">Reiniciar</button>
+                                </div>
+                            </div>
+                            <div class="h-px bg-slate-800 my-6"></div>
+                            <div class="space-y-4">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Transformación</p>
+                                <div>
+                                    <label class="flex justify-between text-xs text-slate-400 mb-2 italic"><span>Escala</span><span id="scale-val">100%</span></label>
+                                    <input type="range" id="prop-scale" min="5" max="200" value="100" class="w-full accent-rose-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                <button onclick="fitActiveLayerToCanvas()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-[10px] font-bold transition-all uppercase">Ajustar Lienzo</button>
+                            </div>
+                            <div class="h-px bg-slate-800 my-6"></div>
+                            <div class="space-y-4">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Apariencia</p>
+                                <div>
+                                    <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
+                                    <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-rose-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Fusión</label>
+                                    <select id="prop-blend" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-rose-500 text-white">
+                                        <option value="source-over">Normal</option>
+                                        <option value="multiply">Multiplicar</option>
+                                        <option value="screen">Trama</option>
+                                        <option value="overlay">Superponer</option>
+                                        <option value="darken">Oscurecer</option>
+                                        <option value="lighten">Aclarar</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
+                    </div>
+                </div>
+
+                <!-- Lista de Capas -->
+                <div>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
+                    <div id="layer-list" class="space-y-2 pb-10"></div>
+                </div>
             </div>
         </aside>
     </div>
@@ -512,8 +523,8 @@
 
         function setMaskAction(action) {
             maskAction = action;
-            document.getElementById('m-action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
-            document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
+            document.getElementById('m-action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
+            document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
         }
 
         function resetMask() {
@@ -569,7 +580,8 @@
                 const act = (draggingMeasureIdx === index || hoveredMeasureIdx === index);
                 ctx.fillStyle = act ? '#ef4444' : '#475569';
                 ctx.beginPath(); ctx.arc(bx, by, 14, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx-5, by-5); ctx.lineTo(bx+5, by+5); ctx.moveTo(bx+5, by-5); ctx.lineTo(bx-5, by+5); ctx.stroke(); ctx.restore();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath();
+                ctx.moveTo(bx-5, by-5); ctx.lineTo(bx+5, by+5); ctx.moveTo(bx+5, by-5); ctx.lineTo(bx-5, by+5); ctx.stroke(); ctx.restore();
             }
         }
 
@@ -600,13 +612,30 @@
             measures.forEach((m, i) => drawMeasureLine(m, i, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
             if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !isExporting) {
-                const l = layers.find(lay => lay.id === activeLayerId);
+                const layer = layers.find(lay => lay.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
-                if (Math.abs(l.x) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,1000); ctx.stroke(); }
-                if (Math.abs((l.x + l.width/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,1000); ctx.stroke(); }
-                if (Math.abs((l.x + l.width)-1000) < 1) { ctx.beginPath(); ctx.moveTo(1000,0); ctx.lineTo(1000,1000); ctx.stroke(); }
+                
+                // Guías Verticales
+                if (Math.abs(layer.x) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,1000); ctx.stroke(); }
+                if (Math.abs((layer.x + layer.width/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,1000); ctx.stroke(); }
+                if (Math.abs((layer.x + layer.width)-1000) < 1) { ctx.beginPath(); ctx.moveTo(1000,0); ctx.lineTo(1000,1000); ctx.stroke(); }
+                
+                // Guías Horizontales
+                if (Math.abs(layer.y) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(1000,0); ctx.stroke(); }
+                if (Math.abs((layer.y + layer.height/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(0,500); ctx.lineTo(1000,500); ctx.stroke(); }
+                if (Math.abs((layer.y + layer.height)-1000) < 1) { ctx.beginPath(); ctx.moveTo(0,1000); ctx.lineTo(1000,1000); ctx.stroke(); }
+                
                 ctx.setLineDash([]);
             }
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
+            } else { clientX = e.clientX; clientY = e.clientY; }
+            return { x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width), y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height) };
         }
 
         function setupEventListeners() {
@@ -619,26 +648,30 @@
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
                 const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
-                const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
-                const lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
+                const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
+                const dx = pos.x - centerX, dy = pos.y - centerY;
+                const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
                 if (maskMode) {
-                    isMouseDown = true; maskStartX = (lx + activeLayer.width / 2); maskStartY = (ly + activeLayer.height / 2);
+                    isMouseDown = true; maskStartX = (localX + activeLayer.width / 2); maskStartY = (localY + activeLayer.height / 2);
                     if (maskMode === 'brush') paintOnMask(maskStartX, maskStartY, true);
                     else if (maskMode === 'rect') { maskWorldStartX = pos.x; maskWorldStartY = pos.y; selectionGuide.style.display = 'block'; updateSelectionGuide(pos.x, pos.y, pos.x, pos.y); }
                     return;
                 }
-                if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
-                else if (Math.abs(lx - activeLayer.width/2) < 20 && Math.abs(ly - activeLayer.height/2) < 20) activeLayer.isResizing = true;
-                else if (Math.abs(lx) < activeLayer.width/2 && Math.abs(ly) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
+                if (Math.sqrt(Math.pow(localX, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
+                else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) activeLayer.isResizing = true;
+                else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
                 if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
             });
 
             window.addEventListener('mousemove', e => {
                 const pos = getMousePos(e); if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
                 if (editorMode === 'measure') {
-                    let fHover = -1;
-                    for (let i = 0; i < measures.length; i++) { const m = measures[i]; if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { fHover = i; break; } } }
-                    if (hoveredMeasureIdx !== fHover) { hoveredMeasureIdx = fHover; render(); }
+                    let foundHover = -1;
+                    for (let i = 0; i < measures.length; i++) {
+                        const m = measures[i];
+                        if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { foundHover = i; break; } }
+                    }
+                    if (hoveredMeasureIdx !== foundHover) { hoveredMeasureIdx = foundHover; render(); }
                 }
                 if (!isMouseDown) return;
                 if (editorMode === 'measure') {
@@ -651,7 +684,7 @@
                 }
                 const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
                 if (maskMode) {
-                    const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
+                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2, dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
                     if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); }
                     else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
@@ -717,7 +750,7 @@
                     <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
                     
                     ${isActive ? `
-                        <div class="text-rose-500 mr-1">
+                        <div class="text-rose-500 mr-1 animate-pulse">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                         </div>
                     ` : ''}
@@ -752,7 +785,9 @@
             } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
         }
 
-        function getMousePos(e) { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (CANVAS_WIDTH / r.width), y: (cy - r.top) * (CANVAS_HEIGHT / r.height) }; }
+        function toggleVisibility(id) { const l = layers.find(lay => lay.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
+        function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
+        function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
 
         function fitActiveLayerToCanvas() {
             const l = layers.find(lay => lay.id === activeLayerId);
@@ -761,10 +796,6 @@
                 l.x = (1000 - l.width)/2; l.y = (1000 - l.height)/2; l.rotation = 0; syncScaleUI(l); render();
             }
         }
-
-        function toggleVisibility(id) { const l = layers.find(lay => lay.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
-        function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
-        function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
 
         function exportImage(format = 'png') {
             const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false;
