@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fenix Editor Pro - Máscaras Corregidas</title>
+    <title>Fenix Editor Pro - Máscaras y Orden Corregido</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -58,19 +58,19 @@
             border-left: 4px solid #38bdf8;
         }
 
-        /* Guía de pincel mejorada */
+        /* Indicador de Pincel */
         #brush-cursor {
             position: fixed;
-            border: 2px solid rgba(56, 189, 248, 0.8);
+            border: 2px solid rgba(56, 189, 248, 0.9);
             border-radius: 50%;
             pointer-events: none;
             display: none;
-            z-index: 1000;
+            z-index: 9999;
             background: rgba(56, 189, 248, 0.1);
-            transform: translate(-50%, -50%); /* Centrado exacto en el cursor */
+            transform: translate(-50%, -50%);
         }
 
-        /* Guía de selección rectangular corregida */
+        /* Guía de Selección Rectangular */
         #selection-guide {
             position: absolute;
             border: 1px solid #38bdf8;
@@ -80,9 +80,19 @@
             z-index: 999;
         }
 
-        .mask-active-mode {
-            outline: 2px solid #ef4444;
+        .layer-item.dragging { opacity: 0.3; background-color: #334155; }
+        .layer-item.drag-over { border-top: 2px solid #38bdf8; }
+
+        .mask-active-canvas {
+            outline: 3px solid #ef4444 !important;
             outline-offset: 4px;
+        }
+
+        /* Estilo para botón de herramienta activa */
+        .tool-active {
+            background-color: #38bdf8 !important;
+            color: #0f172a !important;
+            border-color: #38bdf8 !important;
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -104,41 +114,41 @@
             </div>
 
             <div class="space-y-3">
-                <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest">Sellos de Marca</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest">Recursos / Marcas</p>
                 <div class="grid grid-cols-1 gap-2 px-1">
-                    <button onclick="addBrand('ugreen')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                    <button onclick="addBrand('ugreen')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-sky-500">
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">UG</div>
                         <span class="text-xs font-semibold">Ugreen</span>
                     </button>
-                    <button onclick="addBrand('anker')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                    <button onclick="addBrand('anker')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-sky-500">
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">AN</div>
                         <span class="text-xs font-semibold">Anker</span>
                     </button>
-                    <button onclick="addBrand('dimax')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                    <button onclick="addBrand('dimax')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-sky-500">
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">DX</div>
                         <span class="text-xs font-semibold">Dimax</span>
                     </button>
-                    <button onclick="addBrand('baseus')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                    <button onclick="addBrand('baseus')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-sky-500">
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">BS</div>
                         <span class="text-xs font-semibold">Baseus</span>
                     </button>
-                    <button onclick="addBrand('havit')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left">
+                    <button onclick="addBrand('havit')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-sky-500">
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-sky-400">HV</div>
                         <span class="text-xs font-semibold">Havit</span>
                     </button>
                 </div>
             </div>
 
-            <div id="mask-help" class="hidden space-y-3 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
-                <p class="text-[10px] font-bold text-red-400 uppercase">Modo Máscara Activo</p>
-                <p class="text-[11px] text-slate-300 leading-relaxed">Pinta para ocultar o mostrar. Los cambios son instantáneos.</p>
-                <button onclick="exitMaskMode()" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg transition-all">SALIR DE MÁSCARA</button>
+            <div id="mask-help-box" class="hidden space-y-3 bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+                <p class="text-[10px] font-bold text-red-400 uppercase tracking-tighter">Editando Máscara</p>
+                <p class="text-[11px] text-slate-300 leading-tight">Haz clic y arrastra sobre la imagen para recortar.</p>
+                <button onclick="exitMaskMode()" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold rounded-lg transition-all">TERMINAR EDICIÓN</button>
             </div>
 
             <div class="mt-auto pt-4 space-y-4">
                 <label class="block group cursor-pointer">
                     <div class="bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-sky-500/20">
-                        Añadir Imagen Local
+                        Añadir Imagen
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept="image/*">
                 </label>
@@ -148,7 +158,7 @@
             </div>
         </aside>
 
-        <!-- Área Central del Canvas -->
+        <!-- Área Central -->
         <main class="canvas-area relative">
             <div id="canvas-wrapper">
                 <canvas id="mainCanvas" width="1000" height="1000"></canvas>
@@ -164,25 +174,26 @@
                 <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
                 
                 <div id="layer-props" class="hidden space-y-6">
+                    <!-- Herramientas de Máscara -->
                     <div class="space-y-3">
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="enterMaskMode('brush')" id="mask-brush-btn" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Pincel</button>
-                            <button onclick="enterMaskMode('rect')" id="mask-rect-btn" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700">Rectángulo</button>
+                            <button onclick="enterMaskMode('brush')" id="btn-mask-brush" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Pincel</button>
+                            <button onclick="enterMaskMode('rect')" id="btn-mask-rect" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-[10px] font-bold border border-slate-700 transition-all">Rectángulo</button>
                         </div>
-                        <div id="mask-controls" class="hidden space-y-3 pt-2">
+                        <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
                             <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-400 uppercase">Acción:</span>
+                                <span class="text-[10px] text-slate-400">ACCIÓN:</span>
                                 <div class="flex gap-1">
-                                    <button onclick="setMaskAction('reveal')" id="action-reveal" class="px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded">Mostrar</button>
-                                    <button onclick="setMaskAction('hide')" id="action-hide" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Ocultar</button>
+                                    <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
+                                    <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded">Ocultar</button>
                                 </div>
                             </div>
                             <div>
-                                <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="mask-size-val">50px</span></label>
-                                <input type="range" id="mask-brush-size" min="5" max="250" value="50" class="w-full accent-sky-500">
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1">Pincel <span id="val-brush-size">50px</span></label>
+                                <input type="range" id="input-brush-size" min="5" max="300" value="50" class="w-full accent-sky-500">
                             </div>
-                            <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 hover:text-red-300 uppercase font-bold">Reiniciar Máscara</button>
+                            <button onclick="resetMask()" class="w-full py-1 text-[9px] text-red-400 font-bold uppercase hover:bg-red-500/10 rounded">Borrar Máscara</button>
                         </div>
                     </div>
 
@@ -193,10 +204,7 @@
                     </button>
 
                     <div>
-                        <label class="flex justify-between text-xs text-slate-400 mb-2">
-                            <span>Opacidad</span>
-                            <span id="opacity-val">100%</span>
-                        </label>
+                        <label class="flex justify-between text-xs text-slate-400 mb-2">Opacidad <span id="opacity-val">100%</span></label>
                         <input type="range" id="prop-opacity" min="0" max="100" value="100" class="w-full accent-sky-500">
                     </div>
                     
@@ -224,9 +232,9 @@
         </aside>
     </div>
 
-    <!-- Feedback Visual -->
+    <!-- Toast -->
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">
-        Mensaje aquí
+        Mensaje
     </div>
 
     <script>
@@ -237,6 +245,9 @@
         const selectionGuide = document.getElementById('selection-guide');
         const brushCursor = document.getElementById('brush-cursor');
         
+        const maskBuffer = document.createElement('canvas');
+        const mbfCtx = maskBuffer.getContext('2d');
+
         const CANVAS_WIDTH = 1000;
         const CANVAS_HEIGHT = 1000;
 
@@ -247,12 +258,11 @@
         let shiftPressed = false;
         let draggedItemIdx = null;
 
-        // Estado Máscara
-        let maskMode = false; // false, 'brush', 'rect'
-        let maskAction = 'reveal'; 
+        let maskMode = false; 
+        let maskAction = 'hide'; 
         let maskBrushSize = 50;
         let maskStartX, maskStartY;
-        let maskWorldStartX, maskWorldStartY; // Coordenadas 1000x1000 de inicio para rect
+        let maskWorldStartX, maskWorldStartY; 
 
         function init() {
             render();
@@ -326,19 +336,24 @@
             render();
         }
 
-        // --- FUNCIONES DE MÁSCARA ---
+        // --- SISTEMA DE MÁSCARA ---
 
         function enterMaskMode(mode) {
             if (!activeLayerId) return;
             maskMode = mode;
-            document.getElementById('mask-controls').classList.remove('hidden');
-            document.getElementById('mask-help').classList.remove('hidden');
-            canvas.classList.add('mask-active-mode');
+            document.getElementById('mask-controls-panel').classList.remove('hidden');
+            document.getElementById('mask-help-box').classList.remove('hidden');
+            canvas.classList.add('mask-active-canvas');
             
-            if(mode === 'brush') {
+            // Actualizar botones de herramienta
+            document.getElementById('btn-mask-brush').classList.remove('tool-active');
+            document.getElementById('btn-mask-rect').classList.remove('tool-active');
+            if (mode === 'brush') {
+                document.getElementById('btn-mask-brush').classList.add('tool-active');
                 brushCursor.style.display = 'block';
-                updateBrushCursorSize();
-            } else {
+                updateBrushCursorVisual();
+            } else if (mode === 'rect') {
+                document.getElementById('btn-mask-rect').classList.add('tool-active');
                 brushCursor.style.display = 'none';
             }
             updateUI();
@@ -346,15 +361,20 @@
 
         function exitMaskMode() {
             maskMode = false;
-            document.getElementById('mask-controls').classList.add('hidden');
-            document.getElementById('mask-help').classList.add('hidden');
-            canvas.classList.remove('mask-active-mode');
+            document.getElementById('mask-controls-panel').classList.add('hidden');
+            document.getElementById('mask-help-box').classList.add('hidden');
+            canvas.classList.remove('mask-active-canvas');
+            
+            // Limpiar estilos de botones
+            document.getElementById('btn-mask-brush').classList.remove('tool-active');
+            document.getElementById('btn-mask-rect').classList.remove('tool-active');
+            
             brushCursor.style.display = 'none';
             selectionGuide.style.display = 'none';
             render();
         }
 
-        function updateBrushCursorSize() {
+        function updateBrushCursorVisual() {
             const rect = canvas.getBoundingClientRect();
             const visualSize = maskBrushSize * (rect.width / CANVAS_WIDTH);
             brushCursor.style.width = visualSize + 'px';
@@ -363,8 +383,8 @@
 
         function setMaskAction(action) {
             maskAction = action;
-            document.getElementById('action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
-            document.getElementById('action-hide').className = action === 'hide' ? 'px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
+            document.getElementById('m-action-reveal').className = action === 'reveal' ? 'px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
+            document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-sky-500 text-slate-900 text-[9px] font-bold rounded transition-all' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all';
         }
 
         function resetMask() {
@@ -374,7 +394,7 @@
                 mCtx.fillStyle = 'white';
                 mCtx.fillRect(0, 0, layer.maskCanvas.width, layer.maskCanvas.height);
                 render();
-                showToast("Máscara reiniciada");
+                showToast("Máscara restaurada");
             }
         }
 
@@ -382,44 +402,28 @@
             const layer = layers.find(l => l.id === activeLayerId);
             if (!layer) return;
             const mCtx = layer.maskCanvas.getContext('2d');
-            
             const imgX = (localX / layer.width) * layer.maskCanvas.width;
             const imgY = (localY / layer.height) * layer.maskCanvas.height;
             const realBrushSize = (maskBrushSize / layer.width) * layer.maskCanvas.width;
-
             mCtx.save();
-            mCtx.lineCap = 'round';
-            mCtx.lineJoin = 'round';
+            mCtx.lineCap = 'round'; mCtx.lineJoin = 'round';
             mCtx.lineWidth = realBrushSize;
             mCtx.globalCompositeOperation = maskAction === 'reveal' ? 'source-over' : 'destination-out';
             mCtx.strokeStyle = 'white';
-
-            if (isFirst) {
-                mCtx.beginPath();
-                mCtx.arc(imgX, imgY, realBrushSize/2, 0, Math.PI * 2);
-                mCtx.fill();
-            } else {
-                mCtx.beginPath();
-                mCtx.moveTo(maskStartX, maskStartY);
-                mCtx.lineTo(imgX, imgY);
-                mCtx.stroke();
-            }
+            if (isFirst) { mCtx.beginPath(); mCtx.arc(imgX, imgY, realBrushSize/2, 0, Math.PI * 2); mCtx.fill(); }
+            else { mCtx.beginPath(); mCtx.moveTo(maskStartX, maskStartY); mCtx.lineTo(imgX, imgY); mCtx.stroke(); }
             mCtx.restore();
-
-            maskStartX = imgX;
-            maskStartY = imgY;
+            maskStartX = imgX; maskStartY = imgY;
         }
 
         function applyRectMask(x1, y1, x2, y2) {
             const layer = layers.find(l => l.id === activeLayerId);
             if (!layer) return;
             const mCtx = layer.maskCanvas.getContext('2d');
-
             const imgX1 = (x1 / layer.width) * layer.maskCanvas.width;
             const imgY1 = (y1 / layer.height) * layer.maskCanvas.height;
             const imgX2 = (x2 / layer.width) * layer.maskCanvas.width;
             const imgY2 = (y2 / layer.height) * layer.maskCanvas.height;
-
             mCtx.save();
             mCtx.globalCompositeOperation = maskAction === 'reveal' ? 'source-over' : 'destination-out';
             mCtx.fillStyle = 'white';
@@ -428,41 +432,28 @@
             render();
         }
 
-        // --- RENDERIZADO ---
-
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
-                
                 const centerX = l.x + l.width / 2;
                 const centerY = l.y + l.height / 2;
                 ctx.translate(centerX, centerY);
                 ctx.rotate(l.rotation);
                 ctx.globalAlpha = l.opacity / 100;
                 ctx.globalCompositeOperation = l.blend;
-
-                const tempBuffer = document.createElement('canvas');
-                tempBuffer.width = l.width;
-                tempBuffer.height = l.height;
-                const tCtx = tempBuffer.getContext('2d');
-
-                tCtx.drawImage(l.content, 0, 0, l.width, l.height);
-                tCtx.globalCompositeOperation = 'destination-in';
-                tCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
-
-                ctx.drawImage(tempBuffer, -l.width / 2, -l.height / 2);
-
+                maskBuffer.width = l.width; maskBuffer.height = l.height;
+                mbfCtx.clearRect(0, 0, l.width, l.height);
+                mbfCtx.drawImage(l.content, 0, 0, l.width, l.height);
+                mbfCtx.globalCompositeOperation = 'destination-in';
+                mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
+                ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
                 if (l.id === activeLayerId && !maskMode) {
-                    ctx.strokeStyle = '#38bdf8';
-                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
                     ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
-                    ctx.beginPath();
-                    ctx.moveTo(0, -l.height / 2); ctx.lineTo(0, -l.height / 2 - 30); ctx.stroke();
+                    ctx.fillStyle = '#38bdf8'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
+                    ctx.beginPath(); ctx.moveTo(0, -l.height / 2); ctx.lineTo(0, -l.height / 2 - 30); ctx.stroke();
                     ctx.beginPath(); ctx.arc(0, -l.height / 2 - 35, 10, 0, Math.PI * 2); ctx.fill();
                 }
                 ctx.restore();
@@ -483,14 +474,11 @@
             }
         }
 
-        // --- EVENTOS ---
-
         function setupEventListeners() {
             canvas.addEventListener('mousedown', e => {
                 const pos = getMousePos(e);
                 const activeLayer = layers.find(l => l.id === activeLayerId);
                 if (!activeLayer) return;
-
                 const centerX = activeLayer.x + activeLayer.width / 2;
                 const centerY = activeLayer.y + activeLayer.height / 2;
                 const dx = pos.x - centerX, dy = pos.y - centerY;
@@ -501,25 +489,19 @@
                     isMouseDown = true;
                     maskStartX = (localX + activeLayer.width / 2);
                     maskStartY = (localY + activeLayer.height / 2);
-                    
-                    if (maskMode === 'brush') {
-                        paintOnMask(maskStartX, maskStartY, true);
-                    } else if (maskMode === 'rect') {
-                        maskWorldStartX = pos.x;
-                        maskWorldStartY = pos.y;
+                    if (maskMode === 'brush') paintOnMask(maskStartX, maskStartY, true);
+                    else if (maskMode === 'rect') {
+                        maskWorldStartX = pos.x; maskWorldStartY = pos.y;
                         selectionGuide.style.display = 'block';
                         updateSelectionGuide(pos.x, pos.y, pos.x, pos.y);
                     }
                     return;
                 }
 
-                if (Math.sqrt(Math.pow(localX - 0, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) {
-                    activeLayer.isRotating = true;
-                } else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) {
-                    activeLayer.isResizing = true;
-                } else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) {
-                    activeLayer.isDragging = true;
-                    dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y;
+                if (Math.sqrt(Math.pow(localX - 0, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) { activeLayer.isRotating = true; }
+                else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) { activeLayer.isResizing = true; }
+                else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) {
+                    activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y;
                 }
                 if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
             });
@@ -527,39 +509,23 @@
             window.addEventListener('mousemove', e => {
                 const pos = getMousePos(e);
                 const activeLayer = layers.find(l => l.id === activeLayerId);
-                
-                // Cursor de pincel centrado
-                if (maskMode === 'brush') {
-                    brushCursor.style.left = e.clientX + 'px';
-                    brushCursor.style.top = e.clientY + 'px';
-                }
-
+                if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
                 if (!isMouseDown || !activeLayer) return;
-
                 if (maskMode) {
                     const centerX = activeLayer.x + activeLayer.width / 2;
                     const centerY = activeLayer.y + activeLayer.height / 2;
                     const dx = pos.x - centerX, dy = pos.y - centerY;
                     const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2;
                     const localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-
-                    if (maskMode === 'brush') {
-                        paintOnMask(localX, localY, false);
-                        render();
-                    } else if (maskMode === 'rect') {
-                        updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
-                    }
+                    if (maskMode === 'brush') { paintOnMask(localX, localY, false); render(); }
+                    else if (maskMode === 'rect') { updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y); }
                     return;
                 }
-
                 if (activeLayer.isRotating) {
                     const centerX = activeLayer.x + activeLayer.width / 2;
                     const centerY = activeLayer.y + activeLayer.height / 2;
                     let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2;
-                    if (shiftPressed) {
-                        const deg = (angle * 180 / Math.PI);
-                        angle = (Math.round(deg / 45) * 45) * Math.PI / 180;
-                    }
+                    if (shiftPressed) { angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; }
                     activeLayer.rotation = angle;
                 } else if (activeLayer.isResizing) {
                     const centerX = activeLayer.x + activeLayer.width / 2;
@@ -591,29 +557,22 @@
                     const activeLayer = layers.find(l => l.id === activeLayerId);
                     const centerX = activeLayer.x + activeLayer.width / 2;
                     const centerY = activeLayer.y + activeLayer.height / 2;
-
-                    // Convertir punto de inicio a local
                     const startDx = maskWorldStartX - centerX, startDy = maskWorldStartY - centerY;
                     const startLocalX = startDx * Math.cos(-activeLayer.rotation) - startDy * Math.sin(-activeLayer.rotation) + activeLayer.width/2;
                     const startLocalY = startDx * Math.sin(-activeLayer.rotation) + startDy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-
-                    // Convertir punto final a local
                     const endDx = pos.x - centerX, endDy = pos.y - centerY;
                     const endLocalX = endDx * Math.cos(-activeLayer.rotation) - endDy * Math.sin(-activeLayer.rotation) + activeLayer.width/2;
                     const endLocalY = endDx * Math.sin(-activeLayer.rotation) + endDy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-
                     applyRectMask(startLocalX, startLocalY, endLocalX, endLocalY);
                 }
-                isMouseDown = false;
-                selectionGuide.style.display = 'none';
+                isMouseDown = false; selectionGuide.style.display = 'none';
                 layers.forEach(l => { l.isDragging = l.isResizing = l.isRotating = false; });
                 render();
             });
 
-            document.getElementById('mask-brush-size').oninput = (e) => {
-                maskBrushSize = e.target.value;
-                document.getElementById('mask-size-val').textContent = e.target.value + 'px';
-                if(maskMode === 'brush') updateBrushCursorSize();
+            document.getElementById('input-brush-size').oninput = (e) => {
+                maskBrushSize = e.target.value; document.getElementById('val-brush-size').textContent = e.target.value + 'px';
+                if(maskMode === 'brush') updateBrushCursorVisual();
             };
             document.getElementById('prop-opacity').oninput = (e) => {
                 const layer = layers.find(l => l.id === activeLayerId);
@@ -634,24 +593,16 @@
             };
         }
 
-        // CORRECCIÓN DE LA GUÍA VISUAL: Se posiciona relativa al Canvas y no a la ventana
         function updateSelectionGuide(x1, y1, x2, y2) {
-            const rect = canvas.getBoundingClientRect(); // Rect visual en pantalla
-            const scale = rect.width / CANVAS_WIDTH; // Escala 1000px -> pantalla
-            
-            // Calculamos posición relativa al origen del lienzo dentro del wrapper
+            const rect = canvas.getBoundingClientRect();
+            const scale = rect.width / CANVAS_WIDTH;
             const left = (Math.min(x1, x2) * scale) + canvas.offsetLeft;
             const top = (Math.min(y1, y2) * scale) + canvas.offsetTop;
             const width = Math.abs(x1 - x2) * scale;
             const height = Math.abs(y1 - y2) * scale;
-
-            selectionGuide.style.left = left + 'px';
-            selectionGuide.style.top = top + 'px';
-            selectionGuide.style.width = width + 'px';
-            selectionGuide.style.height = height + 'px';
+            selectionGuide.style.left = left + 'px'; selectionGuide.style.top = top + 'px';
+            selectionGuide.style.width = width + 'px'; selectionGuide.style.height = height + 'px';
         }
-
-        // --- UTILIDADES ---
 
         function updateUI() {
             layerListEl.innerHTML = '';
@@ -660,14 +611,19 @@
                 div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${activeLayerId === l.id ? 'active' : ''}`;
                 div.draggable = true;
                 div.ondragstart = (e) => { draggedItemIdx = index; div.classList.add('dragging'); };
-                div.ondragover = (e) => { e.preventDefault(); };
+                div.ondragover = (e) => { e.preventDefault(); div.classList.add('drag-over'); };
+                div.ondragleave = () => div.classList.remove('drag-over');
                 div.ondrop = (e) => {
-                    e.preventDefault();
+                    e.preventDefault(); div.classList.remove('drag-over');
                     const movedItem = layers.splice(draggedItemIdx, 1)[0];
                     layers.splice(index, 0, movedItem); render(); updateUI();
                 };
+                div.ondragend = () => div.classList.remove('dragging');
                 div.onclick = () => setActiveLayer(l.id);
                 div.innerHTML = `
+                    <div class="cursor-grab active:cursor-grabbing text-slate-500 hover:text-sky-400 py-1 px-1">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3z"/></svg>
+                    </div>
                     <div class="w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0">
                         <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? 'opacity-80' : 'opacity-20 grayscale'}">
                     </div>
@@ -678,16 +634,15 @@
                 `;
                 layerListEl.appendChild(div);
             });
-
             const propsEl = document.getElementById('layer-props');
             const noLayerEl = document.getElementById('no-layer-msg');
             const activeLayer = layers.find(l => l.id === activeLayerId);
             if (activeLayer) {
                 propsEl.classList.remove('hidden'); noLayerEl.classList.add('hidden');
                 document.getElementById('opacity-val').textContent = activeLayer.opacity + '%';
-            } else {
-                propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden');
-            }
+                document.getElementById('prop-opacity').value = activeLayer.opacity;
+                document.getElementById('prop-blend').value = activeLayer.blend;
+            } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
         }
 
         function getMousePos(e) {
@@ -721,7 +676,7 @@
         function exportImage() {
             const oldId = activeLayerId; activeLayerId = null; render();
             setTimeout(() => {
-                const link = document.createElement('a'); link.download = 'fenix-export-' + Date.now() + '.png';
+                const link = document.createElement('a'); link.download = 'fenix-master-' + Date.now() + '.png';
                 link.href = canvas.toDataURL('image/png'); link.click();
                 setActiveLayer(oldId);
             }, 100);
