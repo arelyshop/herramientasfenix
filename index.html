@@ -34,6 +34,13 @@
             overflow: hidden; 
         }
 
+        /* Efecto visual al arrastrar archivo sobre el canvas */
+        .canvas-area.drag-active {
+            background-color: rgba(244, 63, 94, 0.1);
+            outline: 4px dashed #f43f5e;
+            outline-offset: -20px;
+        }
+
         #canvas-wrapper {
             position: relative;
             display: flex;
@@ -55,7 +62,6 @@
             object-fit: contain;
         }
 
-        /* Estilo de Capa Seleccionada */
         .layer-item.active {
             background-color: #334155 !important;
             border-left: 4px solid #f43f5e;
@@ -66,7 +72,6 @@
             border-color: #f43f5e;
         }
 
-        /* Indicador de Pincel */
         #brush-cursor {
             position: fixed;
             border: 2px solid rgba(244, 63, 94, 0.8);
@@ -78,7 +83,6 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Guía de selección */
         #selection-guide {
             position: absolute;
             border: 1px solid #f43f5e;
@@ -94,7 +98,6 @@
         .mask-active-canvas { outline: 3px solid #ef4444 !important; outline-offset: 4px; }
         .tool-active { background-color: #f43f5e !important; color: #ffffff !important; border-color: #f43f5e !important; }
 
-        /* Modal Estilo */
         #textModal { background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index: 10000; }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -103,7 +106,6 @@
         
         input[type=range] { accent-color: #f43f5e; }
 
-        /* Barra lateral scrollable */
         .sidebar-scrollable {
             overflow-y: auto;
             max-height: 100vh;
@@ -114,7 +116,6 @@
 
     <div id="brush-cursor"></div>
 
-    <!-- Modal para ingresar texto de medida -->
     <div id="textModal" class="fixed inset-0 flex items-center justify-center hidden">
         <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl w-80 border border-slate-700">
             <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">Ingresa la medida</h3>
@@ -127,7 +128,7 @@
     </div>
 
     <div class="editor-container">
-        <!-- Barra Lateral Izquierda (Scrollable) -->
+        <!-- Barra Lateral Izquierda -->
         <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 sidebar-scrollable">
             <div class="flex items-center gap-3 px-2">
                 <div class="w-8 h-8 bg-rose-500 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-rose-500/20">A</div>
@@ -153,7 +154,7 @@
                 </div>
             </div>
 
-            <!-- Sección de Marcas -->
+            <!-- Marcas -->
             <div class="space-y-3">
                 <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest">Recursos / Marcas</p>
                 <div class="grid grid-cols-1 gap-2 px-1">
@@ -209,27 +210,25 @@
         </aside>
 
         <!-- Área Central -->
-        <main class="canvas-area relative">
+        <main id="canvas-dropzone" class="canvas-area relative">
             <div id="canvas-wrapper">
                 <canvas id="mainCanvas" width="1000" height="1000"></canvas>
                 <div id="selection-guide"></div>
             </div>
         </main>
 
-        <!-- Barra Lateral Derecha (Scrollable) -->
+        <!-- Barra Lateral Derecha -->
         <aside class="bg-slate-900 border-l border-slate-800 flex flex-col sidebar-scrollable">
             <div class="p-6 flex flex-col gap-6">
                 <div>
                     <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
                     
-                    <!-- Panel Medidas -->
                     <div id="measure-props" class="hidden space-y-4">
                         <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
                         <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
                         <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all uppercase">Borrar medidas</button>
                     </div>
 
-                    <!-- Panel Estilos -->
                     <div id="styles-props" class="hidden space-y-6">
                         <div class="space-y-4">
                             <p class="text-[10px] font-bold text-rose-400 uppercase italic">HUE / Color</p>
@@ -278,8 +277,8 @@
                                     <div class="flex items-center justify-between">
                                         <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
                                         <div class="flex gap-1">
-                                            <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all">Mostrar</button>
-                                            <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all">Ocultar</button>
+                                            <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
+                                            <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
                                         </div>
                                     </div>
                                     <div>
@@ -322,7 +321,6 @@
                     </div>
                 </div>
 
-                <!-- Lista de Capas -->
                 <div>
                     <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
                     <div id="layer-list" class="space-y-2 pb-10"></div>
@@ -340,6 +338,7 @@
         const fileInput = document.getElementById('fileInput');
         const selectionGuide = document.getElementById('selection-guide');
         const brushCursor = document.getElementById('brush-cursor');
+        const dropZone = document.getElementById('canvas-dropzone');
         
         const maskBuffer = document.createElement('canvas');
         const mbfCtx = maskBuffer.getContext('2d');
@@ -354,6 +353,7 @@
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
         let draggedItemIdx = null;
+        let layerClipboard = null; // Portapapeles para copiar/pegar
 
         let maskMode = false; 
         let maskAction = 'hide'; 
@@ -376,12 +376,108 @@
             cancel: document.getElementById('cancelText')
         };
 
-        function init() { render(); setupEventListeners(); }
-
-        window.addEventListener('keydown', (e) => { if(e.key === 'Shift') shiftPressed = true; });
-        window.addEventListener('keyup', (e) => { if(e.key === 'Shift') shiftPressed = false; });
+        function init() { 
+            render(); 
+            setupEventListeners();
+            setupKeyboardShortcuts();
+            setupDragAndDrop();
+        }
 
         function createId() { return Math.random().toString(36).substr(2, 9); }
+
+        /**
+         * Lógica de Arrastrar y Soltar Archivos
+         */
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+
+            dropZone.addEventListener('dragenter', () => dropZone.classList.add('drag-active'), false);
+            dropZone.addEventListener('dragover', () => dropZone.classList.add('drag-active'), false);
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'), false);
+            
+            dropZone.addEventListener('drop', (e) => {
+                dropZone.classList.remove('drag-active');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => addLayer(ev.target.result, file.name);
+                    reader.readAsDataURL(file);
+                    showToast("Cargando imagen soltada...");
+                }
+            }, false);
+        }
+
+        /**
+         * Lógica de Atajos de Teclado (Copiar / Pegar / Suprimir)
+         */
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Shift') shiftPressed = true;
+                
+                // Ignorar si el usuario está escribiendo en el modal
+                if (!MODAL.el.classList.contains('hidden')) return;
+
+                // Ctrl+C (Copiar)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                    const active = layers.find(l => l.id === activeLayerId);
+                    if (active) {
+                        layerClipboard = JSON.parse(JSON.stringify(active));
+                        // Re-adjuntar objetos no serializables
+                        layerClipboard.content = active.content;
+                        showToast("Capa copiada al portapapeles");
+                    }
+                }
+
+                // Ctrl+V (Pegar)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                    if (layerClipboard) {
+                        pasteLayer();
+                    }
+                }
+
+                // Suprimir (Borrar)
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (activeLayerId && editorMode === 'move' && !maskMode) {
+                        deleteActiveLayer();
+                    }
+                }
+            });
+
+            window.addEventListener('keyup', (e) => { if(e.key === 'Shift') shiftPressed = false; });
+        }
+
+        function pasteLayer() {
+            const newLayer = JSON.parse(JSON.stringify(layerClipboard));
+            newLayer.id = createId();
+            newLayer.x += 30; // Desfase para que se vea el duplicado
+            newLayer.y += 30;
+            newLayer.content = layerClipboard.content;
+            
+            // Re-procesar lienzos internos
+            newLayer.processedCanvas = document.createElement('canvas');
+            newLayer.processedCanvas.width = newLayer.content.width;
+            newLayer.processedCanvas.height = newLayer.content.height;
+            
+            newLayer.maskCanvas = document.createElement('canvas');
+            newLayer.maskCanvas.width = newLayer.content.width;
+            newLayer.maskCanvas.height = newLayer.content.height;
+            
+            // Copiar estado de la máscara si existe en el original
+            const originalLayer = layers.find(l => l.id === activeLayerId);
+            if (originalLayer) {
+                newLayer.maskCanvas.getContext('2d').drawImage(originalLayer.maskCanvas, 0, 0);
+            } else {
+                const mCtx = newLayer.maskCanvas.getContext('2d');
+                mCtx.fillStyle = 'white'; mCtx.fillRect(0,0,newLayer.maskCanvas.width, newLayer.maskCanvas.height);
+            }
+
+            applyEffects(newLayer);
+            layers.unshift(newLayer);
+            setActiveLayer(newLayer.id);
+            showToast("Capa pegada");
+        }
 
         function addLayer(data, name = "Capa", brandKey = null) {
             const layer = {
@@ -408,8 +504,7 @@
                 layer.processedCanvas.height = img.height;
 
                 const mCanvas = document.createElement('canvas');
-                mCanvas.width = img.width;
-                mCanvas.height = img.height;
+                mCanvas.width = img.width; mCanvas.height = img.height;
                 const mCtx = mCanvas.getContext('2d');
                 mCtx.fillStyle = 'white'; mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
                 layer.maskCanvas = mCanvas;
@@ -468,6 +563,11 @@
                 data[i] = r; data[i+1] = g; data[i+2] = b;
             }
             pCtx.putImageData(imageData, 0, 0);
+        }
+
+        function addBrand(brand) {
+            const path = `images/marcas/logo-${brand}.png`;
+            addLayer(path, `${brand.toUpperCase()}`, brand);
         }
 
         function setActiveLayer(id) {
@@ -614,17 +714,12 @@
             if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !isExporting) {
                 const layer = layers.find(lay => lay.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
-                
-                // Guías Verticales
                 if (Math.abs(layer.x) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,1000); ctx.stroke(); }
                 if (Math.abs((layer.x + layer.width/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,1000); ctx.stroke(); }
                 if (Math.abs((layer.x + layer.width)-1000) < 1) { ctx.beginPath(); ctx.moveTo(1000,0); ctx.lineTo(1000,1000); ctx.stroke(); }
-                
-                // Guías Horizontales
                 if (Math.abs(layer.y) < 1) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(1000,0); ctx.stroke(); }
                 if (Math.abs((layer.y + layer.height/2)-500) < 1) { ctx.beginPath(); ctx.moveTo(0,500); ctx.lineTo(1000,500); ctx.stroke(); }
                 if (Math.abs((layer.y + layer.height)-1000) < 1) { ctx.beginPath(); ctx.moveTo(0,1000); ctx.lineTo(1000,1000); ctx.stroke(); }
-                
                 ctx.setLineDash([]);
             }
         }
@@ -648,30 +743,26 @@
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
                 const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
-                const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                const dx = pos.x - centerX, dy = pos.y - centerY;
-                const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
+                const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
+                const lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation), ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation);
                 if (maskMode) {
-                    isMouseDown = true; maskStartX = (localX + activeLayer.width / 2); maskStartY = (localY + activeLayer.height / 2);
+                    isMouseDown = true; maskStartX = (lx + activeLayer.width / 2); maskStartY = (ly + activeLayer.height / 2);
                     if (maskMode === 'brush') paintOnMask(maskStartX, maskStartY, true);
                     else if (maskMode === 'rect') { maskWorldStartX = pos.x; maskWorldStartY = pos.y; selectionGuide.style.display = 'block'; updateSelectionGuide(pos.x, pos.y, pos.x, pos.y); }
                     return;
                 }
-                if (Math.sqrt(Math.pow(localX, 2) + Math.pow(localY - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
-                else if (Math.abs(localX - activeLayer.width/2) < 20 && Math.abs(localY - activeLayer.height/2) < 20) activeLayer.isResizing = true;
-                else if (Math.abs(localX) < activeLayer.width/2 && Math.abs(localY) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
+                if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-activeLayer.height/2 - 35), 2)) < 20) activeLayer.isRotating = true;
+                else if (Math.abs(lx - activeLayer.width/2) < 20 && Math.abs(ly - activeLayer.height/2) < 20) activeLayer.isResizing = true;
+                else if (Math.abs(lx) < activeLayer.width/2 && Math.abs(ly) < activeLayer.height/2) { activeLayer.isDragging = true; dragOffset.x = pos.x - activeLayer.x; dragOffset.y = pos.y - activeLayer.y; }
                 if (activeLayer.isRotating || activeLayer.isResizing || activeLayer.isDragging) isMouseDown = true;
             });
 
             window.addEventListener('mousemove', e => {
                 const pos = getMousePos(e); if (maskMode === 'brush') { brushCursor.style.left = e.clientX + 'px'; brushCursor.style.top = e.clientY + 'px'; }
                 if (editorMode === 'measure') {
-                    let foundHover = -1;
-                    for (let i = 0; i < measures.length; i++) {
-                        const m = measures[i];
-                        if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { foundHover = i; break; } }
-                    }
-                    if (hoveredMeasureIdx !== foundHover) { hoveredMeasureIdx = foundHover; render(); }
+                    let fHover = -1;
+                    for (let i = 0; i < measures.length; i++) { const m = measures[i]; if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { fHover = i; break; } } }
+                    if (hoveredMeasureIdx !== fHover) { hoveredMeasureIdx = fHover; render(); }
                 }
                 if (!isMouseDown) return;
                 if (editorMode === 'measure') {
@@ -684,7 +775,7 @@
                 }
                 const activeLayer = layers.find(l => l.id === activeLayerId); if (!activeLayer) return;
                 if (maskMode) {
-                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2, dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
+                    const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
                     if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); }
                     else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
