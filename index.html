@@ -58,7 +58,7 @@
             border-left: 4px solid #f43f5e;
         }
 
-        /* Guía de pincel */
+        /* Indicador de Pincel */
         #brush-cursor {
             position: fixed;
             border: 2px solid rgba(244, 63, 94, 0.8);
@@ -167,7 +167,7 @@
 
             <div class="mt-auto pt-4 space-y-4">
                 <label class="block group cursor-pointer">
-                    <div class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-rose-500/20">
+                    <div class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-sky-500/20">
                         Añadir Imagen
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept="image/*">
@@ -514,21 +514,35 @@
 
         function clearAllMeasures() { if(confirm("¿Borrar todas las medidas?")) { measures = []; render(); } }
 
-        function render(isExporting = false) {
+        /**
+         * Función de renderizado principal
+         * @param {string|null} exportFormat - 'png', 'jpeg' o null (para edición normal)
+         */
+        function render(exportFormat = null) {
+            const isExporting = (exportFormat === 'png' || exportFormat === 'jpeg');
+            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (isExporting && arguments[0] === 'jpeg') { ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+            
+            // Si es exportación a JPEG, pintar fondo blanco sólido obligatorio
+            if (exportFormat === 'jpeg') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
                 const centerX = l.x + l.width / 2, centerY = l.y + l.height / 2;
                 ctx.translate(centerX, centerY); ctx.rotate(l.rotation);
                 ctx.globalAlpha = l.opacity / 100; ctx.globalCompositeOperation = l.blend;
+                
                 maskBuffer.width = l.width; maskBuffer.height = l.height;
                 mbfCtx.clearRect(0, 0, l.width, l.height);
                 mbfCtx.drawImage(l.content, 0, 0, l.width, l.height);
                 mbfCtx.globalCompositeOperation = 'destination-in';
                 mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
                 ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
+
                 if (l.id === activeLayerId && !maskMode && !isExporting) {
                     ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
                     ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
@@ -537,8 +551,10 @@
                 }
                 ctx.restore();
             });
+
             measures.forEach((m, i) => drawMeasureLine(m, i, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
+
             if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !isExporting) {
                 const layer = layers.find(l => l.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
@@ -723,16 +739,32 @@
         function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
 
+        /**
+         * Exporta la imagen en el formato deseado.
+         * @param {string} format - 'png' o 'jpeg'
+         */
         function exportImage(format = 'png') {
-            const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false;
-            render(format === 'jpeg');
+            const oldId = activeLayerId, oldMaskMode = maskMode; 
+            activeLayerId = null; 
+            maskMode = false;
+            
+            // Llamamos a render pasando el formato para que dibuje fondo blanco si es jpeg
+            render(format);
+
             setTimeout(() => {
-                const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+                const quality = format === 'jpeg' ? 0.92 : 1.0;
                 const link = document.createElement('a');
                 link.download = `arelyshop-photo-${Date.now()}.${format}`;
-                link.href = canvas.toDataURL(mime, 0.92);
-                link.click(); showToast(`Exportado como ${format.toUpperCase()}`);
-                activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI();
+                link.href = canvas.toDataURL(mimeType, quality);
+                link.click();
+                
+                showToast(`Exportado como ${format.toUpperCase()}`);
+                
+                activeLayerId = oldId; 
+                maskMode = oldMaskMode; 
+                render(); 
+                updateUI();
             }, 100);
         }
 
