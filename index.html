@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arelyshop Pro - Editor con Medidas</title>
+    <title>Arelyshop Pro - Editor de Fotos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
@@ -130,6 +130,11 @@
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" class="mb-1"><path d="M680-280q-72 0-127-45.5T484-440H272q-12 27-37 43.5T180-380q-42 0-71-29t-29-71q0-42 29-71t71-29q30 0 55 16.5t37 43.5h212q14-69 69-114.5T680-680q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280Zm85-115q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Z"/></svg>
                         <span class="text-[9px] font-bold uppercase">Medida</span>
                     </button>
+                    <!-- Nueva Herramienta Estilos con Nuevo Icono -->
+                    <button onclick="setEditorMode('styles')" id="btn-mode-styles" class="col-span-2 flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
+                        <span class="text-[9px] font-bold uppercase">Estilos (Color)</span>
+                    </button>
                 </div>
             </div>
 
@@ -167,7 +172,7 @@
 
             <div class="mt-auto pt-4 space-y-4">
                 <label class="block group cursor-pointer">
-                    <div class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-sky-500/20">
+                    <div class="bg-rose-500 hover:bg-rose-400 text-white font-bold py-3 rounded-xl text-center text-sm transition-all shadow-lg shadow-rose-500/20">
                         Añadir Imagen
                     </div>
                     <input type="file" id="fileInput" class="hidden" accept="image/*">
@@ -201,17 +206,38 @@
             <div class="p-6 border-b border-slate-800">
                 <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Propiedades</p>
                 
-                <!-- Ajustes específicos de Medidas -->
+                <!-- Panel de Medidas -->
                 <div id="measure-props" class="hidden space-y-4">
                     <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
                     <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
-                    <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all">Borrar todas las medidas</button>
+                    <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all">Borrar medidas</button>
+                </div>
+
+                <!-- Panel de Estilos (Niveles) -->
+                <div id="styles-props" class="hidden space-y-4">
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Niveles</p>
+                        <div class="space-y-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/50">
+                            <div>
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Negros <span id="val-lv-black">0</span></label>
+                                <input type="range" id="input-lv-black" min="0" max="250" value="0" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Medios <span id="val-lv-mid">1.0</span></label>
+                                <input type="range" id="input-lv-mid" min="0.1" max="3" step="0.1" value="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                            </div>
+                            <div>
+                                <label class="flex justify-between text-[10px] text-slate-400 mb-1 uppercase">Blancos <span id="val-lv-white">255</span></label>
+                                <input type="range" id="input-lv-white" min="5" max="255" value="255" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
                 
                 <div id="layer-props" class="hidden space-y-6">
-                    <!-- Máscara -->
+                    <!-- Máscara (Dentro de Editor) -->
                     <div class="space-y-3">
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Máscara de Recorte</p>
                         <div class="grid grid-cols-2 gap-2">
@@ -220,10 +246,10 @@
                         </div>
                         <div id="mask-controls-panel" class="hidden space-y-3 pt-2 bg-slate-800/50 p-2 rounded-lg">
                             <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-400 uppercase">Acción:</span>
+                                <span class="text-[10px] text-slate-400 uppercase text-[9px]">ACCIÓN:</span>
                                 <div class="flex gap-1">
-                                    <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded transition-all">Mostrar</button>
-                                    <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded transition-all">Ocultar</button>
+                                    <button onclick="setMaskAction('reveal')" id="m-action-reveal" class="px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded">Mostrar</button>
+                                    <button onclick="setMaskAction('hide')" id="m-action-hide" class="px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded">Ocultar</button>
                                 </div>
                             </div>
                             <div>
@@ -268,7 +294,7 @@
                         </div>
                     </div>
 
-                    <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all">Eliminar Capa</button>
+                    <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
                 </div>
             </div>
 
@@ -298,7 +324,7 @@
 
         let layers = [];
         let activeLayerId = null;
-        let editorMode = 'move'; 
+        let editorMode = 'move'; // 'move', 'measure', 'styles'
         let isMouseDown = false;
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
@@ -325,10 +351,7 @@
             cancel: document.getElementById('cancelText')
         };
 
-        function init() {
-            render();
-            setupEventListeners();
-        }
+        function init() { render(); setupEventListeners(); }
 
         window.addEventListener('keydown', (e) => { if(e.key === 'Shift') shiftPressed = true; });
         window.addEventListener('keyup', (e) => { if(e.key === 'Shift') shiftPressed = false; });
@@ -344,7 +367,9 @@
                 blend: 'source-over',
                 x: 0, y: 0, width: 0, height: 0, rotation: 0, aspectRatio: 1, 
                 content: null,
-                maskCanvas: null 
+                maskCanvas: null,
+                levels: { black: 0, gamma: 1.0, white: 255 },
+                processedCanvas: document.createElement('canvas')
             };
 
             const img = new Image();
@@ -353,6 +378,8 @@
                 layer.width = img.width;
                 layer.height = img.height;
                 layer.content = img;
+                layer.processedCanvas.width = img.width;
+                layer.processedCanvas.height = img.height;
 
                 const mCanvas = document.createElement('canvas');
                 mCanvas.width = img.width;
@@ -363,23 +390,45 @@
 
                 if (brandKey) {
                     switch (brandKey) {
-                        case 'ugreen': layer.x = (CANVAS_WIDTH - layer.width) / 2; layer.y = 0; break;
+                        case 'ugreen': layer.x = (CANVAS_WIDTH-layer.width)/2; layer.y = 0; break;
                         case 'anker': layer.x = 55; layer.y = 0; break;
-                        case 'dimax': layer.x = 0; layer.y = CANVAS_HEIGHT - layer.height - 85; break;
+                        case 'dimax': layer.x = 0; layer.y = CANVAS_HEIGHT-layer.height-85; break;
                         case 'baseus': layer.x = 45; layer.y = 0; break;
-                        case 'havit': layer.x = 0; layer.y = CANVAS_HEIGHT - layer.height - 95; break;
+                        case 'havit': layer.x = 0; layer.y = CANVAS_HEIGHT-layer.height-95; break;
                     }
                 } else {
-                    const ratio = Math.min(CANVAS_WIDTH * 0.7 / img.width, CANVAS_HEIGHT * 0.7 / img.height);
-                    layer.width = img.width * ratio; layer.height = img.height * ratio;
-                    layer.x = (CANVAS_WIDTH - layer.width) / 2; layer.y = (CANVAS_HEIGHT - layer.height) / 2;
+                    const ratio = Math.min(CANVAS_WIDTH*0.7/img.width, CANVAS_HEIGHT*0.7/img.height);
+                    layer.width = img.width*ratio; layer.height = img.height*ratio;
+                    layer.x = (CANVAS_WIDTH-layer.width)/2; layer.y = (CANVAS_HEIGHT-layer.height)/2;
                 }
 
+                applyLevels(layer);
                 layers.unshift(layer);
                 setActiveLayer(layer.id);
                 render();
             };
             img.src = data;
+        }
+
+        function applyLevels(layer) {
+            if (!layer.content) return;
+            const pCtx = layer.processedCanvas.getContext('2d');
+            pCtx.drawImage(layer.content, 0, 0);
+            const imageData = pCtx.getImageData(0, 0, layer.processedCanvas.width, layer.processedCanvas.height);
+            const data = imageData.data;
+            const { black, gamma, white } = layer.levels;
+            const range = white - black;
+            const lut = new Uint8ClampedArray(256);
+            for (let i = 0; i < 256; i++) {
+                let v = (i - black) / range;
+                v = Math.max(0, Math.min(1, v));
+                v = Math.pow(v, 1 / gamma);
+                lut[i] = v * 255;
+            }
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = lut[data[i]]; data[i+1] = lut[data[i+1]]; data[i+2] = lut[data[i+2]];
+            }
+            pCtx.putImageData(imageData, 0, 0);
         }
 
         function addBrand(brand) {
@@ -398,8 +447,13 @@
             editorMode = mode;
             document.getElementById('btn-mode-move').className = mode === 'move' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-measure').className = mode === 'measure' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
+            document.getElementById('btn-mode-styles').className = mode === 'styles' ? 'tool-active flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all' : 'flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
+            
             document.getElementById('measure-props').classList.toggle('hidden', mode !== 'measure');
+            document.getElementById('styles-props').classList.toggle('hidden', mode !== 'styles');
+            
             if (mode === 'measure') { activeLayerId = null; exitMaskMode(); }
+            if (mode === 'styles') { exitMaskMode(); }
             updateUI();
             render();
         }
@@ -410,12 +464,10 @@
             document.getElementById('mask-controls-panel').classList.remove('hidden');
             document.getElementById('mask-help-box').classList.remove('hidden');
             canvas.classList.add('mask-active-canvas');
-            document.getElementById('btn-mask-brush').classList.remove('tool-active');
-            document.getElementById('btn-mask-rect').classList.remove('tool-active');
-            if (mode === 'brush') {
-                document.getElementById('btn-mask-brush').classList.add('tool-active');
-                brushCursor.style.display = 'block'; updateBrushCursorVisual();
-            } else { document.getElementById('btn-mask-rect').classList.add('tool-active'); brushCursor.style.display = 'none'; }
+            document.getElementById('btn-mask-brush').classList.toggle('tool-active', mode === 'brush');
+            document.getElementById('btn-mask-rect').classList.toggle('tool-active', mode === 'rect');
+            if (mode === 'brush') { brushCursor.style.display = 'block'; updateBrushCursorVisual(); }
+            else { brushCursor.style.display = 'none'; }
             updateUI();
         }
 
@@ -514,35 +566,22 @@
 
         function clearAllMeasures() { if(confirm("¿Borrar todas las medidas?")) { measures = []; render(); } }
 
-        /**
-         * Función de renderizado principal
-         * @param {string|null} exportFormat - 'png', 'jpeg' o null (para edición normal)
-         */
         function render(exportFormat = null) {
             const isExporting = (exportFormat === 'png' || exportFormat === 'jpeg');
-            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Si es exportación a JPEG, pintar fondo blanco sólido obligatorio
-            if (exportFormat === 'jpeg') {
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
+            if (exportFormat === 'jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
             [...layers].reverse().forEach(l => {
                 if (!l.visible) return;
                 ctx.save();
                 const centerX = l.x + l.width / 2, centerY = l.y + l.height / 2;
                 ctx.translate(centerX, centerY); ctx.rotate(l.rotation);
                 ctx.globalAlpha = l.opacity / 100; ctx.globalCompositeOperation = l.blend;
-                
                 maskBuffer.width = l.width; maskBuffer.height = l.height;
                 mbfCtx.clearRect(0, 0, l.width, l.height);
-                mbfCtx.drawImage(l.content, 0, 0, l.width, l.height);
+                mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
                 mbfCtx.globalCompositeOperation = 'destination-in';
                 mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
                 ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
-
                 if (l.id === activeLayerId && !maskMode && !isExporting) {
                     ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
                     ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
@@ -551,10 +590,8 @@
                 }
                 ctx.restore();
             });
-
             measures.forEach((m, i) => drawMeasureLine(m, i, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
-
             if (activeLayerId && shiftPressed && isMouseDown && !maskMode && !isExporting) {
                 const layer = layers.find(l => l.id === activeLayerId);
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
@@ -571,10 +608,7 @@
                 if (editorMode === 'measure') {
                     for (let i = measures.length - 1; i >= 0; i--) {
                         const m = measures[i];
-                        if (m.deleteBtn) {
-                            const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2));
-                            if (d <= 20) { draggingMeasureIdx = i; mDragOffset.x = pos.x; mDragOffset.y = pos.y; hasMovedDraggedMeasure = false; isMouseDown = true; return; }
-                        }
+                        if (m.deleteBtn) { const d = Math.sqrt(Math.pow(pos.x - m.deleteBtn.x, 2) + Math.pow(pos.y - m.deleteBtn.y, 2)); if (d <= 20) { draggingMeasureIdx = i; mDragOffset.x = pos.x; mDragOffset.y = pos.y; hasMovedDraggedMeasure = false; isMouseDown = true; return; } }
                     }
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
@@ -608,16 +642,10 @@
                 }
                 if (!isMouseDown) return;
                 if (editorMode === 'measure') {
-                    if (draggingMeasureIdx !== -1) {
-                        const dx = pos.x - mDragOffset.x, dy = pos.y - mDragOffset.y;
-                        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMovedDraggedMeasure = true;
-                        const m = measures[draggingMeasureIdx]; m.x1 += dx; m.x2 += dx; m.y1 += dy; m.y2 += dy; mDragOffset.x = pos.x; mDragOffset.y = pos.y;
-                    } else if (activeMeasure) {
-                        if (shiftPressed) {
-                            const dx = pos.x - activeMeasure.x1, dy = pos.y - activeMeasure.y1;
-                            const dist = Math.sqrt(dx*dx + dy*dy), angle = Math.round(Math.atan2(dy, dx) / (Math.PI/4)) * (Math.PI/4);
-                            activeMeasure.x2 = activeMeasure.x1 + Math.cos(angle) * dist; activeMeasure.y2 = activeMeasure.y1 + Math.sin(angle) * dist;
-                        } else { activeMeasure.x2 = pos.x; activeMeasure.y2 = pos.y; }
+                    if (draggingMeasureIdx !== -1) { const dx = pos.x - mDragOffset.x, dy = pos.y - mDragOffset.y; if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMovedDraggedMeasure = true; const m = measures[draggingMeasureIdx]; m.x1 += dx; m.x2 += dx; m.y1 += dy; m.y2 += dy; mDragOffset.x = pos.x; mDragOffset.y = pos.y; }
+                    else if (activeMeasure) {
+                        if (shiftPressed) { const dx = pos.x-activeMeasure.x1, dy = pos.y-activeMeasure.y1, d = Math.sqrt(dx*dx+dy*dy), a = Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4); activeMeasure.x2 = activeMeasure.x1+Math.cos(a)*d; activeMeasure.y2 = activeMeasure.y1+Math.sin(a)*d; }
+                        else { activeMeasure.x2 = pos.x; activeMeasure.y2 = pos.y; }
                     }
                     render(); return;
                 }
@@ -625,64 +653,42 @@
                 if (!activeLayer) return;
                 if (maskMode) {
                     const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                    const dx = pos.x - centerX, dy = pos.y - centerY;
-                    const localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, localY = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-                    if (maskMode === 'brush') { paintOnMask(localX, localY, false); render(); }
+                    const dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
+                    if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); }
                     else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
                 }
-                if (activeLayer.isRotating) {
-                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                    let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2;
-                    if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180;
-                    activeLayer.rotation = angle;
-                } else if (activeLayer.isResizing) {
-                    const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2;
-                    const dx = pos.x - centerX, dy = pos.y - centerY, localX = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation);
-                    let newWidth = Math.max(20, localX * 2);
-                    activeLayer.width = newWidth; activeLayer.height = newWidth / activeLayer.aspectRatio; activeLayer.x = centerX - activeLayer.width / 2; activeLayer.y = centerY - activeLayer.height / 2;
-                    syncScaleUI(activeLayer);
-                } else if (activeLayer.isDragging) {
-                    let newX = pos.x - dragOffset.x, newY = pos.y - dragOffset.y;
-                    if (shiftPressed) {
-                        const t = 35;
-                        if (Math.abs(newX) < t) newX = 0; else if (Math.abs(newX + activeLayer.width/2 - 500) < t) newX = 500 - activeLayer.width/2; else if (Math.abs(newX + activeLayer.width - 1000) < t) newX = 1000 - activeLayer.width;
-                        if (Math.abs(newY) < t) newY = 0; else if (Math.abs(newY + activeLayer.height/2 - 500) < t) newY = 500 - activeLayer.height/2; else if (Math.abs(newY + activeLayer.height - 1000) < t) newY = 1000 - activeLayer.height;
-                    }
-                    activeLayer.x = newX; activeLayer.y = newY;
+                if (activeLayer.isRotating) { const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - centerY, pos.x - centerX) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; }
+                else if (activeLayer.isResizing) { const centerX = activeLayer.x + activeLayer.width / 2, centerY = activeLayer.y + activeLayer.height / 2, dx = pos.x - centerX, dy = pos.y - centerY, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation); let nw = Math.max(20, lx * 2); activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = centerX - nw / 2; activeLayer.y = centerY - activeLayer.height / 2; syncScaleUI(activeLayer); }
+                else if (activeLayer.isDragging) {
+                    let nx = pos.x - dragOffset.x, ny = pos.y - dragOffset.y;
+                    if (shiftPressed) { const t = 35; if (Math.abs(nx) < t) nx = 0; else if (Math.abs(nx+activeLayer.width/2-500) < t) nx = 500-activeLayer.width/2; else if (Math.abs(nx+activeLayer.width-1000) < t) nx = 1000-activeLayer.width; if (Math.abs(ny) < t) ny = 0; else if (Math.abs(ny+activeLayer.height/2-500) < t) ny = 500-activeLayer.height/2; else if (Math.abs(ny+activeLayer.height-1000) < t) ny = 1000-activeLayer.height; }
+                    activeLayer.x = nx; activeLayer.y = ny;
                 }
                 render();
             });
 
             window.addEventListener('mouseup', e => {
-                if (editorMode === 'measure' && isMouseDown) {
-                    if (draggingMeasureIdx !== -1) { if (!hasMovedDraggedMeasure) measures.splice(draggingMeasureIdx, 1); draggingMeasureIdx = -1; }
-                    else if (activeMeasure) {
-                        const dist = Math.sqrt(Math.pow(activeMeasure.x2 - activeMeasure.x1, 2) + Math.pow(activeMeasure.y2 - activeMeasure.y1, 2));
-                        if (dist > 10) { pendingMeasure = {...activeMeasure}; MODAL.el.classList.remove('hidden'); MODAL.input.value = ""; setTimeout(() => MODAL.input.focus(), 50); }
-                        activeMeasure = null;
-                    }
-                }
+                if (editorMode === 'measure' && isMouseDown) { if (draggingMeasureIdx !== -1) { if (!hasMovedDraggedMeasure) measures.splice(draggingMeasureIdx, 1); draggingMeasureIdx = -1; } else if (activeMeasure) { const d = Math.sqrt(Math.pow(activeMeasure.x2-activeMeasure.x1,2)+Math.pow(activeMeasure.y2-activeMeasure.y1,2)); if (d > 10) { pendingMeasure = {...activeMeasure}; MODAL.el.classList.remove('hidden'); MODAL.input.value = ""; setTimeout(()=>MODAL.input.focus(),50); } activeMeasure = null; } }
                 if (maskMode === 'rect' && isMouseDown) {
-                    const pos = getMousePos(e), activeLayer = layers.find(l => l.id === activeLayerId);
-                    const centerX = activeLayer.x + activeLayer.width/2, centerY = activeLayer.y + activeLayer.height/2;
-                    const sDx = maskWorldStartX - centerX, sDy = maskWorldStartY - centerY, sLocalX = sDx * Math.cos(-activeLayer.rotation) - sDy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, sLocalY = sDx * Math.sin(-activeLayer.rotation) + sDy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-                    const eDx = pos.x - centerX, eDy = pos.y - centerY, eLocalX = eDx * Math.cos(-activeLayer.rotation) - eDy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, eLocalY = eDx * Math.sin(-activeLayer.rotation) + eDy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-                    applyRectMask(sLocalX, sLocalY, eLocalX, eLocalY);
+                    const pos = getMousePos(e), activeLayer = layers.find(l => l.id === activeLayerId), cx = activeLayer.x+activeLayer.width/2, cy = activeLayer.y+activeLayer.height/2;
+                    const sdx = maskWorldStartX-cx, sdy = maskWorldStartY-cy, slx = sdx*Math.cos(-activeLayer.rotation)-sdy*Math.sin(-activeLayer.rotation)+activeLayer.width/2, sly = sdx*Math.sin(-activeLayer.rotation)+sdy*Math.cos(-activeLayer.rotation)+activeLayer.height/2;
+                    const edx = pos.x-cx, edy = pos.y-cy, elx = edx*Math.cos(-activeLayer.rotation)-edy*Math.sin(-activeLayer.rotation)+activeLayer.width/2, ely = edx*Math.sin(-activeLayer.rotation)+edy*Math.cos(-activeLayer.rotation)+activeLayer.height/2;
+                    applyRectMask(slx, sly, elx, ely);
                 }
                 isMouseDown = false; selectionGuide.style.display = 'none';
                 layers.forEach(l => { l.isDragging = l.isResizing = l.isRotating = false; });
                 render();
             });
 
+            document.getElementById('input-lv-black').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.black = parseInt(e.target.value); document.getElementById('val-lv-black').textContent = e.target.value; applyLevels(l); render(); } };
+            document.getElementById('input-lv-mid').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.gamma = parseFloat(e.target.value); document.getElementById('val-lv-mid').textContent = e.target.value; applyLevels(l); render(); } };
+            document.getElementById('input-lv-white').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.white = parseInt(e.target.value); document.getElementById('val-lv-white').textContent = e.target.value; applyLevels(l); render(); } };
             MODAL.save.onclick = () => { if(pendingMeasure) { pendingMeasure.text = MODAL.input.value; measures.push(pendingMeasure); pendingMeasure = null; } MODAL.el.classList.add('hidden'); render(); };
             MODAL.cancel.onclick = () => { pendingMeasure = null; MODAL.el.classList.add('hidden'); render(); };
             document.getElementById('input-brush-size').oninput = (e) => { maskBrushSize = e.target.value; document.getElementById('val-brush-size').textContent = e.target.value + 'px'; if(maskMode === 'brush') updateBrushCursorVisual(); };
             document.getElementById('prop-opacity').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.opacity = e.target.value; document.getElementById('opacity-val').textContent = l.opacity + '%'; render(); } };
-            document.getElementById('prop-scale').oninput = (e) => {
-                const l = layers.find(l => l.id === activeLayerId);
-                if(l) { const cx = l.x + l.width/2, cy = l.y + l.height/2, nw = 1000 * (e.target.value/100); l.width = nw; l.height = nw / l.aspectRatio; l.x = cx - nw/2; l.y = cy - l.height/2; document.getElementById('scale-val').textContent = e.target.value + '%'; render(); }
-            };
+            document.getElementById('prop-scale').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { const cx = l.x + l.width/2, cy = l.y + l.height/2, nw = 1000 * (e.target.value/100); l.width = nw; l.height = nw / l.aspectRatio; l.x = cx - nw/2; l.y = cy - l.height/2; document.getElementById('scale-val').textContent = e.target.value + '%'; render(); } };
             document.getElementById('prop-blend').onchange = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.blend = e.target.value; render(); } };
             fileInput.onchange = (e) => { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload = (ev) => addLayer(ev.target.result, f.name); r.readAsDataURL(f); fileInput.value = ""; } };
         }
@@ -697,9 +703,9 @@
                 div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${activeLayerId === l.id ? 'active' : ''}`;
                 div.draggable = true;
                 div.ondragstart = (e) => { draggedItemIdx = index; div.classList.add('dragging'); };
-                div.ondragover = (e) => e.preventDefault();
                 div.ondrop = (e) => { e.preventDefault(); const movedItem = layers.splice(draggedItemIdx, 1)[0]; layers.splice(index, 0, movedItem); render(); updateUI(); };
-                div.onclick = () => { if(editorMode === 'move') setActiveLayer(l.id); };
+                div.ondragover = (e) => e.preventDefault();
+                div.onclick = () => { if(editorMode !== 'measure') setActiveLayer(l.id); };
                 div.innerHTML = `
                     <div class="cursor-grab active:cursor-grabbing text-slate-500 hover:text-rose-400 py-1 px-1">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 7h2v2H7V7zm0 4h2v2H7v-2zm4-4h2v2h-2V7zm0 4h2v2h-2v-2zM7 3h2v2H7V3zm4 0h2v2h-2V3z"/></svg>
@@ -717,15 +723,22 @@
             const propsEl = document.getElementById('layer-props');
             const noLayerEl = document.getElementById('no-layer-msg');
             const activeLayer = layers.find(l => l.id === activeLayerId);
-            if (activeLayer && editorMode === 'move') {
+            if (activeLayer && editorMode !== 'measure') {
                 propsEl.classList.remove('hidden'); noLayerEl.classList.add('hidden');
                 document.getElementById('opacity-val').textContent = activeLayer.opacity + '%';
                 document.getElementById('prop-opacity').value = activeLayer.opacity;
+                document.getElementById('prop-blend').value = activeLayer.blend;
                 syncScaleUI(activeLayer);
+                document.getElementById('input-lv-black').value = activeLayer.levels.black;
+                document.getElementById('val-lv-black').textContent = activeLayer.levels.black;
+                document.getElementById('input-lv-mid').value = activeLayer.levels.gamma;
+                document.getElementById('val-lv-mid').textContent = activeLayer.levels.gamma;
+                document.getElementById('input-lv-white').value = activeLayer.levels.white;
+                document.getElementById('val-lv-white').textContent = activeLayer.levels.white;
             } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
         }
 
-        function getMousePos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX, clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width), y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height) }; }
+        function getMousePos(e) { const r = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - r.left) * (CANVAS_WIDTH / r.width), y: (cy - r.top) * (CANVAS_HEIGHT / r.height) }; }
 
         function fitActiveLayerToCanvas() {
             const l = layers.find(l => l.id === activeLayerId);
@@ -739,32 +752,15 @@
         function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
 
-        /**
-         * Exporta la imagen en el formato deseado.
-         * @param {string} format - 'png' o 'jpeg'
-         */
         function exportImage(format = 'png') {
-            const oldId = activeLayerId, oldMaskMode = maskMode; 
-            activeLayerId = null; 
-            maskMode = false;
-            
-            // Llamamos a render pasando el formato para que dibuje fondo blanco si es jpeg
+            const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false;
             render(format);
-
             setTimeout(() => {
-                const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-                const quality = format === 'jpeg' ? 0.92 : 1.0;
                 const link = document.createElement('a');
                 link.download = `arelyshop-photo-${Date.now()}.${format}`;
-                link.href = canvas.toDataURL(mimeType, quality);
-                link.click();
-                
-                showToast(`Exportado como ${format.toUpperCase()}`);
-                
-                activeLayerId = oldId; 
-                maskMode = oldMaskMode; 
-                render(); 
-                updateUI();
+                link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92);
+                link.click(); showToast(`Exportado como ${format.toUpperCase()}`);
+                activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI();
             }, 100);
         }
 
