@@ -133,7 +133,6 @@
         <!-- Barra Lateral Izquierda -->
         <aside class="bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-6 sidebar-scrollable">
             <div class="flex items-center gap-3 px-2">
-                <!-- Logo con imagen favicon.png -->
                 <div id="logo-container" class="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-rose-500/20 bg-slate-800 flex items-center justify-center">
                     <img src="images/favicon.png" alt="Logo" class="w-full h-full object-contain" onerror="handleLogoError(this)">
                 </div>
@@ -152,9 +151,13 @@
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" class="mb-1"><path d="M680-280q-72 0-127-45.5T484-440H272q-12 27-37 43.5T180-380q-42 0-71-29t-29-71q0-42 29-71t71-29q30 0 55 16.5t37 43.5h212q14-69 69-114.5T680-680q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280Zm85-115q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Z"/></svg>
                         <span class="text-[9px] font-bold uppercase">Medida</span>
                     </button>
-                    <button onclick="setEditorMode('styles')" id="btn-mode-styles" class="col-span-2 flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
-                        <span class="text-[9px] font-bold uppercase">Estilos (Color)</span>
+                    <button onclick="setEditorMode('transform')" id="btn-mode-transform" class="flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" class="mb-1"><path d="M680-40v-160H280q-33 0-56.5-23.5T200-280v-400H40v-80h160v-160h80v640h640v80H760v160h-80Zm0-320v-320H360v-80h320q33 0 56.5 23.5T760-680v320h-80Z"/></svg>
+                        <span class="text-[9px] font-bold uppercase">Transformar</span>
+                    </button>
+                    <button onclick="setEditorMode('styles')" id="btn-mode-styles" class="flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" class="mb-1"><path d="M480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 32.5-156t88-127Q256-817 330-848.5T488-880q80 0 151 27.5t124.5 76q53.5 48.5 85 115T880-518q0 115-70 176.5T640-280h-74q-9 0-12.5 5t-3.5 11q0 12 15 34.5t15 51.5q0 50-27.5 74T480-80Zm0-400Zm-177 23q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120-160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm200 0q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17Zm120 160q17-17 17-43t-17-43q-17-17-43-17t-43 17q-17 17-17 43t17 43q17 17 43 17t43-17ZM480-160q9 0 14.5-5t5.5-13q0-14-15-33t-15-57q0-42 29-67t71-25h70q66 0 113-38.5T800-518q0-121-92.5-201.5T488-800q-136 0-232 93t-96 227q0 133 93.5 226.5T480-160Z"/></svg>
+                        <span class="text-[9px] font-bold uppercase">Estilos</span>
                     </button>
                 </div>
             </div>
@@ -232,6 +235,21 @@
                         <p class="text-[10px] font-bold text-rose-400 uppercase italic">Ajustes de Medida</p>
                         <p class="text-[11px] text-slate-400 leading-tight">Usa SHIFT para trazos rectos. Haz clic en la 'X' para borrar o mover la medida.</p>
                         <button onclick="clearAllMeasures()" class="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-2 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all uppercase">Borrar medidas</button>
+                    </div>
+
+                    <div id="transform-props" class="hidden space-y-6">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Transformación Espejo</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="flipLayer('x')" class="flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M400-120 160-360l240-240v480Zm160 0v-480l240 240-240 240Z"/></svg>
+                                <span class="text-[9px] font-bold uppercase mt-2">Horizontal</span>
+                            </button>
+                            <button onclick="flipLayer('y')" class="flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3" style="transform: rotate(90deg)"><path d="M400-120 160-360l240-240v480Zm160 0v-480l240 240-240 240Z"/></svg>
+                                <span class="text-[9px] font-bold uppercase mt-2">Vertical</span>
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 italic leading-tight mt-2 text-center">Refleja la imagen tipo espejo respecto a su centro.</p>
                     </div>
 
                     <div id="styles-props" class="hidden space-y-6">
@@ -343,9 +361,6 @@
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">Mensaje</div>
 
     <script>
-        /**
-         * Manejador de error para el logo (favicon.png)
-         */
         function handleLogoError(img) {
             const parent = img.parentElement || document.getElementById('logo-container');
             if (parent) {
@@ -375,7 +390,6 @@
         let isMouseDown = false;
         let dragOffset = { x: 0, y: 0 };
         let shiftPressed = false;
-        let draggedItemIdx = null;
         let layerClipboard = null; 
 
         let maskMode = false; 
@@ -392,11 +406,7 @@
         let mDragOffset = { x: 0, y: 0 };
         let hasMovedDraggedMeasure = false;
 
-        // Estado de alineación magnética
-        let alignmentGuides = {
-            vertical: null, // null, 0, 500, 1000
-            horizontal: null // null, 0, 500, 1000
-        };
+        let alignmentGuides = { vertical: null, horizontal: null };
 
         const MODAL = {
             el: document.getElementById('textModal'),
@@ -425,7 +435,6 @@
                 dropZone.classList.remove('drag-active');
                 const files = Array.from(e.dataTransfer.files);
                 const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                
                 if (imageFiles.length > 0) {
                     showToast(`Cargando ${imageFiles.length} imágenes...`);
                     imageFiles.forEach(file => {
@@ -497,6 +506,7 @@
                 opacity: 100,
                 blend: 'source-over',
                 x: 0, y: 0, width: 0, height: 0, rotation: 0, aspectRatio: 1, 
+                flipX: 1, flipY: 1, // Nuevas propiedades para espejo
                 content: null,
                 maskCanvas: null,
                 levels: { black: 0, gamma: 1.0, white: 255 },
@@ -589,15 +599,23 @@
         function resetTransform() {
             const l = layers.find(l => l.id === activeLayerId);
             if (!l) return;
-            l.rotation = 0;
-            l.opacity = 100;
-            l.blend = 'source-over';
+            l.rotation = 0; l.opacity = 100; l.blend = 'source-over';
+            l.flipX = 1; l.flipY = 1;
             const cx = l.x + l.width / 2, cy = l.y + l.height / 2;
             l.width = 1000; l.height = 1000 / l.aspectRatio;
             l.x = cx - l.width/2; l.y = cy - l.height/2;
             updateUI();
             render();
             showToast("Transformación restablecida");
+        }
+
+        function flipLayer(axis) {
+            const l = layers.find(l => l.id === activeLayerId);
+            if (!l) return;
+            if (axis === 'x') l.flipX *= -1;
+            if (axis === 'y') l.flipY *= -1;
+            render();
+            showToast(`Espejo ${axis === 'x' ? 'Horizontal' : 'Vertical'} aplicado`);
         }
 
         function addBrand(brand) {
@@ -710,7 +728,9 @@
                 if (!l.visible) return;
                 ctx.save();
                 const centerX = l.x + l.width / 2, centerY = l.y + l.height / 2;
-                ctx.translate(centerX, centerY); ctx.rotate(l.rotation);
+                ctx.translate(centerX, centerY); 
+                ctx.rotate(l.rotation);
+                ctx.scale(l.flipX || 1, l.flipY || 1); // Aplicación de espejo
                 ctx.globalAlpha = l.opacity / 100; ctx.globalCompositeOperation = l.blend;
                 maskBuffer.width = l.width; maskBuffer.height = l.height;
                 mbfCtx.clearRect(0, 0, l.width, l.height); mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
@@ -724,28 +744,12 @@
                 }
                 ctx.restore();
             });
-
-            // Dibujar guías de alineación si Shift está presionado
             if (shiftPressed && !isExporting && activeLayerId) {
-                ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
-                
-                if (alignmentGuides.vertical !== null) {
-                    ctx.beginPath();
-                    ctx.moveTo(alignmentGuides.vertical, 0);
-                    ctx.lineTo(alignmentGuides.vertical, 1000);
-                    ctx.stroke();
-                }
-                if (alignmentGuides.horizontal !== null) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, alignmentGuides.horizontal);
-                    ctx.lineTo(1000, alignmentGuides.horizontal);
-                    ctx.stroke();
-                }
+                ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+                if (alignmentGuides.vertical !== null) { ctx.beginPath(); ctx.moveTo(alignmentGuides.vertical, 0); ctx.lineTo(alignmentGuides.vertical, 1000); ctx.stroke(); }
+                if (alignmentGuides.horizontal !== null) { ctx.beginPath(); ctx.moveTo(0, alignmentGuides.horizontal); ctx.lineTo(1000, alignmentGuides.horizontal); ctx.stroke(); }
                 ctx.setLineDash([]);
             }
-
             measures.forEach((m, i) => drawMeasureLine(m, i, isExporting));
             if (activeMeasure) drawMeasureLine(activeMeasure, -1, isExporting);
         }
@@ -753,9 +757,7 @@
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             let clientX, clientY;
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
-            } else { clientX = e.clientX; clientY = e.clientY; }
+            if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; }
             return { x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width), y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height) };
         }
 
@@ -772,14 +774,10 @@
                 if (currentActiveLayer && !maskMode) {
                     const cx = currentActiveLayer.x + currentActiveLayer.width / 2, cy = currentActiveLayer.y + currentActiveLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
                     const lx = dx * Math.cos(-currentActiveLayer.rotation) - dy * Math.sin(-currentActiveLayer.rotation), ly = dx * Math.sin(-currentActiveLayer.rotation) + dy * Math.cos(-currentActiveLayer.rotation);
-                    if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-currentActiveLayer.height/2 - 35), 2)) < 20) {
-                        currentActiveLayer.isRotating = true; isMouseDown = true; return;
-                    }
-                    if (Math.abs(lx - currentActiveLayer.width/2) < 20 && Math.abs(ly - currentActiveLayer.height/2) < 20) {
-                        currentActiveLayer.isResizing = true; isMouseDown = true; return;
-                    }
+                    if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-currentActiveLayer.height/2 - 35), 2)) < 20) { currentActiveLayer.isRotating = true; isMouseDown = true; return; }
+                    if (Math.abs(lx - currentActiveLayer.width/2) < 20 && Math.abs(ly - currentActiveLayer.height/2) < 20) { currentActiveLayer.isResizing = true; isMouseDown = true; return; }
                 }
-                if (editorMode === 'move' && !maskMode) {
+                if ((editorMode === 'move' || editorMode === 'transform') && !maskMode) {
                     for (let i = 0; i < layers.length; i++) {
                         const l = layers[i]; if (!l.visible) continue;
                         const cx = l.x + l.width / 2, cy = l.y + l.height / 2, dx = pos.x - cx, dy = pos.y - cy;
@@ -814,64 +812,23 @@
                         if (Math.abs(dx) > 2 || Math.abs(dy) > 2) hasMovedDraggedMeasure = true; 
                         const m = measures[draggingMeasureIdx]; m.x1 += dx; m.x2 += dx; m.y1 += dy; m.y2 += dy; mDragOffset.x = pos.x; mDragOffset.y = pos.y; 
                     } else if (activeMeasure) {
-                        if (shiftPressed) { 
-                            const dx = pos.x-activeMeasure.x1, dy = pos.y-activeMeasure.y1, d = Math.sqrt(dx*dx+dy*dy), a = Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4); 
-                            activeMeasure.x2 = activeMeasure.x1+Math.cos(a)*d; activeMeasure.y2 = activeMeasure.y1+Math.sin(a)*d; 
-                        } else { activeMeasure.x2 = pos.x; activeMeasure.y2 = pos.y; }
+                        if (shiftPressed) { const dx = pos.x-activeMeasure.x1, dy = pos.y-activeMeasure.y1, d = Math.sqrt(dx*dx+dy*dy), a = Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4); activeMeasure.x2 = activeMeasure.x1+Math.cos(a)*d; activeMeasure.y2 = activeMeasure.y1+Math.sin(a)*d; } 
+                        else { activeMeasure.x2 = pos.x; activeMeasure.y2 = pos.y; }
                     }
                     render(); return;
                 }
                 if (!activeLayer) return;
                 if (maskMode) {
                     const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-                    if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); }
-                    else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
+                    if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); } else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
                 }
-                
-                if (activeLayer.isRotating) { 
-                    const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; 
-                    let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; 
-                    if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; 
-                    activeLayer.rotation = angle; 
-                }
-                else if (activeLayer.isResizing) { 
-                    const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); 
-                    let nw = lx * 2; 
-                    
-                    if (shiftPressed) {
-                        const snapT = 25;
-                        if (Math.abs(nw - 1000) < snapT) nw = 1000;
-                        else if (Math.abs(nw/activeLayer.aspectRatio - 1000) < snapT) nw = 1000 * activeLayer.aspectRatio;
-                    }
-
-                    activeLayer.width = nw; 
-                    activeLayer.height = nw / activeLayer.aspectRatio; 
-                    activeLayer.x = cx - nw / 2; 
-                    activeLayer.y = cy - activeLayer.height / 2; 
-                    syncScaleUI(activeLayer); 
-                }
+                if (activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; }
+                else if (activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); let nw = lx * 2; if (shiftPressed) { const snapT = 25; if (Math.abs(nw - 1000) < snapT) nw = 1000; else if (Math.abs(nw/activeLayer.aspectRatio - 1000) < snapT) nw = 1000 * activeLayer.aspectRatio; } activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); }
                 else if (activeLayer.isDragging) { 
-                    let nx = pos.x - dragOffset.x;
-                    let ny = pos.y - dragOffset.y;
-                    
-                    alignmentGuides = { vertical: null, horizontal: null };
-
-                    if (shiftPressed) {
-                        const snapT = 25;
-                        // Alineación Vertical (Bordes y Centro)
-                        if (Math.abs(nx) < snapT) { nx = 0; alignmentGuides.vertical = 0; }
-                        else if (Math.abs(nx + activeLayer.width / 2 - 500) < snapT) { nx = 500 - activeLayer.width / 2; alignmentGuides.vertical = 500; }
-                        else if (Math.abs(nx + activeLayer.width - 1000) < snapT) { nx = 1000 - activeLayer.width; alignmentGuides.vertical = 1000; }
-
-                        // Alineación Horizontal (Bordes y Centro)
-                        if (Math.abs(ny) < snapT) { ny = 0; alignmentGuides.horizontal = 0; }
-                        else if (Math.abs(ny + activeLayer.height / 2 - 500) < snapT) { ny = 500 - activeLayer.height / 2; alignmentGuides.horizontal = 500; }
-                        else if (Math.abs(ny + activeLayer.height - 1000) < snapT) { ny = 1000 - activeLayer.height; alignmentGuides.horizontal = 1000; }
-                    }
-
-                    activeLayer.x = nx; 
-                    activeLayer.y = ny; 
+                    let nx = pos.x - dragOffset.x, ny = pos.y - dragOffset.y; alignmentGuides = { vertical: null, horizontal: null };
+                    if (shiftPressed) { const snapT = 25; if (Math.abs(nx) < snapT) { nx = 0; alignmentGuides.vertical = 0; } else if (Math.abs(nx + activeLayer.width / 2 - 500) < snapT) { nx = 500 - activeLayer.width / 2; alignmentGuides.vertical = 500; } else if (Math.abs(nx + activeLayer.width - 1000) < snapT) { nx = 1000 - activeLayer.width; alignmentGuides.vertical = 1000; } if (Math.abs(ny) < snapT) { ny = 0; alignmentGuides.horizontal = 0; } else if (Math.abs(ny + activeLayer.height / 2 - 500) < snapT) { ny = 500 - activeLayer.height / 2; alignmentGuides.horizontal = 500; } else if (Math.abs(ny + activeLayer.height - 1000) < snapT) { ny = 1000 - activeLayer.height; alignmentGuides.horizontal = 1000; } }
+                    activeLayer.x = nx; activeLayer.y = ny; 
                 }
                 render();
             });
@@ -884,9 +841,7 @@
                     const edx = pos.x-cx, edy = pos.y-cy, elx = edx*Math.cos(-activeLayer.rotation)-edy*Math.sin(-activeLayer.rotation)+activeLayer.width/2, ely = edx*Math.sin(-activeLayer.rotation)+edy*Math.cos(-activeLayer.rotation)+activeLayer.height/2;
                     applyRectMask(slx, sly, elx, ely);
                 }
-                isMouseDown = false; 
-                selectionGuide.style.display = 'none';
-                alignmentGuides = { vertical: null, horizontal: null };
+                isMouseDown = false; selectionGuide.style.display = 'none'; alignmentGuides = { vertical: null, horizontal: null };
                 layers.forEach(l => { l.isDragging = l.isResizing = l.isRotating = false; });
                 render();
             });
@@ -902,20 +857,7 @@
             document.getElementById('prop-opacity').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.opacity = e.target.value; document.getElementById('opacity-val').textContent = l.opacity + '%'; render(); } };
             document.getElementById('prop-scale').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { const cx = l.x + l.width/2, cy = l.y + l.height/2, nw = 1000 * (e.target.value/100); l.width = nw; l.height = nw / l.aspectRatio; l.x = cx - nw/2; l.y = cy - l.height/2; document.getElementById('scale-val').textContent = e.target.value + '%'; render(); } };
             document.getElementById('prop-blend').onchange = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.blend = e.target.value; render(); } };
-            
-            fileInput.onchange = (e) => { 
-                const files = Array.from(e.target.files);
-                const imageFiles = files.filter(f => f.type.startsWith('image/'));
-                if (imageFiles.length > 0) {
-                    showToast(`Cargando ${imageFiles.length} imágenes...`);
-                    imageFiles.forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => addLayer(ev.target.result, file.name);
-                        reader.readAsDataURL(file);
-                    });
-                }
-                fileInput.value = ""; 
-            };
+            fileInput.onchange = (e) => { const files = Array.from(e.target.files); const imageFiles = files.filter(f => f.type.startsWith('image/')); if (imageFiles.length > 0) { showToast(`Cargando ${imageFiles.length} imágenes...`); imageFiles.forEach(file => { const reader = new FileReader(); reader.onload = (ev) => addLayer(ev.target.result, file.name); reader.readAsDataURL(file); }); } fileInput.value = ""; };
         }
 
         function syncScaleUI(layer) { const s = Math.round((layer.width/1000)*100); document.getElementById('prop-scale').value = s; document.getElementById('scale-val').textContent = s + '%'; }
@@ -928,83 +870,33 @@
                 const div = document.createElement('div');
                 div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${isActive ? 'active' : ''}`;
                 div.onclick = () => { if(editorMode !== 'measure') setActiveLayer(l.id); };
-                div.innerHTML = `
-                    <div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0">
-                        <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}">
-                    </div>
-                    <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
-                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-72q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280q113 0 207.5-59.5Z"/></svg>
-                    </button>
-                `;
+                div.innerHTML = `<div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0"><img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}"></div><span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span><button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-72q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280q113 0 207.5-59.5Z"/></svg></button>`;
                 layerListEl.appendChild(div);
             });
-            const propsEl = document.getElementById('layer-props');
-            const noLayerEl = document.getElementById('no-layer-msg');
             const activeLayer = layers.find(l => l.id === activeLayerId);
-            
-            // Actualizar botones de modo
             document.getElementById('btn-mode-move').className = editorMode === 'move' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-measure').className = editorMode === 'measure' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
-            document.getElementById('btn-mode-styles').className = editorMode === 'styles' ? 'tool-active flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all' : 'flex flex-row items-center justify-center gap-3 p-3 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
-            
-            // Paneles de propiedades
+            document.getElementById('btn-mode-transform').className = editorMode === 'transform' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
+            document.getElementById('btn-mode-styles').className = editorMode === 'styles' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('measure-props').classList.toggle('hidden', editorMode !== 'measure');
+            document.getElementById('transform-props').classList.toggle('hidden', editorMode !== 'transform');
             document.getElementById('styles-props').classList.toggle('hidden', editorMode !== 'styles');
             document.getElementById('editor-specific-props').classList.toggle('hidden', editorMode !== 'move');
-
             if (activeLayer && editorMode !== 'measure') {
-                propsEl.classList.remove('hidden'); noLayerEl.classList.add('hidden');
-                document.getElementById('opacity-val').textContent = activeLayer.opacity + '%';
-                document.getElementById('prop-opacity').value = activeLayer.opacity;
-                document.getElementById('prop-blend').value = activeLayer.blend;
-                syncScaleUI(activeLayer);
-                document.getElementById('input-lv-black').value = activeLayer.levels.black;
-                document.getElementById('val-lv-black').textContent = activeLayer.levels.black;
-                document.getElementById('input-lv-mid').value = activeLayer.levels.gamma;
-                document.getElementById('val-lv-mid').textContent = activeLayer.levels.gamma;
-                document.getElementById('input-lv-white').value = activeLayer.levels.white;
-                document.getElementById('val-lv-white').textContent = activeLayer.levels.white;
-                document.getElementById('input-hue').value = activeLayer.hsl.hue;
-                document.getElementById('val-hue').textContent = activeLayer.hsl.hue + '°';
-                document.getElementById('input-sat').value = Math.round(activeLayer.hsl.saturation * 100);
-                document.getElementById('val-sat').textContent = Math.round(activeLayer.hsl.saturation * 100) + '%';
-                
-                // Mostrar controles de máscara si procede
-                document.getElementById('mask-controls-panel').classList.toggle('hidden', !maskMode);
-                document.getElementById('mask-help-box').classList.toggle('hidden', !maskMode);
-                document.getElementById('btn-mask-brush').classList.toggle('tool-active', maskMode === 'brush');
-                document.getElementById('btn-mask-rect').classList.toggle('tool-active', maskMode === 'rect');
-                
-                if (maskMode === 'brush') { brushCursor.style.display = 'block'; updateBrushCursorVisual(); }
-                else { brushCursor.style.display = 'none'; }
-                
-            } else { propsEl.classList.add('hidden'); noLayerEl.classList.remove('hidden'); }
+                document.getElementById('layer-props').classList.remove('hidden'); document.getElementById('no-layer-msg').classList.add('hidden');
+                document.getElementById('opacity-val').textContent = activeLayer.opacity + '%'; document.getElementById('prop-opacity').value = activeLayer.opacity; document.getElementById('prop-blend').value = activeLayer.blend; syncScaleUI(activeLayer);
+                document.getElementById('val-lv-black').textContent = activeLayer.levels.black; document.getElementById('input-lv-black').value = activeLayer.levels.black; document.getElementById('val-lv-mid').textContent = activeLayer.levels.gamma; document.getElementById('input-lv-mid').value = activeLayer.levels.gamma; document.getElementById('val-lv-white').textContent = activeLayer.levels.white; document.getElementById('input-lv-white').value = activeLayer.levels.white;
+                document.getElementById('val-hue').textContent = activeLayer.hsl.hue + '°'; document.getElementById('input-hue').value = activeLayer.hsl.hue; document.getElementById('val-sat').textContent = Math.round(activeLayer.hsl.saturation * 100) + '%'; document.getElementById('input-sat').value = Math.round(activeLayer.hsl.saturation * 100);
+                document.getElementById('mask-controls-panel').classList.toggle('hidden', !maskMode); document.getElementById('mask-help-box').classList.toggle('hidden', !maskMode); document.getElementById('btn-mask-brush').classList.toggle('tool-active', maskMode === 'brush'); document.getElementById('btn-mask-rect').classList.toggle('tool-active', maskMode === 'rect');
+                if (maskMode === 'brush') { brushCursor.style.display = 'block'; updateBrushCursorVisual(); } else { brushCursor.style.display = 'none'; }
+            } else { document.getElementById('layer-props').classList.add('hidden'); document.getElementById('no-layer-msg').classList.remove('hidden'); }
         }
 
         function toggleVisibility(id) { const l = layers.find(lay => lay.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
         function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
-
-        function fitActiveLayerToCanvas() {
-            const l = layers.find(lay => lay.id === activeLayerId);
-            if (l) {
-                if (l.aspectRatio > 1) { l.height = 1000; l.width = 1000 * l.aspectRatio; } else { l.width = 1000; l.height = 1000 / l.aspectRatio; }
-                l.x = (1000 - l.width)/2; l.y = (1000 - l.height)/2; l.rotation = 0; syncScaleUI(l); render();
-            }
-        }
-
-        function exportImage(format = 'png') {
-            const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false;
-            render(format);
-            setTimeout(() => {
-                const link = document.createElement('a');
-                link.download = `arelyshop-photo-${Date.now()}.${format}`;
-                link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92);
-                link.click(); showToast(`Exportado como ${format.toUpperCase()}`);
-                activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI();
-            }, 100);
-        }
+        function fitActiveLayerToCanvas() { const l = layers.find(lay => lay.id === activeLayerId); if (l) { if (l.aspectRatio > 1) { l.height = 1000; l.width = 1000 * l.aspectRatio; } else { l.width = 1000; l.height = 1000 / l.aspectRatio; } l.x = (1000 - l.width)/2; l.y = (1000 - l.height)/2; l.rotation = 0; syncScaleUI(l); render(); } }
+        function exportImage(format = 'png') { const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false; render(format); setTimeout(() => { const link = document.createElement('a'); link.download = `arelyshop-photo-${Date.now()}.${format}`; link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92); link.click(); showToast(`Exportado como ${format.toUpperCase()}`); activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI(); }, 100); }
 
         init();
     </script>
