@@ -94,8 +94,17 @@
             z-index: 999;
         }
 
-        .layer-item.dragging { opacity: 0.3; background-color: #334155; }
-        .layer-item.drag-over { border-top: 2px solid #f43f5e; }
+        /* Estilos para el arrastre de capas en la barra lateral */
+        .layer-item.dragging { 
+            opacity: 0.4; 
+            transform: scale(0.95);
+            border: 1px dashed #f43f5e;
+        }
+
+        .layer-item.drag-over { 
+            border-top: 2px solid #f43f5e; 
+            background-color: rgba(244, 63, 94, 0.05);
+        }
 
         .mask-active-canvas { outline: 3px solid #ef4444 !important; outline-offset: 4px; }
         .tool-active { background-color: #f43f5e !important; color: #ffffff !important; border-color: #f43f5e !important; }
@@ -352,6 +361,7 @@
 
                 <div>
                     <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
+                    <!-- El contenedor de capas ahora soporta drag & drop visual -->
                     <div id="layer-list" class="space-y-2 pb-10"></div>
                 </div>
             </div>
@@ -392,6 +402,9 @@
         let shiftPressed = false;
         let layerClipboard = null; 
 
+        // Variables para el arrastre de reordenamiento de capas
+        let draggedLayerIdx = null;
+
         let maskMode = false; 
         let maskAction = 'hide'; 
         let maskBrushSize = 50;
@@ -425,6 +438,7 @@
         function createId() { return Math.random().toString(36).substr(2, 9); }
 
         function setupDragAndDrop() {
+            // Drag and drop de archivos sobre el canvas
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
                 dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
             });
@@ -506,7 +520,7 @@
                 opacity: 100,
                 blend: 'source-over',
                 x: 0, y: 0, width: 0, height: 0, rotation: 0, aspectRatio: 1, 
-                flipX: 1, flipY: 1, // Nuevas propiedades para espejo
+                flipX: 1, flipY: 1, 
                 content: null,
                 maskCanvas: null,
                 levels: { black: 0, gamma: 1.0, white: 255 },
@@ -730,7 +744,7 @@
                 const centerX = l.x + l.width / 2, centerY = l.y + l.height / 2;
                 ctx.translate(centerX, centerY); 
                 ctx.rotate(l.rotation);
-                ctx.scale(l.flipX || 1, l.flipY || 1); // Aplicación de espejo
+                ctx.scale(l.flipX || 1, l.flipY || 1); 
                 ctx.globalAlpha = l.opacity / 100; ctx.globalCompositeOperation = l.blend;
                 maskBuffer.width = l.width; maskBuffer.height = l.height;
                 mbfCtx.clearRect(0, 0, l.width, l.height); mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
@@ -860,6 +874,41 @@
             fileInput.onchange = (e) => { const files = Array.from(e.target.files); const imageFiles = files.filter(f => f.type.startsWith('image/')); if (imageFiles.length > 0) { showToast(`Cargando ${imageFiles.length} imágenes...`); imageFiles.forEach(file => { const reader = new FileReader(); reader.onload = (ev) => addLayer(ev.target.result, file.name); reader.readAsDataURL(file); }); } fileInput.value = ""; };
         }
 
+        // --- MANEJADORES DE DRAG & DROP PARA REORDENAR CAPAS ---
+
+        function handleLayerDragStart(e, index) {
+            draggedLayerIdx = index;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            // Firefox requiere que se establezca algo en dataTransfer para permitir el drag
+            e.dataTransfer.setData('text/plain', index);
+        }
+
+        function handleLayerDragOver(e, index) {
+            e.preventDefault();
+            if (draggedLayerIdx === null || draggedLayerIdx === index) return;
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleLayerDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleLayerDrop(e, targetIndex) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (draggedLayerIdx !== null && draggedLayerIdx !== targetIndex) {
+                // Mover elemento en el array: borrar de la posición vieja e insertar en la nueva
+                const [movedLayer] = layers.splice(draggedLayerIdx, 1);
+                layers.splice(targetIndex, 0, movedLayer);
+                
+                draggedLayerIdx = null;
+                updateUI();
+                render();
+            }
+        }
+
         function syncScaleUI(layer) { const s = Math.round((layer.width/1000)*100); document.getElementById('prop-scale').value = s; document.getElementById('scale-val').textContent = s + '%'; }
         function updateSelectionGuide(x1, y1, x2, y2) { const r = canvas.getBoundingClientRect(), s = r.width/CANVAS_WIDTH; selectionGuide.style.left = (Math.min(x1,x2)*s)+canvas.offsetLeft+'px'; selectionGuide.style.top = (Math.min(y1,y2)*s)+canvas.offsetTop+'px'; selectionGuide.style.width = Math.abs(x1-x2)*s+'px'; selectionGuide.style.height = Math.abs(y1-y2)*s+'px'; }
 
@@ -869,8 +918,24 @@
                 const isActive = activeLayerId === l.id;
                 const div = document.createElement('div');
                 div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${isActive ? 'active' : ''}`;
+                
+                // Configuración de Drag & Drop para reordenar
+                div.draggable = true;
+                div.ondragstart = (e) => handleLayerDragStart(e, index);
+                div.ondragover = (e) => handleLayerDragOver(e, index);
+                div.ondragleave = handleLayerDragLeave;
+                div.ondrop = (e) => handleLayerDrop(e, index);
+                div.ondragend = (e) => e.target.classList.remove('dragging');
+
                 div.onclick = () => { if(editorMode !== 'measure') setActiveLayer(l.id); };
-                div.innerHTML = `<div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0"><img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}"></div><span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span><button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-72q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280q113 0 207.5-59.5Z"/></svg></button>`;
+                div.innerHTML = `
+                    <div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0">
+                        <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}">
+                    </div>
+                    <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
+                    <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-2 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-72q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280q113 0 207.5-59.5Z"/></svg>
+                    </button>`;
                 layerListEl.appendChild(div);
             });
             const activeLayer = layers.find(l => l.id === activeLayerId);
