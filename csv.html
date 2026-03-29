@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor de CSV para Catálogo de Facebook</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse para procesar CSV de forma robusta -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-xl w-full bg-white rounded-xl shadow-lg p-8">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Convertidor a Formato Facebook</h1>
+            <p class="text-sm text-gray-500 mt-2">Sube tu CSV original y obtén el formato exacto para tu catálogo.</p>
+        </div>
+
+        <div class="space-y-5">
+            <!-- Archivo de Entrada -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">1. Sube tu archivo CSV original</label>
+                <input type="file" id="csvFileInput" accept=".csv" 
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-md p-1">
+            </div>
+
+            <!-- Moneda -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">2. Código de Moneda (Obligatorio para Facebook)</label>
+                <input type="text" id="currencyCode" value="BOB" placeholder="Ej. BOB, USD, MXN" 
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <p class="text-xs text-gray-400 mt-1">Se añadirá automáticamente a tus precios (ej. 100 BOB).</p>
+            </div>
+
+            <!-- Botón de Conversión -->
+            <button id="convertBtn" 
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                Convertir y Descargar CSV
+            </button>
+
+            <!-- Mensajes de estado -->
+            <div id="statusMessage" class="hidden text-center text-sm font-medium p-3 rounded-md"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('csvFileInput');
+            const currency = document.getElementById('currencyCode').value.trim().toUpperCase() || 'BOB';
+            const statusDiv = document.getElementById('statusMessage');
+
+            if (!fileInput.files.length) {
+                showStatus('Por favor, selecciona un archivo CSV primero.', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // Usamos PapaParse para leer el archivo CSV
+            Papa.parse(file, {
+                header: true, // Asumimos que la primera fila tiene los encabezados
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const data = results.data;
+                    
+                    if (data.length === 0) {
+                        showStatus('El archivo CSV está vacío.', 'error');
+                        return;
+                    }
+
+                    try {
+                        const newData = data.map(row => {
+                            // Limpiar valores numéricos para asegurar formato correcto
+                            const cleanPrice = (price) => price ? price.toString().trim() : "";
+                            const salePriceOriginal = cleanPrice(row['sale_price']);
+                            const discountPriceOriginal = cleanPrice(row['discount_price']);
+
+                            return {
+                                "id": row['id'] || "",
+                                "title": row['name'] || "",
+                                "description": row['description'] || "",
+                                "availability": "in stock", // Valor fijo
+                                "condition": "new", // Valor fijo
+                                // Agregar moneda al precio de venta
+                                "price": salePriceOriginal ? `${salePriceOriginal} ${currency}` : "",
+                                // Construir el enlace dinámicamente con el ID
+                                "link": row['id'] ? `https://arelyshop.com/product.html?id=${row['id']}` : "https://arelyshop.com",
+                                "image_link": row['photo_url_1'] || "",
+                                "brand": row['brand'] || "",
+                                "google_product_category": "",
+                                "fb_product_category": "",
+                                "quantity_to_sell_on_facebook": "",
+                                // Agregar moneda al precio de descuento solo si existe
+                                "sale_price": discountPriceOriginal ? `${discountPriceOriginal} ${currency}` : "",
+                                "sale_price_effective_date": "",
+                                "item_group_id": "",
+                                "gender": "",
+                                "color": "",
+                                "size": "",
+                                "age_group": "",
+                                "material": "",
+                                "pattern": "",
+                                "shipping": "",
+                                "shipping_weight": "",
+                                "video[0].url": "",
+                                "video[0].tag[0]": "",
+                                "gtin": row['sku'] || "", // GTIN mapeado a SKU
+                                "product_tags[0]": "",
+                                "product_tags[1]": "",
+                                "style[0]": ""
+                            };
+                        });
+
+                        // Convertir el nuevo array de objetos a formato CSV
+                        const csvOutput = Papa.unparse(newData);
+                        
+                        // Descargar el archivo
+                        downloadCSV(csvOutput, 'catalogo_facebook.csv');
+                        showStatus('¡Éxito! Tu archivo ha sido convertido y descargado.', 'success');
+
+                    } catch (error) {
+                        console.error(error);
+                        showStatus('Ocurrió un error al procesar los datos. Revisa los encabezados de tu CSV.', 'error');
+                    }
+                },
+                error: function(error) {
+                    showStatus('Error al leer el archivo: ' + error.message, 'error');
+                }
+            });
+        });
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            
+            if (type === 'error') {
+                statusDiv.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                statusDiv.classList.add('bg-green-100', 'text-green-700');
+            }
+        }
+
+        function downloadCSV(csv, filename) {
+            // Añadir el BOM para que Excel/Sistemas lean correctamente los caracteres especiales (tildes, ñ)
+            const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+            
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+    </script>
+</body>
+</html>
