@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Catálogo - Meta Business</title>
+    
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PapaParse para leer el CSV de forma robusta -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        meta: '#0668E1', // Azul característico de Meta
+                        metadark: '#0452b5'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .drag-over {
+            border-color: #0668E1 !important;
+            background-color: #eff6ff !important;
+        }
+        /* Custom scrollbar para la tabla */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-brands fa-meta text-meta text-2xl"></i>
+                <h1 class="text-xl font-bold text-slate-900">Visualizador de Catálogo</h1>
+            </div>
+            <div id="statsBadge" class="hidden bg-blue-50 text-meta px-4 py-1.5 rounded-full text-sm font-semibold border border-blue-100">
+                <span id="productCount">0</span> productos cargados
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Pantalla de subida -->
+        <div id="uploadSection" class="max-w-2xl mx-auto mt-10">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">Revisa tu archivo de productos</h2>
+                <p class="text-slate-600">Sube tu archivo <span class="font-semibold bg-slate-200 px-2 py-0.5 rounded text-sm">.csv</span> de Meta Business / Facebook para previsualizar cómo se verán tus productos antes de importarlos.</p>
+            </div>
+
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center bg-white transition-colors duration-200 ease-in-out cursor-pointer hover:border-meta hover:bg-slate-50">
+                <input type="file" id="fileInput" accept=".csv" class="hidden">
+                <i class="fa-solid fa-file-csv text-5xl text-slate-400 mb-4"></i>
+                <h3 class="text-lg font-semibold text-slate-700 mb-1">Arrastra tu archivo CSV aquí</h3>
+                <p class="text-slate-500 text-sm mb-4">o haz clic para explorar tus archivos</p>
+                <button onclick="document.getElementById('fileInput').click()" class="bg-meta hover:bg-metadark text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm">
+                    Seleccionar Archivo
+                </button>
+            </div>
+            
+            <div id="loadingIndicator" class="hidden text-center mt-8">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-meta mb-3"></i>
+                <p class="text-slate-600 font-medium">Procesando catálogo...</p>
+            </div>
+        </div>
+
+        <!-- Resultados (Oculto por defecto) -->
+        <div id="resultsSection" class="hidden">
+            <!-- Controles y Tabs -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <div class="flex bg-slate-200/60 p-1 rounded-lg">
+                    <button onclick="switchTab('gallery')" id="tabGallery" class="px-5 py-2 rounded-md font-medium text-sm transition-all shadow-sm bg-white text-meta">
+                        <i class="fa-solid fa-border-all mr-2"></i> Vista Galería
+                    </button>
+                    <button onclick="switchTab('table')" id="tabTable" class="px-5 py-2 rounded-md font-medium text-sm transition-all text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-table border-slate-300 mr-2"></i> Vista Tabla
+                    </button>
+                </div>
+                <button onclick="resetApp()" class="text-sm text-slate-500 hover:text-red-600 font-medium transition-colors px-3 py-2">
+                    <i class="fa-solid fa-trash-arrow-up mr-1"></i> Cargar otro archivo
+                </button>
+            </div>
+
+            <!-- Contenedor Galería -->
+            <div id="viewGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Las tarjetas se insertan aquí vía JS -->
+            </div>
+
+            <!-- Contenedor Tabla -->
+            <div id="viewTable" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[70vh]">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead id="tableHead" class="bg-slate-50 sticky top-0 border-b border-slate-200 shadow-sm z-10">
+                            <!-- Cabeceras vía JS -->
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Filas vía JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Variables globales
+        let currentData = [];
+        let currentHeaders = [];
+
+        // Referencias al DOM
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const statsBadge = document.getElementById('statsBadge');
+        const productCount = document.getElementById('productCount');
+        
+        const viewGallery = document.getElementById('viewGallery');
+        const viewTable = document.getElementById('viewTable');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        
+        const tabGallery = document.getElementById('tabGallery');
+        const tabTable = document.getElementById('tabTable');
+
+        // Event Listeners para Drag & Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Procesar el archivo
+        function handleFile(file) {
+            if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+                alert('Por favor, sube un archivo CSV válido.');
+                return;
+            }
+
+            // Mostrar UI de carga
+            dropZone.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+
+            Papa.parse(file, {
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processCSVData(results.data);
+                },
+                error: function(err) {
+                    alert("Error al leer el archivo: " + err.message);
+                    resetApp();
+                }
+            });
+        }
+
+        // Lógica para interpretar el formato de Meta
+        function processCSVData(rawData) {
+            if (!rawData || rawData.length === 0) {
+                alert("El archivo parece estar vacío.");
+                resetApp();
+                return;
+            }
+
+            // Buscar la fila de cabeceras (saltando instrucciones que empiezan con #)
+            let headerIndex = -1;
+            for (let i = 0; i < Math.min(10, rawData.length); i++) {
+                // Si la primera columna existe y NO empieza con #, asumimos que son cabeceras
+                if (rawData[i][0] && !rawData[i][0].toString().trim().startsWith('#')) {
+                    headerIndex = i;
+                    break;
+                }
+            }
+
+            if (headerIndex === -1) {
+                alert("No se pudo detectar la cabecera del catálogo. Asegúrate de que siga el formato estándar.");
+                resetApp();
+                return;
+            }
+
+            currentHeaders = rawData[headerIndex].map(h => h.trim().toLowerCase());
+            
+            // Procesar las filas de productos
+            currentData = [];
+            for (let i = headerIndex + 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                // Ignorar filas extrañas o vacías
+                if (row.length < 3) continue; 
+                
+                let product = {};
+                currentHeaders.forEach((header, index) => {
+                    product[header] = row[index] !== undefined ? row[index].trim() : '';
+                });
+                currentData.push(product);
+            }
+
+            renderUI();
+        }
+
+        function renderUI() {
+            // Ocultar carga, mostrar resultados
+            uploadSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            statsBadge.classList.remove('hidden');
+            productCount.textContent = currentData.length;
+
+            renderGallery();
+            renderTable();
+        }
+
+        function renderGallery() {
+            viewGallery.innerHTML = ''; // Limpiar
+
+            if (currentData.length === 0) {
+                viewGallery.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos válidos.</div>`;
+                return;
+            }
+
+            currentData.forEach(prod => {
+                // Extraer campos clave (soportando ligeras variaciones en nombres de columnas)
+                const img = prod.image_link || prod.image_url || 'https://via.placeholder.com/500x500.png?text=Sin+Imagen';
+                const title = prod.title || prod.name || 'Sin título';
+                const price = prod.price || '0.00';
+                const brand = prod.brand || 'Sin marca';
+                const availability = (prod.availability || '').toLowerCase();
+                const link = prod.link || prod.url || '#';
+                
+                // Formato de etiquetas
+                let availClass = "bg-green-100 text-green-700";
+                let availText = "En stock";
+                if (availability.includes('out') || availability === 'out of stock') {
+                    availClass = "bg-red-100 text-red-700";
+                    availText = "Agotado";
+                } else if (availability.includes('preorder') || availability === 'preorder') {
+                    availClass = "bg-yellow-100 text-yellow-700";
+                    availText = "Preventa";
+                }
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow group";
+                
+                card.innerHTML = `
+                    <div class="relative aspect-square overflow-hidden bg-slate-100">
+                        <img src="${img}" alt="${title}" onerror="this.src='https://via.placeholder.com/500x500.png?text=Error+Imagen'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute top-2 right-2 ${availClass} text-xs font-bold px-2 py-1 rounded shadow-sm">
+                            ${availText}
+                        </div>
+                    </div>
+                    <div class="p-4 flex-grow flex flex-col">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1 truncate" title="${brand}">${brand}</p>
+                        <h3 class="font-bold text-slate-800 text-sm leading-tight mb-2 line-clamp-2" title="${title}">${title}</h3>
+                        <div class="mt-auto">
+                            <p class="text-lg font-black text-slate-900 mb-3">${price}</p>
+                            <a href="${link}" target="_blank" class="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg text-sm transition-colors">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1 text-xs"></i> Ver Enlace
+                            </a>
+                        </div>
+                    </div>
+                `;
+                viewGallery.appendChild(card);
+            });
+        }
+
+        function renderTable() {
+            // Cabeceras
+            tableHead.innerHTML = `<tr>
+                ${currentHeaders.map(h => `<th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">${h}</th>`).join('')}
+            </tr>`;
+
+            // Filas
+            tableBody.innerHTML = currentData.map(prod => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    ${currentHeaders.map(h => {
+                        let val = prod[h] || '';
+                        // Si es un enlace de imagen, mostrar un pequeño preview
+                        if (h.includes('image_link') && val) {
+                            return `<td class="px-4 py-3"><div class="flex items-center gap-2">
+                                <img src="${val}" class="w-8 h-8 rounded object-cover border border-slate-200" onerror="this.style.display='none'">
+                                <a href="${val}" target="_blank" class="text-meta hover:underline truncate max-w-[150px] inline-block" title="${val}">Ver img</a>
+                            </div></td>`;
+                        }
+                        // Si es cualquier otro enlace
+                        if (h === 'link' && val) {
+                            return `<td class="px-4 py-3"><a href="${val}" target="_blank" class="text-meta hover:underline truncate max-w-[150px] inline-block" title="${val}">Abrir link</a></td>`;
+                        }
+                        return `<td class="px-4 py-3 truncate max-w-[200px]" title="${val}">${val}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+        }
+
+        // Sistema de Pestañas (Tabs)
+        function switchTab(tab) {
+            const activeClassBtn = ['bg-white', 'text-meta', 'shadow-sm'];
+            const inactiveClassBtn = ['text-slate-600', 'hover:text-slate-900'];
+
+            if (tab === 'gallery') {
+                viewGallery.classList.remove('hidden');
+                viewTable.classList.add('hidden');
+                
+                tabGallery.classList.add(...activeClassBtn);
+                tabGallery.classList.remove(...inactiveClassBtn);
+                
+                tabTable.classList.remove(...activeClassBtn);
+                tabTable.classList.add(...inactiveClassBtn);
+            } else {
+                viewGallery.classList.add('hidden');
+                viewTable.classList.remove('hidden');
+                
+                tabTable.classList.add(...activeClassBtn);
+                tabTable.classList.remove(...inactiveClassBtn);
+                
+                tabGallery.classList.remove(...activeClassBtn);
+                tabGallery.classList.add(...inactiveClassBtn);
+            }
+        }
+
+        // Reiniciar la App
+        function resetApp() {
+            fileInput.value = '';
+            currentData = [];
+            currentHeaders = [];
+            
+            uploadSection.classList.remove('hidden');
+            dropZone.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+            
+            resultsSection.classList.add('hidden');
+            statsBadge.classList.add('hidden');
+            
+            switchTab('gallery'); // Volver a la pestaña por defecto
+        }
+    </script>
+</body>
+</html>
