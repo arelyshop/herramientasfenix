@@ -79,11 +79,15 @@
                             const salePriceOriginal = cleanPrice(row['sale_price']);
                             const discountPriceOriginal = cleanPrice(row['discount_price']);
 
+                            // Lógica para evaluar el stock exacto
+                            const stockValue = row['stock'] ? row['stock'].toString().trim() : "";
+                            const isOutOfStock = stockValue === "0";
+
                             return {
                                 "id": row['id'] || "",
                                 "title": row['name'] || "",
                                 "description": row['description'] || "",
-                                "availability": "in stock", // Valor fijo
+                                "availability": isOutOfStock ? "out of stock" : "in stock", // Basado en la columna stock
                                 "condition": "new", // Valor fijo
                                 // Agregar moneda al precio de venta
                                 "price": salePriceOriginal ? `${salePriceOriginal} ${currency}` : "",
