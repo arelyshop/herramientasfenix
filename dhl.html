@@ -70,7 +70,7 @@
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900">Arelyshop.com</h1>
-            <p class="text-gray-600">Gestión de Encomiendas Independientes (Máx. 3 por hoja)</p>
+            <p class="text-gray-600">Gestión de Encomiendas con C.I. (Máx. 3 por hoja)</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
@@ -137,8 +137,8 @@
                 <div class="flex items-center gap-2 mb-3">
                     <span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">NOTA ${id + 1}</span>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-1">
                         <label class="block text-xs font-bold text-gray-500 mb-1">NOMBRE:</label>
                         <input type="text" id="name-${id}" placeholder="EJ. JUAN PÉREZ" 
                                class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
@@ -147,6 +147,12 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1">CELULAR:</label>
                         <input type="text" id="cel-${id}" placeholder="EJ. 70012345" 
+                               class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                               oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">C.I.:</label>
+                        <input type="text" id="ci-${id}" placeholder="EJ. 1234567 LP" 
                                class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                                oninput="updatePreview()">
                     </div>
@@ -165,9 +171,27 @@
 
         function renderInputs() {
             const container = document.getElementById('inputsContainer');
+            const savedValues = [];
+            
+            // Guardar valores actuales antes de limpiar para no perder lo escrito
+            for (let i = 0; i < 3; i++) {
+                const n = document.getElementById(`name-${i}`)?.value;
+                const c = document.getElementById(`cel-${i}`)?.value;
+                const ci = document.getElementById(`ci-${i}`)?.value;
+                const d = document.getElementById(`dest-${i}`)?.value;
+                if (n !== undefined) savedValues.push({n, c, ci, d});
+            }
+
             container.innerHTML = "";
             for (let i = 0; i < activeNotes; i++) {
                 container.appendChild(createInputGroup(i));
+                // Restaurar valores si existían
+                if (savedValues[i]) {
+                    document.getElementById(`name-${i}`).value = savedValues[i].n;
+                    document.getElementById(`cel-${i}`).value = savedValues[i].c;
+                    document.getElementById(`ci-${i}`).value = savedValues[i].ci;
+                    document.getElementById(`dest-${i}`).value = savedValues[i].d;
+                }
             }
             updateControls();
         }
@@ -202,33 +226,41 @@
             }
         }
 
-        function generateNoteHTML(id, nombre, cel, destino, fecha) {
+        function generateNoteHTML(id, nombre, cel, ci, destino, fecha) {
             return `
                 <div class="note-preview">
                     <div class="border-4 border-blue-900 h-full p-6 flex flex-col justify-between rounded-lg bg-white">
                         <div class="flex justify-between items-start">
                             <h2 class="text-3xl font-black text-blue-900 italic uppercase">Arelyshop.com</h2>
                             <div class="text-right">
-                                <p class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded">FECHA: ${fecha}</p>
+                                <p class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p>
                             </div>
                         </div>
                         
-                        <div class="space-y-5 my-2">
+                        <div class="space-y-4 my-2">
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Nombre:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${nombre || '....................................'}</div>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase truncate">${nombre || '....................................'}</div>
                             </div>
-                            <div class="flex items-end gap-2">
-                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Celular:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${cel || '..................'}</div>
+                            
+                            <div class="flex gap-4">
+                                <div class="flex items-end gap-2 flex-[1]">
+                                    <span class="font-bold text-lg text-gray-700 uppercase">CEL:</span>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${cel || '..................'}</div>
+                                </div>
+                                <div class="flex items-end gap-2 flex-[1]">
+                                    <span class="font-bold text-lg text-gray-700 uppercase">C.I.:</span>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${ci || '..................'}</div>
+                                </div>
                             </div>
+
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Destino:</span>
                                 <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase">${destino || '..................'}</div>
                             </div>
                         </div>
 
-                        <div class="text-center mt-4">
+                        <div class="text-center mt-2">
                             <p class="text-xl font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p>
                         </div>
                     </div>
@@ -250,12 +282,12 @@
             for (let i = 0; i < activeNotes; i++) {
                 const nombre = document.getElementById(`name-${i}`)?.value.toUpperCase() || "";
                 const cel = document.getElementById(`cel-${i}`)?.value.toUpperCase() || "";
+                const ci = document.getElementById(`ci-${i}`)?.value.toUpperCase() || "";
                 const destino = document.getElementById(`dest-${i}`)?.value || "";
                 
-                container.innerHTML += generateNoteHTML(i, nombre, cel, destino, fechaStr);
+                container.innerHTML += generateNoteHTML(i, nombre, cel, ci, destino, fechaStr);
             }
             
-            // Preparar layout de impresión
             const printLayout = document.getElementById('printLayout');
             printLayout.innerHTML = container.innerHTML;
             
@@ -265,7 +297,6 @@
             });
         }
 
-        // Inicialización
         window.onload = () => {
             renderInputs();
             updatePreview();
