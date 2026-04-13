@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Notas de Encomienda - Arelyshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            @page {
+                size: letter;
+                margin: 0;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-page {
+                width: 215.9mm;
+                height: 279.4mm;
+                display: flex;
+                flex-direction: column;
+            }
+            .note-section {
+                height: 33.33%;
+                border-bottom: 1px dashed #000;
+                padding: 25px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .note-section:last-child {
+                border-bottom: 1px dashed #000;
+            }
+        }
+
+        .preview-container {
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .page-shadow {
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            background: white;
+            width: 215.9mm;
+            height: 279.4mm;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .note-preview {
+            height: 33.33%;
+            border-bottom: 1px dashed #ccc;
+            padding: 2rem;
+            position: relative;
+            box-sizing: border-box;
+        }
+        input {
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Interfaz de Usuario -->
+    <div class="no-print max-w-5xl mx-auto p-6">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-900">Arelyshop.com</h1>
+            <p class="text-gray-600">Gestión de Encomiendas Independientes (Máx. 3 por hoja)</p>
+        </header>
+
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
+            <div id="inputsContainer" class="space-y-6">
+                <!-- Los grupos de inputs se generarán aquí -->
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 border-t mt-8 pt-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="addNote()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Añadir otra nota
+                    </button>
+                    <span class="text-xs font-bold text-gray-500 uppercase" id="limitLabel"></span>
+                </div>
+
+                <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 transition-all transform hover:scale-105 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                    </svg>
+                    Imprimir Hoja Completa
+                </button>
+            </div>
+        </div>
+        
+        <p class="text-center text-sm text-gray-500 mb-4 italic">Vista previa de la hoja (Tamaño Carta):</p>
+    </div>
+
+    <!-- Área de Vista Previa -->
+    <div class="preview-container flex justify-center py-10 no-print">
+        <div class="page-shadow" id="printableArea">
+            <!-- Las notas se generarán dinámicamente aquí -->
+        </div>
+    </div>
+
+    <!-- Contenedor para Impresión -->
+    <div class="hidden print-page" id="printLayout"></div>
+
+    <script>
+        let activeNotes = 1;
+        const departamentos = [
+            "LA PAZ", "SANTA CRUZ", "COCHABAMBA", 
+            "ORURO", "POTOSÍ", "TARIJA", 
+            "CHUQUISACA", "BENI", "PANDO"
+        ];
+
+        function createInputGroup(id) {
+            const div = document.createElement('div');
+            div.id = `group-${id}`;
+            div.className = "p-4 bg-gray-50 rounded-lg border border-gray-200 relative animate-fade-in";
+            
+            let removeBtn = id > 0 ? `
+                <button onclick="removeNote(${id})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            ` : '';
+
+            div.innerHTML = `
+                ${removeBtn}
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">NOTA ${id + 1}</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">NOMBRE:</label>
+                        <input type="text" id="name-${id}" placeholder="EJ. JUAN PÉREZ" 
+                               class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                               oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">CELULAR:</label>
+                        <input type="text" id="cel-${id}" placeholder="EJ. 70012345" 
+                               class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                               oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">DESTINO:</label>
+                        <select id="dest-${id}" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                onchange="updatePreview()">
+                            <option value="">SELECCIONE...</option>
+                            ${departamentos.map(d => `<option value="${d}">${d}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function renderInputs() {
+            const container = document.getElementById('inputsContainer');
+            container.innerHTML = "";
+            for (let i = 0; i < activeNotes; i++) {
+                container.appendChild(createInputGroup(i));
+            }
+            updateControls();
+        }
+
+        function addNote() {
+            if (activeNotes < 3) {
+                activeNotes++;
+                renderInputs();
+                updatePreview();
+            }
+        }
+
+        function removeNote(index) {
+            if (activeNotes > 1) {
+                activeNotes--;
+                renderInputs();
+                updatePreview();
+            }
+        }
+
+        function updateControls() {
+            const btn = document.getElementById('btnAdd');
+            const label = document.getElementById('limitLabel');
+            if (activeNotes >= 3) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                label.textContent = "Límite de 3 notas alcanzado";
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                label.textContent = `Puedes añadir ${3 - activeNotes} más`;
+            }
+        }
+
+        function generateNoteHTML(id, nombre, cel, destino, fecha) {
+            return `
+                <div class="note-preview">
+                    <div class="border-4 border-blue-900 h-full p-6 flex flex-col justify-between rounded-lg bg-white">
+                        <div class="flex justify-between items-start">
+                            <h2 class="text-3xl font-black text-blue-900 italic uppercase">Arelyshop.com</h2>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded">FECHA: ${fecha}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-5 my-2">
+                            <div class="flex items-end gap-2">
+                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Nombre:</span>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${nombre || '....................................'}</div>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Celular:</span>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${cel || '..................'}</div>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Destino:</span>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase">${destino || '..................'}</div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <p class="text-xl font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updatePreview() {
+            const container = document.getElementById('printableArea');
+            container.innerHTML = "";
+
+            const hoy = new Date();
+            const fechaStr = hoy.toLocaleDateString('es-BO', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            for (let i = 0; i < activeNotes; i++) {
+                const nombre = document.getElementById(`name-${i}`)?.value.toUpperCase() || "";
+                const cel = document.getElementById(`cel-${i}`)?.value.toUpperCase() || "";
+                const destino = document.getElementById(`dest-${i}`)?.value || "";
+                
+                container.innerHTML += generateNoteHTML(i, nombre, cel, destino, fechaStr);
+            }
+            
+            // Preparar layout de impresión
+            const printLayout = document.getElementById('printLayout');
+            printLayout.innerHTML = container.innerHTML;
+            
+            const noteDivs = printLayout.querySelectorAll('.note-preview');
+            noteDivs.forEach(div => {
+                div.className = 'note-section';
+            });
+        }
+
+        // Inicialización
+        window.onload = () => {
+            renderInputs();
+            updatePreview();
+        };
+    </script>
+</body>
+</html>
