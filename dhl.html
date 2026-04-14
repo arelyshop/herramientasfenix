@@ -171,7 +171,7 @@
             div.className = "p-4 bg-gray-50 rounded-lg border border-gray-200 relative animate-fade-in";
             
             let removeBtn = id > 0 ? `
-                <button onclick="removeNote(${id})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                <button onclick="removeNote(${id})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -232,6 +232,8 @@
         function renderInputs() {
             const container = document.getElementById('inputsContainer');
             const saved = [];
+            
+            // Guardar valores actuales antes de limpiar para no perder lo escrito
             for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`name-${i}`)?.value;
                 const c = document.getElementById(`cel-${i}`)?.value;
@@ -239,19 +241,17 @@
                 const d = document.getElementById(`dest-${i}`)?.value;
                 if (n !== undefined) saved.push({n, c, ci, d});
             }
+
             container.innerHTML = "";
             for (let i = 0; i < activeNotes; i++) {
                 container.appendChild(createInputGroup(i));
+                // Restaurar valores si existían
                 if (saved[i]) {
                     document.getElementById(`name-${i}`).value = saved[i].n;
                     document.getElementById(`cel-${i}`).value = saved[i].c;
-                    document.getElementById(`ci-${i}`).value = savedValues[i].ci; // Corregido: ci-${i}
+                    document.getElementById(`ci-${i}`).value = saved[i].ci;
                     document.getElementById(`dest-${i}`).value = saved[i].d;
                 }
-            }
-            // Sincronizar C.I. específicamente (corrigiendo error de referencia en loop previo)
-            for (let i = 0; i < activeNotes; i++) {
-                if (saved[i]) document.getElementById(`ci-${i}`).value = saved[i].ci;
             }
             updateControls();
         }
@@ -313,11 +313,21 @@
         }
 
         function downloadPDF() {
+            const printLayout = document.getElementById('printLayout');
+            if (!printLayout.innerHTML) return;
+            
             const element = document.createElement('div');
             element.style.width = '215.9mm';
-            element.innerHTML = document.getElementById('printLayout').innerHTML;
+            element.innerHTML = printLayout.innerHTML;
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
-            const opt = { margin: 0, filename: 'encomiendas_arelyshop.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } };
+            
+            const opt = { 
+                margin: 0, 
+                filename: 'encomiendas_arelyshop.pdf', 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2 }, 
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
+            };
             html2pdf().set(opt).from(element).save();
         }
 
