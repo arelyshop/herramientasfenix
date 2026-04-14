@@ -22,24 +22,29 @@
             .no-print {
                 display: none !important;
             }
-            /* Forzamos a que el layout de impresión sea visible */
+            /* Forzamos a que el layout de impresión sea visible y centrado */
             #printLayout {
                 display: block !important;
-                width: 215.9mm;
+                width: 215.9mm; /* Mantiene ancho carta para el papel */
                 height: 279.4mm;
             }
             .note-section {
                 height: 33.33%;
                 border-bottom: 1px dashed #000;
-                padding: 25px;
+                padding: 20px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
+                align-items: center; /* Centra el contenido comprimido */
                 page-break-inside: avoid;
             }
             .note-section:last-child {
                 border-bottom: 1px dashed #000;
+            }
+            /* El recuadro interno comprimido al 85% */
+            .inner-box {
+                width: 85% !important;
             }
         }
 
@@ -61,24 +66,31 @@
         .note-preview {
             height: 33.33%;
             border-bottom: 1px dashed #ccc;
-            padding: 2rem;
+            padding: 1.5rem;
             position: relative;
             box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+        .inner-box {
+            width: 85%; /* Reducción del 15% en el ancho */
+            height: 100%;
         }
         input {
             text-transform: uppercase;
         }
 
-        /* Estilo para el PDF (mismo que note-section pero para la librería) */
+        /* Estilo para el PDF */
         .pdf-section {
-            height: 93.1mm; /* 1/3 de 279.4mm */
+            height: 93.1mm; 
             width: 215.9mm;
             border-bottom: 1px dashed #000;
-            padding: 25px;
+            padding: 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             background: white;
         }
     </style>
@@ -88,8 +100,8 @@
     <!-- Interfaz de Usuario -->
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-blue-900">Arelyshop.com</h1>
-            <p class="text-gray-600">Gestión de Encomiendas con C.I. (Máx. 3 por hoja)</p>
+            <h1 class="text-3xl font-bold text-blue-900 uppercase">Arelyshop.com</h1>
+            <p class="text-gray-600">Gestión de Encomiendas (Diseño Compacto)</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
@@ -109,7 +121,6 @@
                 </div>
 
                 <div class="flex gap-4">
-                    <!-- Botón Descargar PDF -->
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 transition-all transform hover:scale-105 shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
@@ -117,7 +128,6 @@
                         Descargar PDF
                     </button>
 
-                    <!-- Botón Imprimir -->
                     <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 transition-all transform hover:scale-105 shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
@@ -128,26 +138,31 @@
             </div>
         </div>
         
-        <p class="text-center text-sm text-gray-500 mb-4 italic">Vista previa de la hoja (Tamaño Carta):</p>
+        <p class="text-center text-sm text-gray-500 mb-4 italic">Vista previa (Contenedor comprimido al 85%):</p>
     </div>
 
-    <!-- Área de Vista Previa (No se imprime) -->
     <div class="preview-container flex justify-center py-10 no-print">
         <div class="page-shadow" id="printableArea">
-            <!-- Las notas se generarán dinámicamente aquí -->
+            <!-- Dinámico -->
         </div>
     </div>
 
-    <!-- Contenedor Real para Impresión/PDF (Solo visible al procesar) -->
     <div id="printLayout" class="hidden"></div>
+
+    <datalist id="listaDestinos">
+        <option value="LA PAZ">
+        <option value="SANTA CRUZ">
+        <option value="COCHABAMBA">
+        <option value="ORURO">
+        <option value="POTOSÍ">
+        <option value="TARIJA">
+        <option value="SUCRE">
+        <option value="BENI">
+        <option value="PANDO">
+    </datalist>
 
     <script>
         let activeNotes = 1;
-        const departamentos = [
-            "LA PAZ", "SANTA CRUZ", "COCHABAMBA", 
-            "ORURO", "POTOSÍ", "TARIJA", 
-            "CHUQUISACA", "BENI", "PANDO"
-        ];
 
         function createInputGroup(id) {
             const div = document.createElement('div');
@@ -188,11 +203,9 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Destino:</label>
-                        <select id="dest-${id}" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
-                                onchange="updatePreview()">
-                            <option value="">SELECCIONE...</option>
-                            ${departamentos.map(d => `<option value="${d}">${d}</option>`).join('')}
-                        </select>
+                        <input type="text" id="dest-${id}" list="listaDestinos" placeholder="EJ. SUCRE" 
+                               class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
+                               oninput="updatePreview()">
                     </div>
                 </div>
             `;
@@ -202,7 +215,6 @@
         function renderInputs() {
             const container = document.getElementById('inputsContainer');
             const savedValues = [];
-            
             for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`name-${i}`)?.value;
                 const c = document.getElementById(`cel-${i}`)?.value;
@@ -210,7 +222,6 @@
                 const d = document.getElementById(`dest-${i}`)?.value;
                 if (n !== undefined) savedValues.push({n, c, ci, d});
             }
-
             container.innerHTML = "";
             for (let i = 0; i < activeNotes; i++) {
                 container.appendChild(createInputGroup(i));
@@ -246,50 +257,50 @@
             if (activeNotes >= 3) {
                 btn.disabled = true;
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
-                label.textContent = "Límite alcanzado";
+                label.textContent = "Máximo alcanzado";
             } else {
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                label.textContent = `Quedan ${3 - activeNotes} espacios`;
+                label.textContent = `Espacios: ${3 - activeNotes}`;
             }
         }
 
         function generateNoteHTML(nombre, cel, ci, destino, fecha) {
             return `
                 <div class="note-preview">
-                    <div class="border-4 border-blue-900 h-full p-6 flex flex-col justify-between rounded-lg bg-white">
+                    <div class="inner-box border-4 border-blue-900 p-6 flex flex-col justify-between rounded-lg bg-white">
                         <div class="flex justify-between items-start">
-                            <h2 class="text-3xl font-black text-blue-900 italic uppercase">Arelyshop.com</h2>
+                            <h2 class="text-2xl font-black text-blue-900 italic uppercase">Arelyshop.com</h2>
                             <div class="text-right">
-                                <p class="text-xs font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p>
+                                <p class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p>
                             </div>
                         </div>
                         
                         <div class="space-y-4 my-2">
                             <div class="flex items-end gap-2">
-                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Nombre:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase truncate">${nombre || '....................................'}</div>
+                                <span class="font-bold text-base text-gray-700 uppercase min-w-[80px]">Nombre:</span>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase truncate">${nombre || '....................................'}</div>
                             </div>
                             
                             <div class="flex gap-4">
-                                <div class="flex items-end gap-2 flex-[1]">
-                                    <span class="font-bold text-lg text-gray-700 uppercase">CEL:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${cel || '..................'}</div>
+                                <div class="flex items-end gap-2 flex-1">
+                                    <span class="font-bold text-base text-gray-700 uppercase">CEL:</span>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase">${cel || '..........'}</div>
                                 </div>
-                                <div class="flex items-end gap-2 flex-[1]">
-                                    <span class="font-bold text-lg text-gray-700 uppercase">C.I.:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase">${ci || '..................'}</div>
+                                <div class="flex items-end gap-2 flex-1">
+                                    <span class="font-bold text-base text-gray-700 uppercase">C.I.:</span>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase">${ci || '..........'}</div>
                                 </div>
                             </div>
 
                             <div class="flex items-end gap-2">
-                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Destino:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase">${destino || '..................'}</div>
+                                <span class="font-bold text-base text-gray-700 uppercase min-w-[80px]">Destino:</span>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase">${destino || '..........'}</div>
                             </div>
                         </div>
 
                         <div class="text-center mt-2">
-                            <p class="text-xl font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p>
+                            <p class="text-base font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p>
                         </div>
                     </div>
                 </div>
@@ -299,45 +310,27 @@
         function updatePreview() {
             const container = document.getElementById('printableArea');
             container.innerHTML = "";
-
-            const hoy = new Date();
-            const fechaStr = hoy.toLocaleDateString('es-BO', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+            const fechaStr = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
 
             for (let i = 0; i < activeNotes; i++) {
                 const nombre = document.getElementById(`name-${i}`)?.value.toUpperCase() || "";
                 const cel = document.getElementById(`cel-${i}`)?.value.toUpperCase() || "";
                 const ci = document.getElementById(`ci-${i}`)?.value.toUpperCase() || "";
-                const destino = document.getElementById(`dest-${i}`)?.value || "";
-                
+                const destino = document.getElementById(`dest-${i}`)?.value.toUpperCase() || "";
                 container.innerHTML += generateNoteHTML(nombre, cel, ci, destino, fechaStr);
             }
             
-            // Sincronizamos con el layout de impresión
             const printLayout = document.getElementById('printLayout');
             printLayout.innerHTML = container.innerHTML;
-            const noteDivs = printLayout.querySelectorAll('.note-preview');
-            noteDivs.forEach(div => {
-                div.className = 'note-section';
-            });
+            printLayout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
         }
 
         function downloadPDF() {
             const printLayout = document.getElementById('printLayout');
-            
-            // Creamos un clon temporal para el PDF para asegurar el formato exacto de página
             const element = document.createElement('div');
             element.style.width = '215.9mm';
             element.innerHTML = printLayout.innerHTML;
-            
-            // Aplicar estilos de sección de PDF a cada nota
-            const sections = element.querySelectorAll('.note-section');
-            sections.forEach(s => {
-                s.className = 'pdf-section';
-            });
+            element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
 
             const opt = {
                 margin: 0,
@@ -346,15 +339,10 @@
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
-
-            // Ejecutar la descarga
             html2pdf().set(opt).from(element).save();
         }
 
-        window.onload = () => {
-            renderInputs();
-            updatePreview();
-        };
+        window.onload = () => { renderInputs(); updatePreview(); };
     </script>
 </body>
 </html>
