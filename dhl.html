@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Notas de Encomienda - Arelyshop</title>
+    
+    <!-- Favicon Personalizado -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 960'%3E%3Crect width='960' height='960' fill='black' rx='200'/%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Librería para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         /* CONFIGURACIÓN PARA IMPRESIÓN */
         @media print {
@@ -124,8 +129,8 @@
     <!-- Interfaz de Usuario -->
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-blue-900 uppercase">Arelyshop.com</h1>
-            <p class="text-gray-600">Gestión de Encomiendas (Destino con selector rápido)</p>
+            <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
+            <p class="text-gray-600 font-medium">Gestión de Notas de Encomienda (Versión Segura)</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
@@ -180,24 +185,24 @@
 
             div.innerHTML = `
                 ${removeBtn}
-                <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">NOTA ${id + 1}</span></div>
+                <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">ENVÍO #${id + 1}</span></div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">NOMBRE:</label>
-                        <input type="text" id="name-${id}" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Nombre:</label>
+                        <input type="text" id="name-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">CELULAR:</label>
-                        <input type="text" id="cel-${id}" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Celular:</label>
+                        <input type="text" id="cel-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">C.I.:</label>
-                        <input type="text" id="ci-${id}" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">C.I.:</label>
+                        <input type="text" id="ci-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div class="relative">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">DESTINO:</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Destino:</label>
                         <div class="flex">
-                            <input type="text" id="dest-${id}" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
+                            <input type="text" id="dest-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
                             <button onclick="toggleDropdown(event, ${id})" class="bg-gray-200 border border-gray-300 border-l-0 px-2 rounded-r hover:bg-gray-300">▼</button>
                         </div>
                         <div id="dropdown-${id}" class="dropdown-content">
@@ -233,7 +238,6 @@
             const container = document.getElementById('inputsContainer');
             const saved = [];
             
-            // Guardar valores actuales antes de limpiar para no perder lo escrito
             for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`name-${i}`)?.value;
                 const c = document.getElementById(`cel-${i}`)?.value;
@@ -245,7 +249,6 @@
             container.innerHTML = "";
             for (let i = 0; i < activeNotes; i++) {
                 container.appendChild(createInputGroup(i));
-                // Restaurar valores si existían
                 if (saved[i]) {
                     document.getElementById(`name-${i}`).value = saved[i].n;
                     document.getElementById(`cel-${i}`).value = saved[i].c;
@@ -263,34 +266,40 @@
         }
 
         function generateNoteHTML(nombre, cel, ci, destino, fecha) {
+            // Reemplazo de campos vacíos por "N/A"
+            const dispNombre = nombre.trim() || "N/A";
+            const dispCel = cel.trim() || "N/A";
+            const dispCi = ci.trim() || "N/A";
+            const dispDest = destino.trim() || "N/A";
+
             return `
                 <div class="note-preview">
                     <div class="inner-box border-4 border-blue-900 p-6 flex flex-col justify-between rounded-lg bg-white">
                         <div class="flex justify-between items-start">
-                            <h2 class="text-2xl font-black text-blue-900 italic uppercase">Arelyshop.com</h2>
+                            <h2 class="text-2xl font-black text-blue-900 italic uppercase tracking-tighter">Arelyshop.com</h2>
                             <div class="text-right"><p class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p></div>
                         </div>
                         <div class="space-y-4 my-2">
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-base text-gray-700 uppercase min-w-[80px]">Nombre:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase truncate">${nombre || '....................................'}</div>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase truncate leading-tight">${dispNombre}</div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-base text-gray-700 uppercase">CEL:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase">${cel || '..........'}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase leading-tight">${dispCel}</div>
                                 </div>
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-base text-gray-700 uppercase">C.I.:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase">${ci || '..........'}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-xl font-bold px-2 text-black uppercase leading-tight">${dispCi}</div>
                                 </div>
                             </div>
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-base text-gray-700 uppercase min-w-[80px]">Destino:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase">${destino || '..........'}</div>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-3xl font-black text-blue-800 px-2 uppercase leading-none">${dispDest}</div>
                             </div>
                         </div>
-                        <div class="text-center mt-2"><p class="text-base font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p></div>
+                        <div class="text-center mt-2 border-t border-gray-100 pt-2"><p class="text-base font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p></div>
                     </div>
                 </div>
             `;
@@ -325,7 +334,7 @@
                 margin: 0, 
                 filename: 'encomiendas_arelyshop.pdf', 
                 image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2 }, 
+                html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
             };
             html2pdf().set(opt).from(element).save();
