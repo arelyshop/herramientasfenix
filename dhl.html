@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Notas de Encomienda - Arelyshop</title>
     
-    <!-- Favicon Personalizado -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 960'%3E%3Crect width='960' height='960' fill='black' rx='200'/%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
+    <!-- Favicon Personalizado con el icono solicitado -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Librería para generar PDF -->
@@ -130,7 +130,7 @@
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
-            <p class="text-gray-600 font-medium">Gestión de Notas de Encomienda (Versión Segura)</p>
+            <p class="text-gray-600 font-medium">Gestión de Encomiendas Profesionales</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
@@ -188,19 +188,19 @@
                 <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">ENVÍO #${id + 1}</span></div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Nombre:</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Nombre:</label>
                         <input type="text" id="name-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Celular:</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Celular:</label>
                         <input type="text" id="cel-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">C.I.:</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">C.I.:</label>
                         <input type="text" id="ci-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div class="relative">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Destino:</label>
+                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Destino:</label>
                         <div class="flex">
                             <input type="text" id="dest-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
                             <button onclick="toggleDropdown(event, ${id})" class="bg-gray-200 border border-gray-300 border-l-0 px-2 rounded-r hover:bg-gray-300">▼</button>
