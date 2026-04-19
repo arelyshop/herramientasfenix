@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Notas de Encomienda - Arelyshop</title>
+    <title id="pageTitle">Generador de Notas de Encomienda - Arelyshop</title>
     
     <!-- Favicon Personalizado con el icono solicitado -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería para generar PDF -->
+    <!-- Ko'ápe oĩ html2pdf omoheñói hag̃ua kuatia -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* CONFIGURACIÓN PARA IMPRESIÓN */
+        /* CONFIGURACIÓN PARA IMPRESIÓN - Ñamoporã kuatia oñemboguejy hag̃ua */
         @media print {
             @page {
                 size: letter;
-                margin: 0;
+                margin: 0; /* Ko'ãva oipe'a umi encabezado ha footer navegador-pegua */
             }
             body {
                 margin: 0;
@@ -51,7 +51,7 @@
             }
         }
 
-        /* ESTILOS PARA PANTALLA */
+        /* ESTILOS PARA PANTALLA - Mba'éichapa ojehecháta moĩmbahápe */
         .preview-container {
             background-color: #f3f4f6;
             min-height: 100vh;
@@ -97,7 +97,7 @@
             background: white;
         }
 
-        /* Dropdown personalizado */
+        /* Dropdown personalizado - Ñanduti ojepe'áva */
         .dropdown-content {
             display: none;
             position: absolute;
@@ -126,7 +126,7 @@
 </head>
 <body class="bg-gray-100 font-sans" onclick="closeAllDropdowns(event)">
 
-    <!-- Interfaz de Usuario -->
+    <!-- Interfaz de Usuario - Moĩmbaha -->
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
@@ -152,7 +152,7 @@
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-md transition-all">
                         Descargar PDF
                     </button>
-                    <button onclick="window.print()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 shadow-md transition-all">
+                    <button onclick="safePrint()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 shadow-md transition-all">
                         Imprimir Hoja
                     </button>
                 </div>
@@ -167,9 +167,12 @@
     <div id="printLayout" class="hidden"></div>
 
     <script>
+        // Ñamoĩ ko'ápe umi mba'e jaipurútava
         let activeNotes = 1;
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
+        const originalTitle = document.title;
 
+        // Jahecha mba'éichapa oñemoĩta umi marandu
         function createInputGroup(id) {
             const div = document.createElement('div');
             div.id = `group-${id}`;
@@ -185,7 +188,7 @@
 
             div.innerHTML = `
                 ${removeBtn}
-                <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded">ENVÍO #${id + 1}</span></div>
+                <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded tracking-widest">ENVÍO #${id + 1}</span></div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Nombre:</label>
@@ -214,6 +217,7 @@
             return div;
         }
 
+        // Ko'ápe ñamba'apo umi ñandutíre
         function toggleDropdown(e, id) {
             e.stopPropagation();
             closeAllDropdowns();
@@ -234,6 +238,7 @@
             }
         }
 
+        // Ñamyatyrõ hag̃ua opa mba'e ojehaíva
         function renderInputs() {
             const container = document.getElementById('inputsContainer');
             const saved = [];
@@ -265,8 +270,8 @@
             document.getElementById('btnAdd').style.display = activeNotes >= 3 ? 'none' : 'flex';
         }
 
+        // Ko'ápe oñemoheñói pe nota ojehechátava
         function generateNoteHTML(nombre, cel, ci, destino, fecha) {
-            // Reemplazo de campos vacíos por "N/A"
             const dispNombre = nombre.trim() || "N/A";
             const dispCel = cel.trim() || "N/A";
             const dispCi = ci.trim() || "N/A";
@@ -305,6 +310,7 @@
             `;
         }
 
+        // Ñamyatyrõ pe ojehechátava kuatiápe
         function updatePreview() {
             const container = document.getElementById('printableArea');
             container.innerHTML = "";
@@ -321,6 +327,7 @@
             printLayout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
         }
 
+        // Ko'ápe oñemboguejy hag̃ua PDF
         function downloadPDF() {
             const printLayout = document.getElementById('printLayout');
             if (!printLayout.innerHTML) return;
@@ -338,6 +345,17 @@
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
             };
             html2pdf().set(opt).from(element).save();
+        }
+
+        // Función para imprimir sin encabezado ni pie de página
+        function safePrint() {
+            // Ñamoguãteva'erã kuatia réra ani hag̃ua ojehecha
+            document.title = " ";
+            window.print();
+            // Upéi ñamoĩ jey hendápe
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 100);
         }
 
         window.onload = () => { renderInputs(); updatePreview(); };
