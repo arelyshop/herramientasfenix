@@ -30,12 +30,12 @@
                 height: 279.4mm; 
                 margin: 0; 
             }
-            /* Cada sección ocupa exactamente 1/3 de la hoja carta */
+            /* División exacta de la hoja en 3 */
             .note-section {
                 height: 93.133mm !important;
                 width: 215.9mm !important;
-                border-bottom: 1px dashed #000;
-                padding: 10mm;
+                border-bottom: 1px dashed #ccc;
+                padding: 5mm;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
@@ -45,7 +45,7 @@
                 overflow: hidden;
             }
             .note-section:last-child { border-bottom: none; }
-            .inner-box { width: 85% !important; }
+            .inner-box { width: 88% !important; max-height: 85mm !important; }
         }
 
         /* ESTILOS DE PANTALLA */
@@ -62,7 +62,7 @@
         .note-preview {
             height: 33.3333%;
             width: 100%;
-            border-bottom: 1px dashed #ccc;
+            border-bottom: 1px dashed #eee;
             padding: 1rem;
             position: relative;
             box-sizing: border-box;
@@ -70,15 +70,20 @@
             justify-content: center;
             align-items: center;
         }
-        .inner-box { width: 85%; height: 90%; }
+        .inner-box { 
+            width: 88%; 
+            height: auto; 
+            max-height: 95%;
+            box-sizing: border-box;
+        }
         input { text-transform: uppercase; }
 
-        /* PDF FIX */
+        /* Estilo para el PDF */
         .pdf-section {
             height: 93.133mm; 
             width: 215.9mm;
-            border-bottom: 1px dashed #000;
-            padding: 10mm;
+            border-bottom: 1px dashed #ccc;
+            padding: 5mm;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -87,6 +92,7 @@
             background: white;
         }
 
+        /* Menú de destinos */
         .dropdown-content {
             display: none;
             position: absolute;
@@ -108,6 +114,7 @@
         .dropdown-content button:hover { background-color: #f3f4f6; }
         .show { display: block; }
 
+        /* Interruptor de visibilidad */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -127,7 +134,7 @@
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
-            <p class="text-gray-600 font-medium italic">Gestión de Logística - 3 Notas por Hoja</p>
+            <p class="text-gray-600 font-medium italic">Gestión de Logística - Ajuste de Formato</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
@@ -182,7 +189,7 @@
                         ${id > 0 ? `<button onclick="removeSlot(${id})" class="text-red-400 hover:text-red-600 text-[10px] font-bold uppercase underline">Eliminar</button>` : ''}
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'Habilitado' : 'Oculto'}</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'En hoja' : 'Oculto'}</span>
                         <label class="switch">
                             <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
                             <span class="slider"></span>
@@ -199,8 +206,8 @@
                         <input type="text" id="b-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">C.I.:</label>
-                        <input type="text" id="c-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase text-blue-600">C.I.:</label>
+                        <input type="text" id="c-${id}" autocomplete="off" class="w-full p-2 border border-blue-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div class="relative">
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">DESTINO:</label>
@@ -218,26 +225,17 @@
         }
 
         function addNoteSlot() {
-            if (slotsCount < 3) {
-                slotsCount++;
-                renderAll();
-                updatePreview();
-            }
+            if (slotsCount < 3) { slotsCount++; renderAll(); updatePreview(); }
             updateAddButton();
         }
 
         function removeSlot(id) {
-            if (slotsCount > 1) {
-                slotsCount--;
-                renderAll();
-                updatePreview();
-            }
+            if (slotsCount > 1) { slotsCount--; renderAll(); updatePreview(); }
             updateAddButton();
         }
 
         function updateAddButton() {
-            const btn = document.getElementById('btnAdd');
-            btn.style.display = slotsCount >= 3 ? 'none' : 'flex';
+            document.getElementById('btnAdd').style.display = slotsCount >= 3 ? 'none' : 'flex';
         }
 
         function toggleV(id) {
@@ -288,7 +286,6 @@
         }
 
         function generateNoteHTML(nombre, cel, ci, destino, fecha, isHidden) {
-            // Siempre retornamos el contenedor con altura completa, incluso si está oculto
             if (isHidden) {
                 return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
             }
@@ -300,32 +297,34 @@
 
             return `
                 <div class="note-preview">
-                    <div class="inner-box border-4 border-blue-900 p-6 flex flex-col justify-between rounded-lg bg-white">
-                        <div class="flex justify-between items-start">
+                    <div class="inner-box border-4 border-blue-900 p-5 flex flex-col justify-between rounded-xl bg-white shadow-sm">
+                        <div class="flex justify-between items-start mb-1">
                             <h2 class="text-3xl font-black text-blue-900 italic uppercase tracking-tighter">Arelyshop.com</h2>
-                            <div class="text-right"><p class="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p></div>
+                            <div class="text-right"><p class="text-[10px] font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded uppercase">FECHA: ${fecha}</p></div>
                         </div>
-                        <div class="space-y-4 my-2">
+                        <div class="space-y-4 my-1">
                             <div class="flex items-end gap-2">
-                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Nombre:</span>
+                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[90px]">Nombre:</span>
                                 <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase truncate leading-tight">${n}</div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-lg text-gray-700 uppercase">CEL:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${t}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black leading-tight">${t}</div>
                                 </div>
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-lg text-gray-700 uppercase">C.I.:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${i}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black leading-tight">${i}</div>
                                 </div>
                             </div>
                             <div class="flex items-end gap-2">
-                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Destino:</span>
+                                <span class="font-bold text-lg text-gray-700 uppercase min-w-[90px]">Destino:</span>
                                 <div class="border-b-2 border-dotted border-gray-400 flex-grow text-4xl font-black text-blue-800 px-2 uppercase leading-none">${l}</div>
                             </div>
                         </div>
-                        <div class="text-center mt-2 border-t border-gray-100 pt-2"><p class="text-xl font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p></div>
+                        <div class="text-center mt-3 border-t-2 border-gray-100 pt-2">
+                            <p class="text-xl font-bold text-blue-900 italic uppercase tracking-wide">¡Gracias por comprar en Arelyshop.com!</p>
+                        </div>
                     </div>
                 </div>
             `;
@@ -336,16 +335,12 @@
             container.innerHTML = "";
             const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
-            // SIEMPRE procesamos 3 notas para mantener la estructura de la hoja carta
             for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`a-${i}`)?.value.toUpperCase() || "";
                 const t = document.getElementById(`b-${i}`)?.value.toUpperCase() || "";
                 const ic = document.getElementById(`c-${i}`)?.value.toUpperCase() || "";
                 const l = document.getElementById(`d-${i}`)?.value.toUpperCase() || "";
-                
-                // Una nota está "oculta" si no existe su slot de entrada o si su switch está apagado
                 const isHidden = (i >= slotsCount) || !states[i].visible;
-                
                 container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, isHidden);
             }
 
@@ -362,9 +357,7 @@
             element.innerHTML = layout.innerHTML;
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
             const opt = { 
-                margin: 0, 
-                filename: 'encomiendas_arelyshop.pdf', 
-                image: { type: 'jpeg', quality: 0.98 }, 
+                margin: 0, filename: 'encomiendas_arelyshop.pdf', image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
             };
