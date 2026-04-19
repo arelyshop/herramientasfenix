@@ -5,18 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Generador de Notas de Encomienda - Arelyshop</title>
     
-    <!-- Favicon Personalizado con el icono solicitado -->
+    <!-- Favicon Personalizado -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería para generar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* CONFIGURACIÓN PARA IMPRESIÓN - TAMAÑO CARTA FORZADO */
+        /* CONFIGURACIÓN PARA IMPRESIÓN */
         @media print {
             @page {
-                size: letter portrait; /* Forzar tamaño carta en orientación vertical */
+                size: letter portrait;
                 margin: 0; 
             }
             body {
@@ -61,8 +60,8 @@
         .page-shadow {
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
             background: white;
-            width: 215.9mm; /* Ancho carta */
-            height: 279.4mm; /* Alto carta */
+            width: 215.9mm;
+            height: 279.4mm;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -86,7 +85,7 @@
 
         /* Estilo para el PDF */
         .pdf-section {
-            height: 93.13mm; /* Un tercio exacto de 279.4mm */
+            height: 93.13mm; 
             width: 215.9mm;
             border-bottom: 1px dashed #000;
             padding: 20px;
@@ -123,6 +122,34 @@
             background-color: #f3f4f6;
         }
         .show { display: block; }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #1e3a8a; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body class="bg-gray-100 font-sans" onclick="closeAllDropdowns(event)">
@@ -131,24 +158,15 @@
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
-            <p class="text-gray-600 font-medium">Generador de Notas de Encomienda (Papel Carta)</p>
+            <p class="text-gray-600 font-medium">Gestión de Encomiendas Independientes</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
             <div id="inputsContainer" class="space-y-6">
-                <!-- Dinámico -->
+                <!-- Los 3 bloques de entrada estarán aquí de forma permanente -->
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-4 border-t mt-8 pt-6">
-                <div class="flex items-center gap-4">
-                    <button onclick="addNote()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-6 rounded-lg flex items-center gap-2 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                        </svg>
-                        Añadir otra nota
-                    </button>
-                </div>
-
+            <div class="flex flex-wrap items-center justify-end gap-4 border-t mt-8 pt-6">
                 <div class="flex gap-4">
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-md transition-all">
                         Descargar PDF
@@ -170,41 +188,51 @@
     <div id="printLayout" class="hidden"></div>
 
     <script>
-        let activeNotes = 1;
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
         const originalTitle = document.title;
+        
+        // Estado inicial: Nota 1 visible, las demás ocultas
+        let noteStates = [
+            { id: 0, visible: true },
+            { id: 1, visible: false },
+            { id: 2, visible: false }
+        ];
 
         function createInputGroup(id) {
             const div = document.createElement('div');
             div.id = `group-${id}`;
-            div.className = "p-4 bg-gray-50 rounded-lg border border-gray-200 relative animate-fade-in";
+            const isVisible = noteStates[id].visible;
             
-            let removeBtn = id > 0 ? `
-                <button onclick="removeNote(${id})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            ` : '';
-
+            div.className = `p-4 rounded-lg border transition-all ${isVisible ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-60'}`;
+            
             div.innerHTML = `
-                ${removeBtn}
-                <div class="mb-3"><span class="bg-blue-800 text-white text-xs font-bold px-2 py-1 rounded tracking-widest uppercase">Envío #${id + 1}</span></div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="${isVisible ? 'bg-blue-800' : 'bg-gray-400'} text-white text-xs font-bold px-2 py-1 rounded tracking-widest uppercase">Envío #${id + 1}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-500 uppercase">${isVisible ? 'Visible' : 'Oculto'}</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-${id}" ${isVisible ? 'checked' : ''} onchange="toggleVisibility(${id})">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${isVisible ? '' : 'pointer-events-none grayscale'}">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Nombre:</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Nombre:</label>
                         <input type="text" id="name-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Celular:</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Celular:</label>
                         <input type="text" id="cel-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">C.I.:</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">C.I.:</label>
                         <input type="text" id="ci-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div class="relative">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-tight">Destino:</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Destino:</label>
                         <div class="flex">
                             <input type="text" id="dest-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
                             <button onclick="toggleDropdown(event, ${id})" class="bg-gray-200 border border-gray-300 border-l-0 px-2 rounded-r hover:bg-gray-300 transition-colors">▼</button>
@@ -216,6 +244,12 @@
                 </div>
             `;
             return div;
+        }
+
+        function toggleVisibility(id) {
+            noteStates[id].visible = document.getElementById(`toggle-${id}`).checked;
+            renderInputs();
+            updatePreview();
         }
 
         function toggleDropdown(e, id) {
@@ -242,17 +276,19 @@
             const container = document.getElementById('inputsContainer');
             const saved = [];
             
+            // Guardar valores antes de re-renderizar
             for (let i = 0; i < 3; i++) {
-                const n = document.getElementById(`name-${i}`)?.value;
-                const c = document.getElementById(`cel-${i}`)?.value;
-                const ci = document.getElementById(`ci-${i}`)?.value;
-                const d = document.getElementById(`dest-${i}`)?.value;
-                if (n !== undefined) saved.push({n, c, ci, d});
+                const n = document.getElementById(`name-${i}`)?.value || "";
+                const c = document.getElementById(`cel-${i}`)?.value || "";
+                const ci = document.getElementById(`ci-${i}`)?.value || "";
+                const d = document.getElementById(`dest-${i}`)?.value || "";
+                saved.push({n, c, ci, d});
             }
 
             container.innerHTML = "";
-            for (let i = 0; i < activeNotes; i++) {
+            for (let i = 0; i < 3; i++) {
                 container.appendChild(createInputGroup(i));
+                // Restaurar
                 if (saved[i]) {
                     document.getElementById(`name-${i}`).value = saved[i].n;
                     document.getElementById(`cel-${i}`).value = saved[i].c;
@@ -260,16 +296,14 @@
                     document.getElementById(`dest-${i}`).value = saved[i].d;
                 }
             }
-            updateControls();
         }
 
-        function addNote() { if (activeNotes < 3) { activeNotes++; renderInputs(); updatePreview(); } }
-        function removeNote(index) { if (activeNotes > 1) { activeNotes--; renderInputs(); updatePreview(); } }
-        function updateControls() {
-            document.getElementById('btnAdd').style.display = activeNotes >= 3 ? 'none' : 'flex';
-        }
+        function generateNoteHTML(id, nombre, cel, ci, destino, fecha, isVisible) {
+            // Si no es visible, devolvemos un bloque vacío con las mismas dimensiones para mantener el espacio
+            if (!isVisible) {
+                return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
+            }
 
-        function generateNoteHTML(nombre, cel, ci, destino, fecha) {
             const dispNombre = nombre.trim() || "N/A";
             const dispCel = cel.trim() || "N/A";
             const dispCi = ci.trim() || "N/A";
@@ -312,13 +346,17 @@
             const container = document.getElementById('printableArea');
             container.innerHTML = "";
             const fechaStr = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
-            for (let i = 0; i < activeNotes; i++) {
+            
+            for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`name-${i}`)?.value.toUpperCase() || "";
                 const c = document.getElementById(`cel-${i}`)?.value.toUpperCase() || "";
                 const ci = document.getElementById(`ci-${i}`)?.value.toUpperCase() || "";
                 const d = document.getElementById(`dest-${i}`)?.value.toUpperCase() || "";
-                container.innerHTML += generateNoteHTML(n, c, ci, d, fechaStr);
+                const visible = noteStates[i].visible;
+                
+                container.innerHTML += generateNoteHTML(i, n, c, ci, d, fechaStr, visible);
             }
+            
             const printLayout = document.getElementById('printLayout');
             printLayout.innerHTML = container.innerHTML;
             printLayout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
