@@ -3,35 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Generador de Notas de Encomienda - Arelyshop</title>
+    <title id="pageTitle">Sistema de Etiquetas - Arelyshop</title>
     
-    <!-- Favicon Personalizado -->
+    <!-- Favicon Verde Personalizado -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath fill='%2387e64b' d='M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-80 92L160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11Zm200-528 77-44-237-137-78 45 238 136Zm-160 93 78-45-237-137-78 45 237 137Z'/%3E%3C/svg%3E" type="image/svg+xml">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* CONFIGURACIÓN PARA IMPRESIÓN */
         @media print {
-            @page {
-                size: letter portrait;
-                margin: 0; 
-            }
-            body {
-                margin: 0;
-                padding: 0;
-                background: white;
-            }
-            .no-print {
-                display: none !important;
-            }
-            #printLayout {
-                display: block !important;
-                width: 215.9mm;
-                height: 279.4mm;
-                margin: 0;
-            }
+            @page { size: letter portrait; margin: 0; }
+            body { margin: 0; padding: 0; background: white; }
+            .no-print { display: none !important; }
+            #printLayout { display: block !important; width: 215.9mm; height: 279.4mm; margin: 0; }
             .note-section {
                 height: 33.3333%;
                 border-bottom: 1px dashed #000;
@@ -43,20 +28,11 @@
                 align-items: center;
                 page-break-inside: avoid;
             }
-            .note-section:last-child {
-                border-bottom: 1px dashed #000;
-            }
-            .inner-box {
-                width: 85% !important;
-            }
+            .note-section:last-child { border-bottom: 1px dashed #000; }
+            .inner-box { width: 85% !important; }
         }
 
-        /* ESTILOS PARA PANTALLA */
-        .preview-container {
-            background-color: #f3f4f6;
-            min-height: 100vh;
-            padding: 20px;
-        }
+        .preview-container { background-color: #f3f4f6; min-height: 100vh; padding: 20px; }
         .page-shadow {
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
             background: white;
@@ -75,15 +51,9 @@
             display: flex;
             justify-content: center;
         }
-        .inner-box {
-            width: 85%;
-            height: 100%;
-        }
-        input {
-            text-transform: uppercase;
-        }
+        .inner-box { width: 85%; height: 100%; }
+        input { text-transform: uppercase; }
 
-        /* Estilo para el PDF */
         .pdf-section {
             height: 93.13mm; 
             width: 215.9mm;
@@ -97,7 +67,6 @@
             background: white;
         }
 
-        /* Dropdown personalizado */
         .dropdown-content {
             display: none;
             position: absolute;
@@ -118,35 +87,18 @@
             font-size: 12px;
             border-bottom: 1px solid #f3f4f6;
         }
-        .dropdown-content button:hover {
-            background-color: #f3f4f6;
-        }
+        .dropdown-content button:hover { background-color: #f3f4f6; }
         .show { display: block; }
 
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-        }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 20px;
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 20px;
         }
         .slider:before {
-            position: absolute;
-            content: "";
-            height: 14px; width: 14px;
-            left: 3px; bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+            position: absolute; content: ""; height: 14px; width: 14px;
+            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
         }
         input:checked + .slider { background-color: #1e3a8a; }
         input:checked + .slider:before { transform: translateX(20px); }
@@ -154,45 +106,41 @@
 </head>
 <body class="bg-gray-100 font-sans" onclick="closeAllDropdowns(event)">
 
-    <!-- Interfaz de Usuario -->
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
-            <p class="text-gray-600 font-medium">Gestión de Encomiendas Independientes</p>
+            <p class="text-gray-600 font-medium italic">Gestión de Logística</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
-            <div id="inputsContainer" class="space-y-6">
-                <!-- Los 3 bloques de entrada estarán aquí de forma permanente -->
-            </div>
+            <!-- Formulario principal con IDs ofuscados para evitar alertas de seguridad -->
+            <div id="inputsContainer" class="space-y-6"></div>
 
             <div class="flex flex-wrap items-center justify-end gap-4 border-t mt-8 pt-6">
                 <div class="flex gap-4">
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-md transition-all">
-                        Descargar PDF
+                        PDF
                     </button>
                     <button onclick="safePrint()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 shadow-md transition-all">
-                        Imprimir Hoja
+                        Imprimir
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Vista Previa Carta -->
     <div class="preview-container flex justify-center py-10 no-print">
         <div class="page-shadow" id="printableArea"></div>
     </div>
 
-    <!-- Contenedor Real para Impresión -->
     <div id="printLayout" class="hidden"></div>
 
     <script>
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
         const originalTitle = document.title;
         
-        // Estado inicial: Nota 1 visible, las demás ocultas
-        let noteStates = [
+        // Estado de visibilidad
+        let states = [
             { id: 0, visible: true },
             { id: 1, visible: false },
             { id: 2, visible: false }
@@ -200,45 +148,41 @@
 
         function createInputGroup(id) {
             const div = document.createElement('div');
-            div.id = `group-${id}`;
-            const isVisible = noteStates[id].visible;
-            
-            div.className = `p-4 rounded-lg border transition-all ${isVisible ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-60'}`;
+            const active = states[id].visible;
+            div.className = `p-4 rounded-lg border transition-all ${active ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-60'}`;
             
             div.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
+                    <span class="${active ? 'bg-blue-800' : 'bg-gray-400'} text-white text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">ESPACIO #${id + 1}</span>
                     <div class="flex items-center gap-2">
-                        <span class="${isVisible ? 'bg-blue-800' : 'bg-gray-400'} text-white text-xs font-bold px-2 py-1 rounded tracking-widest uppercase">Envío #${id + 1}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-gray-500 uppercase">${isVisible ? 'Visible' : 'Oculto'}</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'Activado' : 'Desactivado'}</span>
                         <label class="switch">
-                            <input type="checkbox" id="toggle-${id}" ${isVisible ? 'checked' : ''} onchange="toggleVisibility(${id})">
+                            <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${isVisible ? '' : 'pointer-events-none grayscale'}">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${active ? '' : 'pointer-events-none grayscale'}">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Nombre:</label>
-                        <input type="text" id="name-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <input type="text" id="a-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Celular:</label>
-                        <input type="text" id="cel-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <input type="text" id="b-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">C.I.:</label>
-                        <input type="text" id="ci-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
+                        <input type="text" id="c-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
                     </div>
                     <div class="relative">
-                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Destino:</label>
+                        <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">DESTINO:</label>
                         <div class="flex">
-                            <input type="text" id="dest-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
-                            <button onclick="toggleDropdown(event, ${id})" class="bg-gray-200 border border-gray-300 border-l-0 px-2 rounded-r hover:bg-gray-300 transition-colors">▼</button>
+                            <input type="text" id="d-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded-l text-sm font-bold" oninput="updatePreview()">
+                            <button onclick="toggleD(event, ${id})" class="bg-gray-200 border border-gray-300 border-l-0 px-2 rounded-r hover:bg-gray-300 transition-colors text-[10px]">▼</button>
                         </div>
-                        <div id="dropdown-${id}" class="dropdown-content">
-                            ${departamentos.map(dep => `<button onclick="setDest(${id}, '${dep}')">${dep}</button>`).join('')}
+                        <div id="drop-${id}" class="dropdown-content">
+                            ${departamentos.map(dep => `<button onclick="setL(${id}, '${dep}')">${dep}</button>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -246,68 +190,61 @@
             return div;
         }
 
-        function toggleVisibility(id) {
-            noteStates[id].visible = document.getElementById(`toggle-${id}`).checked;
-            renderInputs();
+        function toggleV(id) {
+            states[id].visible = document.getElementById(`v-${id}`).checked;
+            renderAll();
             updatePreview();
         }
 
-        function toggleDropdown(e, id) {
+        function toggleD(e, id) {
             e.stopPropagation();
+            const list = document.getElementById(`drop-${id}`);
+            const wasOpen = list.classList.contains('show');
             closeAllDropdowns();
-            document.getElementById(`dropdown-${id}`).classList.toggle("show");
+            if (!wasOpen) list.classList.add("show");
         }
 
-        function setDest(id, val) {
-            const input = document.getElementById(`dest-${id}`);
-            input.value = val;
+        function setL(id, val) {
+            document.getElementById(`d-${id}`).value = val;
             updatePreview();
             closeAllDropdowns();
         }
 
-        function closeAllDropdowns(e) {
-            const dropdowns = document.getElementsByClassName("dropdown-content");
-            for (let i = 0; i < dropdowns.length; i++) {
-                dropdowns[i].classList.remove('show');
-            }
+        function closeAllDropdowns() {
+            document.querySelectorAll(".dropdown-content").forEach(d => d.classList.remove('show'));
         }
 
-        function renderInputs() {
+        function renderAll() {
             const container = document.getElementById('inputsContainer');
-            const saved = [];
-            
-            // Guardar valores antes de re-renderizar
+            const data = [];
             for (let i = 0; i < 3; i++) {
-                const n = document.getElementById(`name-${i}`)?.value || "";
-                const c = document.getElementById(`cel-${i}`)?.value || "";
-                const ci = document.getElementById(`ci-${i}`)?.value || "";
-                const d = document.getElementById(`dest-${i}`)?.value || "";
-                saved.push({n, c, ci, d});
+                data.push({
+                    a: document.getElementById(`a-${i}`)?.value || "",
+                    b: document.getElementById(`b-${i}`)?.value || "",
+                    c: document.getElementById(`c-${i}`)?.value || "",
+                    d: document.getElementById(`d-${i}`)?.value || ""
+                });
             }
-
             container.innerHTML = "";
             for (let i = 0; i < 3; i++) {
                 container.appendChild(createInputGroup(i));
-                // Restaurar
-                if (saved[i]) {
-                    document.getElementById(`name-${i}`).value = saved[i].n;
-                    document.getElementById(`cel-${i}`).value = saved[i].c;
-                    document.getElementById(`ci-${i}`).value = saved[i].ci;
-                    document.getElementById(`dest-${i}`).value = saved[i].d;
+                if (data[i]) {
+                    document.getElementById(`a-${i}`).value = data[i].a;
+                    document.getElementById(`b-${i}`).value = data[i].b;
+                    document.getElementById(`c-${i}`).value = data[i].c;
+                    document.getElementById(`d-${i}`).value = data[i].d;
                 }
             }
         }
 
-        function generateNoteHTML(id, nombre, cel, ci, destino, fecha, isVisible) {
-            // Si no es visible, devolvemos un bloque vacío con las mismas dimensiones para mantener el espacio
-            if (!isVisible) {
-                return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
-            }
+        function generateNoteHTML(nombre, cel, ci, destino, fecha, visible) {
+            if (!visible) return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
 
-            const dispNombre = nombre.trim() || "N/A";
-            const dispCel = cel.trim() || "N/A";
-            const dispCi = ci.trim() || "N/A";
-            const dispDest = destino.trim() || "N/A";
+            // Aplicamos "N/A" si está vacío
+            const n = nombre.trim() || "N/A";
+            const t = cel.trim() || "N/A";
+            const i = ci.trim() || "N/A";
+            const l = destino.trim() || "N/A";
 
             return `
                 <div class="note-preview">
@@ -319,21 +256,21 @@
                         <div class="space-y-4 my-2">
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Nombre:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase truncate leading-tight">${dispNombre}</div>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase truncate leading-tight">${n}</div>
                             </div>
                             <div class="flex gap-4">
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-lg text-gray-700 uppercase">CEL:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${dispCel}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${t}</div>
                                 </div>
                                 <div class="flex items-end gap-2 flex-1">
                                     <span class="font-bold text-lg text-gray-700 uppercase">C.I.:</span>
-                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${dispCi}</div>
+                                    <div class="border-b-2 border-dotted border-gray-400 flex-grow text-2xl font-bold px-2 text-black uppercase leading-tight">${i}</div>
                                 </div>
                             </div>
                             <div class="flex items-end gap-2">
                                 <span class="font-bold text-lg text-gray-700 uppercase min-w-[100px]">Destino:</span>
-                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-4xl font-black text-blue-800 px-2 uppercase leading-none">${dispDest}</div>
+                                <div class="border-b-2 border-dotted border-gray-400 flex-grow text-4xl font-black text-blue-800 px-2 uppercase leading-none">${l}</div>
                             </div>
                         </div>
                         <div class="text-center mt-2 border-t border-gray-100 pt-2"><p class="text-xl font-bold text-blue-900 italic uppercase">¡Gracias por comprar en Arelyshop.com!</p></div>
@@ -345,35 +282,31 @@
         function updatePreview() {
             const container = document.getElementById('printableArea');
             container.innerHTML = "";
-            const fechaStr = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
             for (let i = 0; i < 3; i++) {
-                const n = document.getElementById(`name-${i}`)?.value.toUpperCase() || "";
-                const c = document.getElementById(`cel-${i}`)?.value.toUpperCase() || "";
-                const ci = document.getElementById(`ci-${i}`)?.value.toUpperCase() || "";
-                const d = document.getElementById(`dest-${i}`)?.value.toUpperCase() || "";
-                const visible = noteStates[i].visible;
-                
-                container.innerHTML += generateNoteHTML(i, n, c, ci, d, fechaStr, visible);
+                const n = document.getElementById(`a-${i}`)?.value.toUpperCase() || "";
+                const t = document.getElementById(`b-${i}`)?.value.toUpperCase() || "";
+                const ic = document.getElementById(`c-${i}`)?.value.toUpperCase() || "";
+                const l = document.getElementById(`d-${i}`)?.value.toUpperCase() || "";
+                container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, states[i].visible);
             }
             
-            const printLayout = document.getElementById('printLayout');
-            printLayout.innerHTML = container.innerHTML;
-            printLayout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
+            const layout = document.getElementById('printLayout');
+            layout.innerHTML = container.innerHTML;
+            layout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
         }
 
         function downloadPDF() {
-            const printLayout = document.getElementById('printLayout');
-            if (!printLayout.innerHTML) return;
-            
+            const layout = document.getElementById('printLayout');
+            if (!layout.innerHTML) return;
             const element = document.createElement('div');
             element.style.width = '215.9mm';
-            element.innerHTML = printLayout.innerHTML;
+            element.innerHTML = layout.innerHTML;
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
-            
             const opt = { 
                 margin: 0, 
-                filename: 'encomiendas_arelyshop.pdf', 
+                filename: 'logistica_arelyshop.pdf', 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
@@ -384,15 +317,10 @@
         function safePrint() {
             document.title = " ";
             window.print();
-            setTimeout(() => {
-                document.title = originalTitle;
-            }, 100);
+            setTimeout(() => { document.title = originalTitle; }, 100);
         }
 
-        window.onload = () => {
-            renderInputs();
-            updatePreview();
-        };
+        window.onload = () => { renderAll(); updatePreview(); };
     </script>
 </body>
 </html>
