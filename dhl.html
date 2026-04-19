@@ -12,26 +12,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
+        /* CONFIGURACIÓN DE IMPRESIÓN */
         @media print {
-            @page { size: letter portrait; margin: 0; }
-            body { margin: 0; padding: 0; background: white; }
+            @page { 
+                size: letter portrait; 
+                margin: 0; 
+            }
+            body { 
+                margin: 0; 
+                padding: 0; 
+                background: white; 
+            }
             .no-print { display: none !important; }
-            #printLayout { display: block !important; width: 215.9mm; height: 279.4mm; margin: 0; }
+            #printLayout { 
+                display: block !important; 
+                width: 215.9mm; 
+                height: 279.4mm; 
+                margin: 0; 
+            }
+            /* Cada sección ocupa exactamente 1/3 de la hoja carta */
             .note-section {
-                height: 33.3333%;
+                height: 93.133mm !important;
+                width: 215.9mm !important;
                 border-bottom: 1px dashed #000;
-                padding: 20px;
+                padding: 10mm;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 page-break-inside: avoid;
+                overflow: hidden;
             }
-            .note-section:last-child { border-bottom: 1px dashed #000; }
+            .note-section:last-child { border-bottom: none; }
             .inner-box { width: 85% !important; }
         }
 
+        /* ESTILOS DE PANTALLA */
         .preview-container { background-color: #f3f4f6; min-height: 100vh; padding: 20px; }
         .page-shadow {
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
@@ -44,21 +61,24 @@
         }
         .note-preview {
             height: 33.3333%;
+            width: 100%;
             border-bottom: 1px dashed #ccc;
-            padding: 1.5rem;
+            padding: 1rem;
             position: relative;
             box-sizing: border-box;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
-        .inner-box { width: 85%; height: 100%; }
+        .inner-box { width: 85%; height: 90%; }
         input { text-transform: uppercase; }
 
+        /* PDF FIX */
         .pdf-section {
-            height: 93.13mm; 
+            height: 93.133mm; 
             width: 215.9mm;
             border-bottom: 1px dashed #000;
-            padding: 20px;
+            padding: 10mm;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -77,8 +97,6 @@
             z-index: 100;
             border-radius: 0.5rem;
             border: 1px solid #e5e7eb;
-            max-height: 200px;
-            overflow-y: auto;
         }
         .dropdown-content button {
             width: 100%;
@@ -109,15 +127,13 @@
     <div class="no-print max-w-5xl mx-auto p-6">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold text-blue-900 uppercase tracking-tight">Arelyshop.com</h1>
-            <p class="text-gray-600 font-medium italic">Gestión de Logística</p>
+            <p class="text-gray-600 font-medium italic">Gestión de Logística - 3 Notas por Hoja</p>
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
-            <!-- Contenedor de Entradas -->
             <div id="inputsContainer" class="space-y-6"></div>
 
             <div class="flex flex-wrap items-center justify-between gap-4 border-t mt-8 pt-6">
-                <!-- Botón para añadir nota -->
                 <button onclick="addNoteSlot()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     Añadir otro envío
@@ -147,7 +163,6 @@
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
         const originalTitle = document.title;
         
-        // Estado inicial
         let slotsCount = 1;
         let states = [
             { id: 0, visible: true },
@@ -167,7 +182,7 @@
                         ${id > 0 ? `<button onclick="removeSlot(${id})" class="text-red-400 hover:text-red-600 text-[10px] font-bold uppercase underline">Eliminar</button>` : ''}
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'En hoja' : 'Oculto'}</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'Habilitado' : 'Oculto'}</span>
                         <label class="switch">
                             <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
                             <span class="slider"></span>
@@ -252,7 +267,6 @@
         function renderAll() {
             const container = document.getElementById('inputsContainer');
             const data = [];
-            // Respaldar datos actuales
             for (let i = 0; i < 3; i++) {
                 data.push({
                     a: document.getElementById(`a-${i}`)?.value || "",
@@ -273,8 +287,11 @@
             }
         }
 
-        function generateNoteHTML(nombre, cel, ci, destino, fecha, visible) {
-            if (!visible) return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
+        function generateNoteHTML(nombre, cel, ci, destino, fecha, isHidden) {
+            // Siempre retornamos el contenedor con altura completa, incluso si está oculto
+            if (isHidden) {
+                return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
+            }
 
             const n = nombre.trim() || "N/A";
             const t = cel.trim() || "N/A";
@@ -319,17 +336,17 @@
             container.innerHTML = "";
             const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
-            for (let i = 0; i < slotsCount; i++) {
+            // SIEMPRE procesamos 3 notas para mantener la estructura de la hoja carta
+            for (let i = 0; i < 3; i++) {
                 const n = document.getElementById(`a-${i}`)?.value.toUpperCase() || "";
                 const t = document.getElementById(`b-${i}`)?.value.toUpperCase() || "";
                 const ic = document.getElementById(`c-${i}`)?.value.toUpperCase() || "";
                 const l = document.getElementById(`d-${i}`)?.value.toUpperCase() || "";
-                container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, states[i].visible);
-            }
-            
-            // Si hay menos de 3 slots, rellenamos el resto con espacios transparentes para mantener la estructura de la hoja
-            for (let i = slotsCount; i < 3; i++) {
-                container.innerHTML += `<div class="note-preview"><div class="inner-box"></div></div>`;
+                
+                // Una nota está "oculta" si no existe su slot de entrada o si su switch está apagado
+                const isHidden = (i >= slotsCount) || !states[i].visible;
+                
+                container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, isHidden);
             }
 
             const layout = document.getElementById('printLayout');
@@ -346,7 +363,7 @@
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
             const opt = { 
                 margin: 0, 
-                filename: 'etiquetas_arelyshop.pdf', 
+                filename: 'encomiendas_arelyshop.pdf', 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
