@@ -113,15 +113,23 @@
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
-            <!-- Formulario principal con IDs ofuscados para evitar alertas de seguridad -->
+            <!-- Contenedor de Entradas -->
             <div id="inputsContainer" class="space-y-6"></div>
 
-            <div class="flex flex-wrap items-center justify-end gap-4 border-t mt-8 pt-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-t mt-8 pt-6">
+                <!-- Botón para añadir nota -->
+                <button onclick="addNoteSlot()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+                    Añadir otro envío
+                </button>
+
                 <div class="flex gap-4">
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-md transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-280 160-160-56-56-64 62v-166h-80v166l-64-62-56 56 160 160ZM240-80q-33 0-56.5-23.5T160-160v-480l240-240h320q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80H240Zm0-80h480v-640H434L240-606v446Zm0 0h480-480Z"/></svg>
                         PDF
                     </button>
                     <button onclick="safePrint()" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full flex items-center gap-2 shadow-md transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M640-640v-120H320v120h-80v-200h480v200h-80Zm-480 80h640-640Zm560 100q17 0 28.5-11.5T760-500q0-17-11.5-28.5T720-540q-17 0-28.5 11.5T680-500q0 17 11.5 28.5T720-460Zm-80 260v-160H320v160h320Zm80 80H240v-160H80v-240q0-51 35-85.5t85-34.5h560q51 0 85.5 34.5T880-520v240H720v160Zm80-240v-160q0-17-11.5-28.5T760-560H200q-17 0-28.5 11.5T160-520v160h80v-80h480v80h80Z"/></svg>
                         Imprimir
                     </button>
                 </div>
@@ -139,11 +147,12 @@
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
         const originalTitle = document.title;
         
-        // Estado de visibilidad
+        // Estado inicial
+        let slotsCount = 1;
         let states = [
             { id: 0, visible: true },
-            { id: 1, visible: false },
-            { id: 2, visible: false }
+            { id: 1, visible: true },
+            { id: 2, visible: true }
         ];
 
         function createInputGroup(id) {
@@ -153,16 +162,19 @@
             
             div.innerHTML = `
                 <div class="flex items-center justify-between mb-3">
-                    <span class="${active ? 'bg-blue-800' : 'bg-gray-400'} text-white text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">ESPACIO #${id + 1}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="${active ? 'bg-blue-800' : 'bg-gray-400'} text-white text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">ENVÍO #${id + 1}</span>
+                        ${id > 0 ? `<button onclick="removeSlot(${id})" class="text-red-400 hover:text-red-600 text-[10px] font-bold uppercase underline">Eliminar</button>` : ''}
+                    </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'Activado' : 'Desactivado'}</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'En hoja' : 'Oculto'}</span>
                         <label class="switch">
                             <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${active ? '' : 'pointer-events-none grayscale'}">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${active ? '' : 'pointer-events-none grayscale opacity-40'}">
                     <div>
                         <label class="block text-[10px] font-bold text-gray-400 mb-1 uppercase">Nombre:</label>
                         <input type="text" id="a-${id}" autocomplete="off" class="w-full p-2 border border-gray-300 rounded text-sm font-bold" oninput="updatePreview()">
@@ -188,6 +200,29 @@
                 </div>
             `;
             return div;
+        }
+
+        function addNoteSlot() {
+            if (slotsCount < 3) {
+                slotsCount++;
+                renderAll();
+                updatePreview();
+            }
+            updateAddButton();
+        }
+
+        function removeSlot(id) {
+            if (slotsCount > 1) {
+                slotsCount--;
+                renderAll();
+                updatePreview();
+            }
+            updateAddButton();
+        }
+
+        function updateAddButton() {
+            const btn = document.getElementById('btnAdd');
+            btn.style.display = slotsCount >= 3 ? 'none' : 'flex';
         }
 
         function toggleV(id) {
@@ -217,6 +252,7 @@
         function renderAll() {
             const container = document.getElementById('inputsContainer');
             const data = [];
+            // Respaldar datos actuales
             for (let i = 0; i < 3; i++) {
                 data.push({
                     a: document.getElementById(`a-${i}`)?.value || "",
@@ -226,7 +262,7 @@
                 });
             }
             container.innerHTML = "";
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < slotsCount; i++) {
                 container.appendChild(createInputGroup(i));
                 if (data[i]) {
                     document.getElementById(`a-${i}`).value = data[i].a;
@@ -240,7 +276,6 @@
         function generateNoteHTML(nombre, cel, ci, destino, fecha, visible) {
             if (!visible) return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
 
-            // Aplicamos "N/A" si está vacío
             const n = nombre.trim() || "N/A";
             const t = cel.trim() || "N/A";
             const i = ci.trim() || "N/A";
@@ -284,7 +319,7 @@
             container.innerHTML = "";
             const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < slotsCount; i++) {
                 const n = document.getElementById(`a-${i}`)?.value.toUpperCase() || "";
                 const t = document.getElementById(`b-${i}`)?.value.toUpperCase() || "";
                 const ic = document.getElementById(`c-${i}`)?.value.toUpperCase() || "";
@@ -292,6 +327,11 @@
                 container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, states[i].visible);
             }
             
+            // Si hay menos de 3 slots, rellenamos el resto con espacios transparentes para mantener la estructura de la hoja
+            for (let i = slotsCount; i < 3; i++) {
+                container.innerHTML += `<div class="note-preview"><div class="inner-box"></div></div>`;
+            }
+
             const layout = document.getElementById('printLayout');
             layout.innerHTML = container.innerHTML;
             layout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
@@ -306,7 +346,7 @@
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
             const opt = { 
                 margin: 0, 
-                filename: 'logistica_arelyshop.pdf', 
+                filename: 'etiquetas_arelyshop.pdf', 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
