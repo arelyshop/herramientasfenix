@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teleprompter Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos adicionales para ocultar barras de desplazamiento y animaciones suaves */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .mirror {
+            transform: scaleX(-1);
+        }
+        
+        /* Efecto de desvanecimiento en los bordes para lectura más cómoda */
+        .fade-overlay {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .fade-top {
+            top: 0;
+            height: 20%;
+            background: linear-gradient(to bottom, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0) 100%);
+        }
+        .fade-bottom {
+            bottom: 0;
+            height: 20%;
+            background: linear-gradient(to top, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0) 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen overflow-hidden selection:bg-blue-500 selection:text-white">
+
+    <!-- PANTALLA DE EDICIÓN (Configuración inicial) -->
+    <div id="edit-view" class="h-screen flex flex-col p-6 max-w-5xl mx-auto transition-opacity duration-300">
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                    Teleprompter Web
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">Escribe tu texto y ajusta las opciones antes de empezar.</p>
+            </div>
+        </header>
+
+        <div class="flex-1 flex flex-col md:flex-row gap-6 h-full min-h-0">
+            <!-- Área de Texto -->
+            <div class="flex-1 flex flex-col bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden">
+                <textarea id="script-input" class="w-full h-full p-6 bg-transparent text-gray-100 placeholder-gray-500 resize-none focus:outline-none text-lg" placeholder="Introduce o pega el texto de tu guion aquí..."></textarea>
+            </div>
+
+            <!-- Panel de Controles -->
+            <div class="w-full md:w-80 bg-gray-800 rounded-2xl border border-gray-700 p-6 flex flex-col gap-6 shadow-xl overflow-y-auto">
+                <h2 class="text-xl font-semibold text-gray-200 border-b border-gray-700 pb-2">Ajustes</h2>
+                
+                <!-- Velocidad -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 flex justify-between">
+                        <span>Velocidad de desplazamiento</span>
+                        <span id="speed-display" class="text-blue-400 font-mono">15</span>
+                    </label>
+                    <input type="range" id="speed-input" min="1" max="50" value="15" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Tamaño de fuente -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm text-gray-400 flex justify-between">
+                        <span>Tamaño de la fuente</span>
+                        <span id="font-size-display" class="text-blue-400 font-mono">64px</span>
+                    </label>
+                    <input type="range" id="font-size-input" min="24" max="120" value="64" class="w-full accent-blue-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- Opciones (Espejo) -->
+                <div class="flex items-center justify-between mt-2">
+                    <label class="text-sm text-gray-400 cursor-pointer" for="mirror-toggle">Modo Espejo (Flip)</label>
+                    <button id="mirror-toggle" class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600 transition-colors focus:outline-none">
+                        <span id="mirror-knob" class="inline-block h-4 w-4 translate-x-1 rounded-full bg-white transition-transform"></span>
+                    </button>
+                </div>
+
+                <div class="mt-auto pt-6">
+                    <button id="start-btn" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-blue-500/25 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Iniciar Teleprompter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DEL TELEPROMPTER -->
+    <div id="prompter-view" class="fixed inset-0 bg-gray-900 hidden flex flex-col z-50">
+        
+        <!-- Barra de herramientas flotante -->
+        <div id="prompter-toolbar" class="absolute top-4 left-1/2 -translate-x-1/2 bg-gray-800/80 backdrop-blur-md border border-gray-700 p-3 rounded-full flex items-center gap-6 z-50 shadow-2xl transition-opacity duration-300 opacity-100 hover:opacity-100">
+            <!-- Volver -->
+            <button id="back-btn" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors" title="Volver a edición">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            </button>
+            
+            <div class="w-px h-6 bg-gray-700"></div>
+            
+            <!-- Velocidad en vivo -->
+            <div class="flex items-center gap-3 w-32">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <input type="range" id="live-speed-input" min="1" max="50" class="w-full accent-blue-500 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <div class="w-px h-6 bg-gray-700"></div>
+
+            <!-- Botones de Control (Play/Pause/Reset) -->
+            <div class="flex items-center gap-2">
+                <button id="reset-btn" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-full transition-colors" title="Volver al inicio">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
+                <button id="play-pause-btn" class="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full transition-all shadow-lg hover:shadow-blue-500/50" title="Pausar/Reanudar (Espacio)">
+                    <!-- Icono de Play -->
+                    <svg id="icon-play" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" style="display: none;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                    <!-- Icono de Pause -->
+                    <svg id="icon-pause" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Guías de lectura (Fade) -->
+        <div class="fade-overlay fade-top"></div>
+        <div class="fade-overlay fade-bottom"></div>
+        
+        <!-- Marcador de línea central (Triángulo apuntando) -->
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 border-y-8 border-y-transparent border-l-8 border-l-blue-500 z-20"></div>
+
+        <!-- Contenedor del texto desplazable -->
+        <div id="scroll-container" class="flex-1 overflow-y-auto no-scrollbar relative pt-[50vh] pb-[50vh]">
+            <div id="prompter-content" class="w-full max-w-4xl mx-auto px-12 text-center leading-relaxed font-semibold break-words" style="white-space: pre-wrap;">
+                <!-- El texto se inyectará aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos de la interfaz - Vista Edición
+        const editView = document.getElementById('edit-view');
+        const scriptInput = document.getElementById('script-input');
+        const speedInput = document.getElementById('speed-input');
+        const speedDisplay = document.getElementById('speed-display');
+        const fontSizeInput = document.getElementById('font-size-input');
+        const fontSizeDisplay = document.getElementById('font-size-display');
+        const mirrorToggle = document.getElementById('mirror-toggle');
+        const mirrorKnob = document.getElementById('mirror-knob');
+        const startBtn = document.getElementById('start-btn');
+
+        // Elementos de la interfaz - Vista Prompter
+        const prompterView = document.getElementById('prompter-view');
+        const scrollContainer = document.getElementById('scroll-container');
+        const prompterContent = document.getElementById('prompter-content');
+        const backBtn = document.getElementById('back-btn');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const liveSpeedInput = document.getElementById('live-speed-input');
+        const iconPlay = document.getElementById('icon-play');
+        const iconPause = document.getElementById('icon-pause');
+        const toolbar = document.getElementById('prompter-toolbar');
+
+        // Variables de estado
+        let text = "¡Hola! Bienvenido a tu Teleprompter Web.\n\nEscribe aquí tu discurso, guion o presentación.\n\nPuedes ajustar la velocidad con el regulador mientras lees, y usar la barra espaciadora para pausar.\n\n¡Mucho éxito en tu presentación!";
+        let speed = 15;
+        let fontSize = 64;
+        let isMirror = false;
+        let isPlaying = false;
+        
+        // Variables para la animación
+        let animationFrameId = null;
+        let scrollPosition = 0;
+        let lastTime = 0;
+
+        // Inicialización
+        scriptInput.value = text;
+
+        // Actualizar displays en edición
+        speedInput.addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            speedDisplay.textContent = speed;
+            liveSpeedInput.value = speed;
+        });
+
+        liveSpeedInput.addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            speedInput.value = speed;
+            speedDisplay.textContent = speed;
+        });
+
+        fontSizeInput.addEventListener('input', (e) => {
+            fontSize = parseInt(e.target.value);
+            fontSizeDisplay.textContent = `${fontSize}px`;
+        });
+
+        mirrorToggle.addEventListener('click', () => {
+            isMirror = !isMirror;
+            if (isMirror) {
+                mirrorToggle.classList.replace('bg-gray-600', 'bg-blue-600');
+                mirrorKnob.classList.add('translate-x-6');
+                mirrorKnob.classList.remove('translate-x-1');
+            } else {
+                mirrorToggle.classList.replace('bg-blue-600', 'bg-gray-600');
+                mirrorKnob.classList.remove('translate-x-6');
+                mirrorKnob.classList.add('translate-x-1');
+            }
+        });
+
+        // Funciones del Prompter
+        function startPrompter() {
+            // Guardar texto actual
+            text = scriptInput.value || "No hay texto para mostrar.";
+            
+            // Aplicar estilos
+            prompterContent.textContent = text;
+            prompterContent.style.fontSize = `${fontSize}px`;
+            
+            if (isMirror) {
+                prompterContent.classList.add('mirror');
+            } else {
+                prompterContent.classList.remove('mirror');
+            }
+
+            // Cambiar vista
+            editView.classList.add('hidden');
+            prompterView.classList.remove('hidden');
+
+            // Resetear posición
+            scrollContainer.scrollTop = 0;
+            scrollPosition = 0;
+            
+            // Iniciar reproducción
+            play();
+        }
+
+        function stopPrompter() {
+            pause();
+            editView.classList.remove('hidden');
+            prompterView.classList.add('hidden');
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) pause();
+            else play();
+        }
+
+        function play() {
+            if (isPlaying) return;
+            isPlaying = true;
+            iconPlay.style.display = 'none';
+            iconPause.style.display = 'block';
+            lastTime = performance.now();
+            animationFrameId = requestAnimationFrame(scrollLoop);
+        }
+
+        function pause() {
+            isPlaying = false;
+            iconPlay.style.display = 'block';
+            iconPause.style.display = 'none';
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        }
+
+        function scrollLoop(timestamp) {
+            if (!isPlaying) return;
+
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // Factor de velocidad (ajustar para que sea cómodo)
+            // Dividimos por 1000 para que sea independiente de la tasa de frames
+            const pixelsPerSecond = speed * 8; 
+            const scrollAmount = (pixelsPerSecond * deltaTime) / 1000;
+
+            scrollPosition += scrollAmount;
+            
+            // Si el usuario escrolea manualmente, sincronizar la posición
+            if (Math.abs(scrollContainer.scrollTop - scrollPosition) > scrollAmount * 2) {
+                scrollPosition = scrollContainer.scrollTop;
+            }
+
+            scrollContainer.scrollTop = scrollPosition;
+
+            // Verificar si llegamos al final
+            const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+            if (scrollPosition >= maxScroll - 2) {
+                pause();
+            } else {
+                animationFrameId = requestAnimationFrame(scrollLoop);
+            }
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startPrompter);
+        backBtn.addEventListener('click', stopPrompter);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        
+        resetBtn.addEventListener('click', () => {
+            scrollPosition = 0;
+            scrollContainer.scrollTop = 0;
+            if (!isPlaying) play();
+        });
+
+        // Controles de teclado
+        window.addEventListener('keydown', (e) => {
+            // Solo si el prompter está activo
+            if (!prompterView.classList.contains('hidden')) {
+                if (e.code === 'Space') {
+                    e.preventDefault(); // Evitar scroll de la página
+                    togglePlayPause();
+                } else if (e.code === 'Escape') {
+                    stopPrompter();
+                } else if (e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    speedInput.value = Math.min(parseInt(speedInput.value) + 1, 50);
+                    liveSpeedInput.value = speedInput.value;
+                    speedInput.dispatchEvent(new Event('input'));
+                } else if (e.code === 'ArrowDown') {
+                    e.preventDefault();
+                    speedInput.value = Math.max(parseInt(speedInput.value) - 1, 1);
+                    liveSpeedInput.value = speedInput.value;
+                    speedInput.dispatchEvent(new Event('input'));
+                }
+            }
+        });
+
+        // Ocultar barra de herramientas al no mover el mouse en el prompter
+        let mouseTimer;
+        prompterView.addEventListener('mousemove', () => {
+            toolbar.style.opacity = '1';
+            clearTimeout(mouseTimer);
+            if (isPlaying) {
+                mouseTimer = setTimeout(() => {
+                    toolbar.style.opacity = '0.1';
+                }, 2500);
+            }
+        });
+
+    </script>
+</body>
+</html>
