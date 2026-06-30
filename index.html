@@ -199,6 +199,14 @@
                         <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-rose-400">HV</div>
                         <span class="text-xs font-semibold">Havit</span>
                     </button>
+                    <button onclick="addBrand('2m')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-rose-500">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-rose-400">2M</div>
+                        <span class="text-xs font-semibold">2M</span>
+                    </button>
+                    <button onclick="addBrand('3m')" class="brand-btn w-full flex items-center gap-3 p-2 bg-slate-800/30 border border-slate-700 rounded-lg transition-all text-left hover:border-rose-500">
+                        <div class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center text-[8px] font-bold text-rose-400">3M</div>
+                        <span class="text-xs font-semibold">3M</span>
+                    </button>
                 </div>
             </div>
 
@@ -629,6 +637,11 @@
                         case 'dimax': layer.x = 0; layer.y = CANVAS_HEIGHT-layer.height-85; break;
                         case 'baseus': layer.x = 45; layer.y = 0; break;
                         case 'havit': layer.x = 0; layer.y = CANVAS_HEIGHT-layer.height-95; break;
+                        case '2m':
+                        case '3m': 
+                            layer.x = CANVAS_WIDTH - layer.width - 60; 
+                            layer.y = CANVAS_HEIGHT - layer.height - 60; 
+                            break;
                     }
                 } else {
                     const ratio = Math.min(CANVAS_WIDTH*0.7/img.width, CANVAS_HEIGHT*0.7/img.height);
