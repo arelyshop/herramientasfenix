@@ -651,6 +651,8 @@
         }
 
         function setupKeyboardShortcuts() {
+            let arrowMoved = false; // Bandera para no saturar el historial con cada pixel
+            
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Shift') shiftPressed = true;
                 
@@ -705,9 +707,40 @@
                 if (e.key === 'Delete' || e.key === 'Backspace') {
                     if (selectedLayerIds.length > 0 && editorMode === 'move' && !maskMode) deleteSelectedLayers();
                 }
+
+                // --- MOVIMIENTO PRECISO CON FLECHAS DEL TECLADO ---
+                if (selectedLayerIds.length > 0 && (editorMode === 'move' || editorMode === 'transform') && !maskMode) {
+                    const isArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+                    
+                    if (isArrow) {
+                        e.preventDefault(); // Evita que la página del navegador haga scroll al presionar las flechas
+                        
+                        const moveAmount = shiftPressed ? 10 : 1; // 10px con Shift, 1px normal
+                        
+                        selectedLayerIds.forEach(id => {
+                            const l = layers.find(lay => lay.id === id);
+                            if (l) {
+                                if (e.key === 'ArrowUp') l.y -= moveAmount;
+                                if (e.key === 'ArrowDown') l.y += moveAmount;
+                                if (e.key === 'ArrowLeft') l.x -= moveAmount;
+                                if (e.key === 'ArrowRight') l.x += moveAmount;
+                            }
+                        });
+                        
+                        arrowMoved = true;
+                        render();
+                    }
+                }
             });
+            
             window.addEventListener('keyup', (e) => { 
                 if(e.key === 'Shift') { shiftPressed = false; alignmentGuides = { vertical: null, horizontal: null }; render(); }
+                
+                // Guardar estado en el historial SOLO al soltar la tecla de la flecha
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && arrowMoved) {
+                    saveHistory();
+                    arrowMoved = false;
+                }
             });
         }
 
