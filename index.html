@@ -60,8 +60,9 @@
             max-width: 100%;  
             height: auto;
             width: auto;
-            aspect-ratio: 1 / 1; 
+            /* Se removió "aspect-ratio: 1 / 1;" para permitir cambios dinámicos */
             object-fit: contain;
+            transition: aspect-ratio 0.2s ease-in-out;
         }
 
         .layer-item.active {
@@ -146,6 +147,16 @@
                     <img src="images/favicon.png" alt="Logo" class="w-full h-full object-contain" onerror="handleLogoError(this)">
                 </div>
                 <h1 class="text-lg font-bold tracking-tight text-slate-100">Arelyshop Pro</h1>
+            </div>
+
+            <!-- Botones de Historial (Deshacer/Rehacer) -->
+            <div class="flex gap-2 px-2">
+                <button onclick="undo()" id="btn-undo" class="flex-1 py-1.5 bg-slate-800 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex justify-center items-center" disabled title="Deshacer (Ctrl+Z)">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M280-280q116 0 198-82t82-198q0-116-82-198t-198-82H200l104 104-56 56-200-200 200-200 56 56-104 104h80q150 0 255 105t105 255q0 150-105 255T280-200v-80Z"/></svg>
+                </button>
+                <button onclick="redo()" id="btn-redo" class="flex-1 py-1.5 bg-slate-800 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex justify-center items-center" disabled title="Rehacer (Ctrl+Y)">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M680-280v80q-150 0-255-105T320-560q0-150 105-255t255-105h80L656-1024l56-56 200 200-200 200-56-56 104-104h-80q-116 0-198 82t-82 198q0 116 82 198t198 82Z"/></svg>
+                </button>
             </div>
 
             <!-- Herramientas -->
@@ -474,6 +485,50 @@
 
         let alignmentGuides = { vertical: null, horizontal: null };
 
+        // --- Variables y Funciones del Historial ---
+        const MAX_HISTORY = 5;
+        let historyStack = [];
+        let historyIndex = -1;
+        let isStateDirty = false;
+
+        function cloneLayer(l) {
+            const nl = { ...l, levels: { ...l.levels }, hsl: { ...l.hsl } };
+            nl.content = l.content;
+            nl.processedCanvas = document.createElement('canvas'); nl.processedCanvas.width = l.processedCanvas.width; nl.processedCanvas.height = l.processedCanvas.height;
+            nl.processedCanvas.getContext('2d').drawImage(l.processedCanvas, 0, 0);
+            nl.maskCanvas = document.createElement('canvas'); nl.maskCanvas.width = l.maskCanvas.width; nl.maskCanvas.height = l.maskCanvas.height;
+            nl.maskCanvas.getContext('2d').drawImage(l.maskCanvas, 0, 0);
+            return nl;
+        }
+
+        function saveHistory() {
+            if (historyIndex < historyStack.length - 1) historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push({
+                layers: layers.map(cloneLayer), width: CANVAS_WIDTH, height: CANVAS_HEIGHT, activeLayerId, selectedLayerIds: [...selectedLayerIds]
+            });
+            if (historyStack.length > MAX_HISTORY + 1) historyStack.shift();
+            historyIndex = historyStack.length - 1;
+            updateHistoryUI();
+        }
+
+        function undo() { if (historyIndex > 0) { historyIndex--; restoreState(historyStack[historyIndex]); } }
+        function redo() { if (historyIndex < historyStack.length - 1) { historyIndex++; restoreState(historyStack[historyIndex]); } }
+
+        function restoreState(state) {
+            layers = state.layers.map(cloneLayer); CANVAS_WIDTH = state.width; CANVAS_HEIGHT = state.height;
+            canvas.width = CANVAS_WIDTH; canvas.height = CANVAS_HEIGHT; canvas.style.aspectRatio = `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`;
+            activeLayerId = state.activeLayerId; selectedLayerIds = [...state.selectedLayerIds];
+            document.getElementById('btn-size-1000').className = CANVAS_WIDTH === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-750').className = CANVAS_WIDTH === 750 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            updateUI(); render(); updateHistoryUI();
+        }
+
+        function updateHistoryUI() {
+            const u = document.getElementById('btn-undo'), r = document.getElementById('btn-redo');
+            if(u) u.disabled = (historyIndex <= 0); if(r) r.disabled = (historyIndex >= historyStack.length - 1);
+        }
+        // ------------------------------------------
+
         const MODAL = {
             el: document.getElementById('textModal'),
             input: document.getElementById('modalInput'),
@@ -486,19 +541,23 @@
             CANVAS_HEIGHT = h;
             canvas.width = w;
             canvas.height = h;
+            canvas.style.aspectRatio = `${w} / ${h}`; // Fuerza al CSS a mostrar la nueva proporción
 
             document.getElementById('btn-size-1000').className = w === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
             document.getElementById('btn-size-750').className = w === 750 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
 
             render();
             showToast(`Lienzo ajustado a ${w}x${h}`);
+            saveHistory();
         }
 
         function init() { 
+            canvas.style.aspectRatio = `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`;
             render(); 
             setupEventListeners();
             setupKeyboardShortcuts();
             setupDragAndDrop();
+            saveHistory(); // Estado base para el historial
         }
 
         function createId() { return Math.random().toString(36).substr(2, 9); }
@@ -586,6 +645,7 @@
                 setActiveLayer(newLayer.id);
                 selState.active = false; 
                 render(); showToast("Selección duplicada en nueva capa");
+                saveHistory();
             };
             img.src = dataUrl;
         }
@@ -604,6 +664,16 @@
                 }
 
                 if (!MODAL.el.classList.contains('hidden')) return;
+
+                // CTRL + Z (Deshacer) / CTRL + Y o CTRL+SHIFT+Z (Rehacer)
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) redo(); else undo();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
 
                 // CTRL + C
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
@@ -650,7 +720,7 @@
             const originalLayer = layers.find(l => l.id === activeLayerId);
             if (originalLayer) newLayer.maskCanvas.getContext('2d').drawImage(originalLayer.maskCanvas, 0, 0);
             else { const mCtx = newLayer.maskCanvas.getContext('2d'); mCtx.fillStyle = 'white'; mCtx.fillRect(0,0,newLayer.maskCanvas.width, newLayer.maskCanvas.height); }
-            applyEffects(newLayer); layers.unshift(newLayer); setActiveLayer(newLayer.id); showToast("Capa pegada");
+            applyEffects(newLayer); layers.unshift(newLayer); setActiveLayer(newLayer.id); showToast("Capa pegada"); saveHistory();
         }
 
         function addLayer(data, name = "Capa", brandKey = null) {
@@ -686,7 +756,7 @@
                     const offset = layers.length * 20;
                     layer.x = (CANVAS_WIDTH-layer.width)/2 + (offset % 100); layer.y = (CANVAS_HEIGHT-layer.height)/2 + (offset % 100);
                 }
-                applyEffects(layer); layers.unshift(layer); setActiveLayer(layer.id); render();
+                applyEffects(layer); layers.unshift(layer); setActiveLayer(layer.id); render(); saveHistory();
             };
             img.src = data;
         }
@@ -719,7 +789,7 @@
         function resetColorStyles() {
             const l = layers.find(l => l.id === activeLayerId); if (!l) return;
             l.hsl = { hue: 0, saturation: 1.0 }; l.levels = { black: 0, gamma: 1.0, white: 255 };
-            applyEffects(l); updateUI(); render(); showToast("Ajustes de color restablecidos");
+            applyEffects(l); updateUI(); render(); showToast("Ajustes de color restablecidos"); saveHistory();
         }
 
         function resetTransform() {
@@ -727,13 +797,13 @@
             l.rotation = 0; l.opacity = 100; l.blend = 'source-over'; l.flipX = 1; l.flipY = 1;
             const cx = l.x + l.width / 2, cy = l.y + l.height / 2;
             l.width = CANVAS_WIDTH; l.height = CANVAS_WIDTH / l.aspectRatio; l.x = cx - l.width/2; l.y = cy - l.height/2;
-            updateUI(); render(); showToast("Transformación restablecida");
+            updateUI(); render(); showToast("Transformación restablecida"); saveHistory();
         }
 
         function flipLayer(axis) {
             const l = layers.find(l => l.id === activeLayerId); if (!l) return;
             if (axis === 'x') l.flipX *= -1; if (axis === 'y') l.flipY *= -1;
-            render(); showToast(`Espejo ${axis === 'x' ? 'Horizontal' : 'Vertical'} aplicado`);
+            render(); showToast(`Espejo ${axis === 'x' ? 'Horizontal' : 'Vertical'} aplicado`); saveHistory();
         }
 
         function addBrand(brand) { addLayer(`images/marcas/logo-${brand}.png`, `${brand.toUpperCase()}`, brand); }
@@ -785,7 +855,7 @@
             document.getElementById('m-action-hide').className = action === 'hide' ? 'px-2 py-1 bg-rose-500 text-white text-[9px] font-bold rounded' : 'px-2 py-1 bg-slate-700 text-white text-[9px] font-bold rounded';
         }
 
-        function resetMask() { const layer = layers.find(l => l.id === activeLayerId); if (layer && layer.maskCanvas) { const mCtx = layer.maskCanvas.getContext('2d'); mCtx.fillStyle = 'white'; mCtx.fillRect(0, 0, layer.maskCanvas.width, layer.maskCanvas.height); render(); showToast("Máscara restaurada"); } }
+        function resetMask() { const layer = layers.find(l => l.id === activeLayerId); if (layer && layer.maskCanvas) { const mCtx = layer.maskCanvas.getContext('2d'); mCtx.fillStyle = 'white'; mCtx.fillRect(0, 0, layer.maskCanvas.width, layer.maskCanvas.height); render(); showToast("Máscara restaurada"); saveHistory(); } }
 
         function paintOnMask(localX, localY, isFirst) {
             const layer = layers.find(l => l.id === activeLayerId); if (!layer) return;
@@ -819,7 +889,7 @@
             }
         }
 
-        function clearAllMeasures() { if(confirm("¿Borrar todas las medidas?")) { measures = []; render(); } }
+        function clearAllMeasures() { if(confirm("¿Borrar todas las medidas?")) { measures = []; render(); saveHistory(); } }
 
         function mergeSelectedLayers() {
             if (selectedLayerIds.length < 2) return;
@@ -900,6 +970,7 @@
                 
                 setActiveLayer(newLayer.id);
                 showToast("Capas combinadas correctamente");
+                saveHistory();
             };
             newLayer.content.src = dataUrl;
         }
@@ -1088,12 +1159,12 @@
                 
                 if (maskMode && activeLayer) {
                     const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
-                    if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); } else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
+                    if (maskMode === 'brush') { paintOnMask(lx, ly, false); isStateDirty = true; render(); } else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
                 }
                 
-                if (activeLayer && activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; render(); return; }
-                else if (activeLayer && activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); let nw = lx * 2; if (shiftPressed) { const snapT = 25; if (Math.abs(nw - CANVAS_WIDTH) < snapT) nw = CANVAS_WIDTH; else if (Math.abs(nw/activeLayer.aspectRatio - CANVAS_HEIGHT) < snapT) nw = CANVAS_HEIGHT * activeLayer.aspectRatio; } activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); render(); return; }
+                if (activeLayer && activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; isStateDirty = true; render(); return; }
+                else if (activeLayer && activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); let nw = lx * 2; if (shiftPressed) { const snapT = 25; if (Math.abs(nw - CANVAS_WIDTH) < snapT) nw = CANVAS_WIDTH; else if (Math.abs(nw/activeLayer.aspectRatio - CANVAS_HEIGHT) < snapT) nw = CANVAS_HEIGHT * activeLayer.aspectRatio; } activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); isStateDirty = true; render(); return; }
                 
                 let draggingAny = false;
                 alignmentGuides = { vertical: null, horizontal: null };
@@ -1101,6 +1172,7 @@
                 layers.forEach(l => {
                     if (l.isDragging) {
                         draggingAny = true;
+                        isStateDirty = true;
                         let dx = pos.x - dragOffset.x;
                         let dy = pos.y - dragOffset.y;
                         
@@ -1144,10 +1216,12 @@
                     const sdx = maskWorldStartX-cx, sdy = maskWorldStartY-cy, slx = sdx*Math.cos(-activeLayer.rotation)-sdy*Math.sin(-activeLayer.rotation)+activeLayer.width/2, sly = sdx*Math.sin(-activeLayer.rotation)+sdy*Math.cos(-activeLayer.rotation)+activeLayer.height/2;
                     const edx = pos.x-cx, edy = pos.y-cy, elx = edx*Math.cos(-activeLayer.rotation)-edy*Math.sin(-activeLayer.rotation)+activeLayer.width/2, ely = edx*Math.sin(-activeLayer.rotation)+edy*Math.cos(-activeLayer.rotation)+activeLayer.height/2;
                     applyRectMask(slx, sly, elx, ely);
+                    isStateDirty = true;
                 }
                 isMouseDown = false; selectionGuide.style.display = 'none'; alignmentGuides = { vertical: null, horizontal: null };
                 layers.forEach(l => { l.isDragging = l.isResizing = l.isRotating = false; });
                 render();
+                if (isStateDirty) { saveHistory(); isStateDirty = false; }
             });
 
             document.getElementById('input-lv-black').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.black = parseInt(e.target.value); document.getElementById('val-lv-black').textContent = e.target.value; applyEffects(l); render(); } };
@@ -1155,12 +1229,22 @@
             document.getElementById('input-lv-white').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.levels.white = parseInt(e.target.value); document.getElementById('val-lv-white').textContent = e.target.value; applyEffects(l); render(); } };
             document.getElementById('input-hue').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.hsl.hue = parseInt(e.target.value); document.getElementById('val-hue').textContent = e.target.value + '°'; applyEffects(l); render(); } };
             document.getElementById('input-sat').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.hsl.saturation = parseInt(e.target.value)/100; document.getElementById('val-sat').textContent = e.target.value + '%'; applyEffects(l); render(); } };
-            MODAL.save.onclick = () => { if(pendingMeasure) { pendingMeasure.text = MODAL.input.value; measures.push(pendingMeasure); pendingMeasure = null; } MODAL.el.classList.add('hidden'); render(); };
+            
+            // Eventos para guardar el historial luego de usar los sliders
+            document.getElementById('input-lv-black').onchange = () => saveHistory();
+            document.getElementById('input-lv-mid').onchange = () => saveHistory();
+            document.getElementById('input-lv-white').onchange = () => saveHistory();
+            document.getElementById('input-hue').onchange = () => saveHistory();
+            document.getElementById('input-sat').onchange = () => saveHistory();
+            document.getElementById('prop-opacity').onchange = () => saveHistory();
+            document.getElementById('prop-scale').onchange = () => saveHistory();
+            
+            MODAL.save.onclick = () => { if(pendingMeasure) { pendingMeasure.text = MODAL.input.value; measures.push(pendingMeasure); pendingMeasure = null; } MODAL.el.classList.add('hidden'); render(); saveHistory(); };
             MODAL.cancel.onclick = () => { pendingMeasure = null; MODAL.el.classList.add('hidden'); render(); };
             document.getElementById('input-brush-size').oninput = (e) => { maskBrushSize = e.target.value; document.getElementById('val-brush-size').textContent = e.target.value + 'px'; if(maskMode === 'brush') updateBrushCursorVisual(); };
             document.getElementById('prop-opacity').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.opacity = e.target.value; document.getElementById('opacity-val').textContent = l.opacity + '%'; render(); } };
             document.getElementById('prop-scale').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { const cx = l.x + l.width/2, cy = l.y + l.height/2, nw = CANVAS_WIDTH * (e.target.value/100); l.width = nw; l.height = nw / l.aspectRatio; l.x = cx - nw/2; l.y = cy - l.height/2; document.getElementById('scale-val').textContent = e.target.value + '%'; render(); } };
-            document.getElementById('prop-blend').onchange = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.blend = e.target.value; render(); } };
+            document.getElementById('prop-blend').onchange = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.blend = e.target.value; render(); saveHistory(); } };
             fileInput.onchange = (e) => { const files = Array.from(e.target.files); const imageFiles = files.filter(f => f.type.startsWith('image/')); if (imageFiles.length > 0) { showToast(`Cargando ${imageFiles.length} imágenes...`); imageFiles.forEach(file => { const reader = new FileReader(); reader.onload = (ev) => addLayer(ev.target.result, file.name); reader.readAsDataURL(file); }); } fileInput.value = ""; };
         }
 
@@ -1246,6 +1330,7 @@
             activeLayerId = null; 
             render(); 
             updateUI(); 
+            saveHistory();
         }
         
         function duplicateSpecificLayer(id) {
@@ -1271,6 +1356,7 @@
             setActiveLayer(newLayer.id);
             render(); 
             showToast("Capa duplicada");
+            saveHistory();
         }
 
         function duplicateSelectedLayers() {
@@ -1308,6 +1394,7 @@
             render();
             updateUI();
             showToast(newIds.length > 1 ? "Capas duplicadas" : "Capa duplicada");
+            saveHistory();
         }
 
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
