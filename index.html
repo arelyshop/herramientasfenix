@@ -325,6 +325,14 @@
 
                     <div id="no-layer-msg" class="text-slate-500 text-xs italic text-center py-4">Selecciona una capa</div>
                     
+                    <div id="multi-layer-props" class="hidden space-y-4">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase italic">Múltiples Capas Seleccionadas</p>
+                        <p class="text-[10px] text-slate-400 leading-tight">Puedes arrastrarlas juntas, combinarlas en una sola capa o eliminarlas.</p>
+                        <button onclick="mergeSelectedLayers()" class="w-full bg-rose-500 hover:bg-rose-400 text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter shadow-lg shadow-rose-500/20">Combinar Capas</button>
+                        <button onclick="duplicateSelectedLayers()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Duplicar Capas</button>
+                        <button onclick="deleteSelectedLayers()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capas</button>
+                    </div>
+
                     <div id="layer-props" class="hidden space-y-6">
                         <div id="editor-specific-props">
                             <div class="space-y-3">
@@ -381,14 +389,17 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mt-4">
-                            <button onclick="duplicateActiveLayer()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Duplicar Capa</button>
-                            <button onclick="deleteActiveLayer()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
+                            <button onclick="duplicateSelectedLayers()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Duplicar Capa</button>
+                            <button onclick="deleteSelectedLayers()" class="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-tighter">Eliminar Capa</button>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Capas</p>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Capas</p>
+                        <span class="text-[8px] text-slate-500 italic">Ctrl+Clic para múltiple</span>
+                    </div>
                     <div id="layer-list" class="space-y-2 pb-10"></div>
                 </div>
             </div>
@@ -422,7 +433,9 @@
         const CANVAS_HEIGHT = 1000;
 
         let layers = [];
-        let activeLayerId = null;
+        let selectedLayerIds = []; // Array para selección múltiple
+        let activeLayerId = null;  // Capa principal activa (para atajos y referencias singulares)
+        
         let editorMode = 'move'; 
         let isMouseDown = false;
         let dragOffset = { x: 0, y: 0 };
@@ -571,7 +584,7 @@
                 // CTRL + C
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
                     const active = layers.find(l => l.id === activeLayerId);
-                    if (active) {
+                    if (active && selectedLayerIds.length === 1) { // Solo copiar si es una
                         layerClipboard = JSON.parse(JSON.stringify(active));
                         layerClipboard.content = active.content;
                         showToast("Capa copiada");
@@ -583,10 +596,10 @@
                 }
                 // CTRL + J (Duplicar Selección o Capa entera)
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
-                    if (selState.active && activeLayerId) {
+                    if (selState.active && activeLayerId && selectedLayerIds.length === 1) {
                         duplicateSelection();
-                    } else if (activeLayerId) {
-                        duplicateActiveLayer();
+                    } else if (selectedLayerIds.length > 0) {
+                        duplicateSelectedLayers();
                     }
                 }
                 // CTRL + D (Deseleccionar)
@@ -596,7 +609,7 @@
                     showToast("Selección eliminada");
                 }
                 if (e.key === 'Delete' || e.key === 'Backspace') {
-                    if (activeLayerId && editorMode === 'move' && !maskMode) deleteActiveLayer();
+                    if (selectedLayerIds.length > 0 && editorMode === 'move' && !maskMode) deleteSelectedLayers();
                 }
             });
             window.addEventListener('keyup', (e) => { 
@@ -700,7 +713,30 @@
         }
 
         function addBrand(brand) { addLayer(`images/marcas/logo-${brand}.png`, `${brand.toUpperCase()}`, brand); }
-        function setActiveLayer(id) { if (maskMode) return; activeLayerId = id; updateUI(); render(); }
+
+        function setActiveLayer(id) {
+            if (maskMode) return;
+            selectedLayerIds = id ? [id] : [];
+            activeLayerId = id;
+            updateUI(); 
+            render(); 
+        }
+
+        function toggleLayerSelection(id, e) {
+            if (maskMode) return;
+            if (e && (e.ctrlKey || e.metaKey || e.shiftKey)) {
+                if (selectedLayerIds.includes(id)) {
+                    selectedLayerIds = selectedLayerIds.filter(selId => selId !== id);
+                } else {
+                    selectedLayerIds.push(id);
+                }
+            } else {
+                selectedLayerIds = [id];
+            }
+            activeLayerId = selectedLayerIds.length > 0 ? selectedLayerIds[selectedLayerIds.length - 1] : null;
+            updateUI();
+            render();
+        }
         
         function setEditorMode(mode) { 
             editorMode = mode; 
@@ -715,7 +751,7 @@
             render();
         }
 
-        function enterMaskMode(mode) { if (!activeLayerId) return; maskMode = mode; updateUI(); }
+        function enterMaskMode(mode) { if (!activeLayerId || selectedLayerIds.length !== 1) return; maskMode = mode; updateUI(); }
         function exitMaskMode() { maskMode = false; updateUI(); render(); }
         function updateBrushCursorVisual() { const rect = canvas.getBoundingClientRect(); const visualSize = maskBrushSize * (rect.width / CANVAS_WIDTH); brushCursor.style.width = visualSize + 'px'; brushCursor.style.height = visualSize + 'px'; }
         
@@ -761,6 +797,89 @@
 
         function clearAllMeasures() { if(confirm("¿Borrar todas las medidas?")) { measures = []; render(); } }
 
+        function mergeSelectedLayers() {
+            if (selectedLayerIds.length < 2) return;
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const selected = layers.filter(l => selectedLayerIds.includes(l.id));
+            
+            selected.forEach(l => {
+                const cx = l.x + l.width/2;
+                const cy = l.y + l.height/2;
+                const w2 = l.width/2;
+                const h2 = l.height/2;
+                const cos = Math.abs(Math.cos(l.rotation));
+                const sin = Math.abs(Math.sin(l.rotation));
+                const rw = w2 * cos + h2 * sin;
+                const rh = w2 * sin + h2 * cos;
+                minX = Math.min(minX, cx - rw);
+                maxX = Math.max(maxX, cx + rw);
+                minY = Math.min(minY, cy - rh);
+                maxY = Math.max(maxY, cy + rh);
+            });
+
+            // Pequeño margen para prevenir recortes de antialiasing en los bordes
+            minX -= 2; minY -= 2; maxX += 2; maxY += 2;
+            const w = maxX - minX;
+            const h = maxY - minY;
+
+            if (w <= 0 || h <= 0) return;
+
+            const mCanvas = document.createElement('canvas');
+            mCanvas.width = w; mCanvas.height = h;
+            const mCtx = mCanvas.getContext('2d');
+            
+            // Dibujar capas desde el fondo hasta el frente
+            const sortedSelected = [...selected].reverse();
+            sortedSelected.forEach(l => {
+                mCtx.save();
+                const cx = l.x + l.width / 2 - minX;
+                const cy = l.y + l.height / 2 - minY;
+                mCtx.translate(cx, cy);
+                mCtx.rotate(l.rotation);
+                mCtx.scale(l.flipX || 1, l.flipY || 1);
+                mCtx.globalAlpha = l.opacity / 100;
+                mCtx.globalCompositeOperation = l.blend;
+
+                maskBuffer.width = l.width; maskBuffer.height = l.height;
+                mbfCtx.clearRect(0, 0, l.width, l.height);
+                mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
+                mbfCtx.globalCompositeOperation = 'destination-in';
+                mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
+
+                mCtx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
+                mCtx.restore();
+            });
+
+            const dataUrl = mCanvas.toDataURL('image/png');
+            
+            const newLayer = {
+                id: createId(), name: "Capas Combinadas", visible: true, opacity: 100, blend: 'source-over',
+                x: minX, y: minY, width: w, height: h, rotation: 0, aspectRatio: w / h, flipX: 1, flipY: 1,
+                content: new Image(), maskCanvas: null, levels: { black: 0, gamma: 1.0, white: 255 }, hsl: { hue: 0, saturation: 1.0 },
+                processedCanvas: document.createElement('canvas')
+            };
+
+            newLayer.content.onload = () => {
+                newLayer.processedCanvas.width = w; newLayer.processedCanvas.height = h;
+                const mask = document.createElement('canvas'); mask.width = w; mask.height = h;
+                const maskCtx = mask.getContext('2d'); maskCtx.fillStyle = 'white'; maskCtx.fillRect(0, 0, w, h);
+                newLayer.maskCanvas = mask;
+                applyEffects(newLayer);
+
+                // Insertar justo donde estaba la capa más alta de las seleccionadas
+                let topIndex = layers.findIndex(l => selectedLayerIds.includes(l.id));
+                if(topIndex === -1) topIndex = 0;
+
+                layers = layers.filter(l => !selectedLayerIds.includes(l.id));
+                layers.splice(topIndex, 0, newLayer);
+                
+                setActiveLayer(newLayer.id);
+                showToast("Capas combinadas correctamente");
+            };
+            newLayer.content.src = dataUrl;
+        }
+
         function render(exportFormat = null) {
             const isExporting = (exportFormat === 'png' || exportFormat === 'jpeg');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -775,15 +894,21 @@
                 mbfCtx.clearRect(0, 0, l.width, l.height); mbfCtx.drawImage(l.processedCanvas, 0, 0, l.width, l.height);
                 mbfCtx.globalCompositeOperation = 'destination-in'; mbfCtx.drawImage(l.maskCanvas, 0, 0, l.width, l.height);
                 ctx.drawImage(maskBuffer, -l.width / 2, -l.height / 2);
-                if (l.id === activeLayerId && editorMode === 'move' && !maskMode && !isExporting) {
+                
+                if (selectedLayerIds.includes(l.id) && editorMode === 'move' && !maskMode && !isExporting) {
                     ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2; ctx.strokeRect(-l.width / 2, -l.height / 2, l.width, l.height);
-                    ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
-                    ctx.beginPath(); ctx.moveTo(0, -l.height / 2); ctx.lineTo(0, -l.height / 2 - 30); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -l.height / 2 - 35, 10, 0, Math.PI * 2); ctx.fill();
+                    
+                    // Solo mostrar controles de rotación y tamaño si HAY SOLO UNA capa seleccionada
+                    if (selectedLayerIds.length === 1) {
+                        ctx.fillStyle = '#f43f5e'; ctx.fillRect(l.width / 2 - 8, l.height / 2 - 8, 16, 16);
+                        ctx.beginPath(); ctx.moveTo(0, -l.height / 2); ctx.lineTo(0, -l.height / 2 - 30); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -l.height / 2 - 35, 10, 0, Math.PI * 2); ctx.fill();
+                    }
                 }
                 ctx.restore();
             });
             
-            if (shiftPressed && !isExporting && activeLayerId && editorMode !== 'select') {
+            // Guías solo si hay una capa seleccionada
+            if (shiftPressed && !isExporting && selectedLayerIds.length === 1 && editorMode !== 'select') {
                 ctx.setLineDash([5, 5]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
                 if (alignmentGuides.vertical !== null) { ctx.beginPath(); ctx.moveTo(alignmentGuides.vertical, 0); ctx.lineTo(alignmentGuides.vertical, 1000); ctx.stroke(); }
                 if (alignmentGuides.horizontal !== null) { ctx.beginPath(); ctx.moveTo(0, alignmentGuides.horizontal); ctx.lineTo(1000, alignmentGuides.horizontal); ctx.stroke(); }
@@ -850,23 +975,46 @@
                     }
                     activeMeasure = { x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, text: "" }; isMouseDown = true; return;
                 }
-                const currentActiveLayer = layers.find(l => l.id === activeLayerId);
+                
+                const currentActiveLayer = selectedLayerIds.length === 1 ? layers.find(l => l.id === selectedLayerIds[0]) : null;
+                
                 if (currentActiveLayer && !maskMode) {
                     const cx = currentActiveLayer.x + currentActiveLayer.width / 2, cy = currentActiveLayer.y + currentActiveLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
                     const lx = dx * Math.cos(-currentActiveLayer.rotation) - dy * Math.sin(-currentActiveLayer.rotation), ly = dx * Math.sin(-currentActiveLayer.rotation) + dy * Math.cos(-currentActiveLayer.rotation);
                     if (Math.sqrt(Math.pow(lx, 2) + Math.pow(ly - (-currentActiveLayer.height/2 - 35), 2)) < 20) { currentActiveLayer.isRotating = true; isMouseDown = true; return; }
                     if (Math.abs(lx - currentActiveLayer.width/2) < 20 && Math.abs(ly - currentActiveLayer.height/2) < 20) { currentActiveLayer.isResizing = true; isMouseDown = true; return; }
                 }
+                
                 if ((editorMode === 'move' || editorMode === 'transform') && !maskMode) {
                     for (let i = 0; i < layers.length; i++) {
                         const l = layers[i]; if (!l.visible) continue;
                         const cx = l.x + l.width / 2, cy = l.y + l.height / 2, dx = pos.x - cx, dy = pos.y - cy;
                         const lx = dx * Math.cos(-l.rotation) - dy * Math.sin(-l.rotation), ly = dx * Math.sin(-l.rotation) + dy * Math.cos(-l.rotation);
                         if (Math.abs(lx) <= l.width / 2 && Math.abs(ly) <= l.height / 2) {
-                            setActiveLayer(l.id); l.isDragging = true; dragOffset.x = pos.x - l.x; dragOffset.y = pos.y - l.y; isMouseDown = true; render(); return;
+                            if (!selectedLayerIds.includes(l.id)) {
+                                setActiveLayer(l.id);
+                            }
+                            dragOffset.x = pos.x; 
+                            dragOffset.y = pos.y;
+                            
+                            layers.forEach(sl => {
+                                if (selectedLayerIds.includes(sl.id)) {
+                                    sl.isDragging = true;
+                                    sl.dragStartX = sl.x;
+                                    sl.dragStartY = sl.y;
+                                }
+                            });
+                            
+                            isMouseDown = true; render(); return;
                         }
                     }
+                    // Si clicamos en espacio vacío, quitar selección
+                    if (!shiftPressed) {
+                        setActiveLayer(null);
+                        return;
+                    }
                 }
+                
                 if (maskMode && currentActiveLayer) {
                     isMouseDown = true; 
                     const cx = currentActiveLayer.x + currentActiveLayer.width / 2, cy = currentActiveLayer.y + currentActiveLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy;
@@ -899,7 +1047,9 @@
                     if (hoveredMeasureIdx !== fHover) { hoveredMeasureIdx = fHover; render(); }
                 }
                 if (!isMouseDown) return;
+                
                 const activeLayer = layers.find(l => l.id === activeLayerId);
+                
                 if (editorMode === 'measure') {
                     if (draggingMeasureIdx !== -1) { 
                         const dx = pos.x - mDragOffset.x, dy = pos.y - mDragOffset.y; 
@@ -911,20 +1061,40 @@
                     }
                     render(); return;
                 }
-                if (!activeLayer) return;
-                if (maskMode) {
+                
+                if (maskMode && activeLayer) {
                     const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation) + activeLayer.width/2, ly = dx * Math.sin(-activeLayer.rotation) + dy * Math.cos(-activeLayer.rotation) + activeLayer.height/2;
                     if (maskMode === 'brush') { paintOnMask(lx, ly, false); render(); } else if (maskMode === 'rect') updateSelectionGuide(maskWorldStartX, maskWorldStartY, pos.x, pos.y);
                     return;
                 }
-                if (activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; }
-                else if (activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); let nw = lx * 2; if (shiftPressed) { const snapT = 25; if (Math.abs(nw - 1000) < snapT) nw = 1000; else if (Math.abs(nw/activeLayer.aspectRatio - 1000) < snapT) nw = 1000 * activeLayer.aspectRatio; } activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); }
-                else if (activeLayer.isDragging) { 
-                    let nx = pos.x - dragOffset.x, ny = pos.y - dragOffset.y; alignmentGuides = { vertical: null, horizontal: null };
-                    if (shiftPressed) { const snapT = 25; if (Math.abs(nx) < snapT) { nx = 0; alignmentGuides.vertical = 0; } else if (Math.abs(nx + activeLayer.width / 2 - 500) < snapT) { nx = 500 - activeLayer.width / 2; alignmentGuides.vertical = 500; } else if (Math.abs(nx + activeLayer.width - 1000) < snapT) { nx = 1000 - activeLayer.width; alignmentGuides.vertical = 1000; } if (Math.abs(ny) < snapT) { ny = 0; alignmentGuides.horizontal = 0; } else if (Math.abs(ny + activeLayer.height / 2 - 500) < snapT) { ny = 500 - activeLayer.height / 2; alignmentGuides.horizontal = 500; } else if (Math.abs(ny + activeLayer.height - 1000) < snapT) { ny = 1000 - activeLayer.height; alignmentGuides.horizontal = 1000; } }
-                    activeLayer.x = nx; activeLayer.y = ny; 
-                }
-                render();
+                
+                if (activeLayer && activeLayer.isRotating) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2; let angle = Math.atan2(pos.y - cy, pos.x - cx) + Math.PI / 2; if (shiftPressed) angle = (Math.round((angle * 180 / Math.PI) / 45) * 45) * Math.PI / 180; activeLayer.rotation = angle; render(); return; }
+                else if (activeLayer && activeLayer.isResizing) { const cx = activeLayer.x + activeLayer.width / 2, cy = activeLayer.y + activeLayer.height / 2, dx = pos.x - cx, dy = pos.y - cy, lx = Math.max(10, dx * Math.cos(-activeLayer.rotation) - dy * Math.sin(-activeLayer.rotation)); let nw = lx * 2; if (shiftPressed) { const snapT = 25; if (Math.abs(nw - 1000) < snapT) nw = 1000; else if (Math.abs(nw/activeLayer.aspectRatio - 1000) < snapT) nw = 1000 * activeLayer.aspectRatio; } activeLayer.width = nw; activeLayer.height = nw / activeLayer.aspectRatio; activeLayer.x = cx - nw / 2; activeLayer.y = cy - activeLayer.height / 2; syncScaleUI(activeLayer); render(); return; }
+                
+                let draggingAny = false;
+                alignmentGuides = { vertical: null, horizontal: null };
+                
+                layers.forEach(l => {
+                    if (l.isDragging) {
+                        draggingAny = true;
+                        let nx = l.dragStartX + (pos.x - dragOffset.x);
+                        let ny = l.dragStartY + (pos.y - dragOffset.y);
+                        
+                        // Solo ajustar al centro o bordes si hay una sola capa y está con SHIFT
+                        if (selectedLayerIds.length === 1 && shiftPressed) { 
+                            const snapT = 25; 
+                            if (Math.abs(nx) < snapT) { nx = 0; alignmentGuides.vertical = 0; } 
+                            else if (Math.abs(nx + l.width / 2 - 500) < snapT) { nx = 500 - l.width / 2; alignmentGuides.vertical = 500; } 
+                            else if (Math.abs(nx + l.width - 1000) < snapT) { nx = 1000 - l.width; alignmentGuides.vertical = 1000; } 
+                            if (Math.abs(ny) < snapT) { ny = 0; alignmentGuides.horizontal = 0; } 
+                            else if (Math.abs(ny + l.height / 2 - 500) < snapT) { ny = 500 - l.height / 2; alignmentGuides.horizontal = 500; } 
+                            else if (Math.abs(ny + l.height - 1000) < snapT) { ny = 1000 - l.height; alignmentGuides.horizontal = 1000; } 
+                        }
+                        l.x = nx; l.y = ny; 
+                    }
+                });
+                
+                if (draggingAny) { render(); return; }
             });
 
             window.addEventListener('mouseup', e => {
@@ -971,18 +1141,18 @@
         function updateUI() {
             layerListEl.innerHTML = '';
             layers.forEach((l, index) => {
-                const isActive = activeLayerId === l.id;
+                const isActive = selectedLayerIds.includes(l.id);
                 const div = document.createElement('div');
                 div.className = `layer-item flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-slate-800/30 ${isActive ? 'active' : ''}`;
                 div.draggable = true; div.ondragstart = (e) => handleLayerDragStart(e, index); div.ondragover = (e) => handleLayerDragOver(e, index); div.ondragleave = handleLayerDragLeave; div.ondrop = (e) => handleLayerDrop(e, index); div.ondragend = (e) => e.target.classList.remove('dragging');
-                div.onclick = () => { if(editorMode !== 'measure') setActiveLayer(l.id); };
+                div.onclick = (e) => { if(editorMode !== 'measure') toggleLayerSelection(l.id, e); };
                 div.innerHTML = `
                     <div class="thumb-container w-10 h-10 bg-slate-800 rounded overflow-hidden border border-slate-700 flex-shrink-0">
                         <img src="${l.content.src}" class="w-full h-full object-contain ${l.visible ? '' : 'opacity-20 grayscale'}">
                     </div>
                     <span class="text-[11px] font-medium flex-1 truncate ${!l.visible ? 'text-slate-600' : 'text-slate-200'}">${l.name}</span>
                     <div class="flex items-center gap-1">
-                        <button onclick="event.stopPropagation(); duplicateSpecificLayer('${l.id}')" class="p-1.5 text-slate-500 hover:text-white" title="Duplicar Capa (Ctrl+J)">
+                        <button onclick="event.stopPropagation(); duplicateSpecificLayer('${l.id}')" class="p-1.5 text-slate-500 hover:text-white" title="Duplicar Capa">
                             <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg>
                         </button>
                         <button onclick="event.stopPropagation(); toggleVisibility('${l.id}')" class="p-1.5 ${l.visible ? 'text-rose-500' : 'text-slate-600'} hover:text-white" title="Mostrar/Ocultar">
@@ -992,6 +1162,7 @@
                 layerListEl.appendChild(div);
             });
             const activeLayer = layers.find(l => l.id === activeLayerId);
+            
             document.getElementById('btn-mode-move').className = editorMode === 'move' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-select').className = editorMode === 'select' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
             document.getElementById('btn-mode-measure').className = editorMode === 'measure' ? 'tool-active flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 border border-slate-700 rounded-xl transition-all bg-slate-800/50';
@@ -1000,22 +1171,49 @@
             
             document.getElementById('select-props').classList.toggle('hidden', editorMode !== 'select');
             document.getElementById('measure-props').classList.toggle('hidden', editorMode !== 'measure');
-            document.getElementById('transform-props').classList.toggle('hidden', editorMode !== 'transform');
-            document.getElementById('styles-props').classList.toggle('hidden', editorMode !== 'styles');
-            document.getElementById('editor-specific-props').classList.toggle('hidden', editorMode !== 'move');
             
-            if (activeLayer && editorMode !== 'measure') {
-                document.getElementById('layer-props').classList.remove('hidden'); document.getElementById('no-layer-msg').classList.add('hidden');
+            if (selectedLayerIds.length > 1) {
+                // UI Múltiples capas
+                document.getElementById('layer-props').classList.add('hidden');
+                document.getElementById('no-layer-msg').classList.add('hidden');
+                document.getElementById('multi-layer-props').classList.remove('hidden');
+                document.getElementById('transform-props').classList.add('hidden');
+                document.getElementById('styles-props').classList.add('hidden');
+            } else if (activeLayer && editorMode !== 'measure') {
+                // UI Capa única
+                document.getElementById('multi-layer-props').classList.add('hidden');
+                document.getElementById('layer-props').classList.remove('hidden'); 
+                document.getElementById('no-layer-msg').classList.add('hidden');
+                
+                document.getElementById('transform-props').classList.toggle('hidden', editorMode !== 'transform');
+                document.getElementById('styles-props').classList.toggle('hidden', editorMode !== 'styles');
+                
+                document.getElementById('editor-specific-props').classList.toggle('hidden', editorMode !== 'move');
+
                 document.getElementById('opacity-val').textContent = activeLayer.opacity + '%'; document.getElementById('prop-opacity').value = activeLayer.opacity; document.getElementById('prop-blend').value = activeLayer.blend; syncScaleUI(activeLayer);
                 document.getElementById('val-lv-black').textContent = activeLayer.levels.black; document.getElementById('input-lv-black').value = activeLayer.levels.black; document.getElementById('val-lv-mid').textContent = activeLayer.levels.gamma; document.getElementById('input-lv-mid').value = activeLayer.levels.gamma; document.getElementById('val-lv-white').textContent = activeLayer.levels.white; document.getElementById('input-lv-white').value = activeLayer.levels.white;
                 document.getElementById('val-hue').textContent = activeLayer.hsl.hue + '°'; document.getElementById('input-hue').value = activeLayer.hsl.hue; document.getElementById('val-sat').textContent = Math.round(activeLayer.hsl.saturation * 100) + '%'; document.getElementById('input-sat').value = Math.round(activeLayer.hsl.saturation * 100);
                 document.getElementById('mask-controls-panel').classList.toggle('hidden', !maskMode); document.getElementById('mask-help-box').classList.toggle('hidden', !maskMode); document.getElementById('btn-mask-brush').classList.toggle('tool-active', maskMode === 'brush'); document.getElementById('btn-mask-rect').classList.toggle('tool-active', maskMode === 'rect');
                 if (maskMode === 'brush') { brushCursor.style.display = 'block'; updateBrushCursorVisual(); } else { brushCursor.style.display = 'none'; }
-            } else { document.getElementById('layer-props').classList.add('hidden'); document.getElementById('no-layer-msg').classList.remove('hidden'); }
+            } else {
+                // Sin selección
+                document.getElementById('multi-layer-props').classList.add('hidden');
+                document.getElementById('layer-props').classList.add('hidden'); 
+                document.getElementById('no-layer-msg').classList.remove('hidden'); 
+                document.getElementById('transform-props').classList.add('hidden');
+                document.getElementById('styles-props').classList.add('hidden');
+            }
         }
 
         function toggleVisibility(id) { const l = layers.find(lay => lay.id === id); if (l) { l.visible = !l.visible; render(); updateUI(); } }
-        function deleteActiveLayer() { layers = layers.filter(l => l.id !== activeLayerId); activeLayerId = null; render(); updateUI(); }
+        
+        function deleteSelectedLayers() { 
+            layers = layers.filter(l => !selectedLayerIds.includes(l.id)); 
+            selectedLayerIds = [];
+            activeLayerId = null; 
+            render(); 
+            updateUI(); 
+        }
         
         function duplicateSpecificLayer(id) {
             const layerToDuplicate = layers.find(l => l.id === id);
@@ -1023,6 +1221,7 @@
             const newLayer = JSON.parse(JSON.stringify(layerToDuplicate));
             newLayer.id = createId(); 
             newLayer.name = layerToDuplicate.name + " (Copia)"; 
+            newLayer.x += 20; newLayer.y += 20;
             newLayer.content = layerToDuplicate.content;
             newLayer.processedCanvas = document.createElement('canvas'); 
             newLayer.processedCanvas.width = newLayer.content.width; 
@@ -1033,7 +1232,6 @@
             newLayer.maskCanvas.getContext('2d').drawImage(layerToDuplicate.maskCanvas, 0, 0);
             applyEffects(newLayer); 
             
-            // Insertar justo encima de la capa duplicada
             const index = layers.findIndex(l => l.id === id);
             layers.splice(index, 0, newLayer);
             
@@ -1042,13 +1240,62 @@
             showToast("Capa duplicada");
         }
 
-        function duplicateActiveLayer() {
-            if (activeLayerId) duplicateSpecificLayer(activeLayerId);
+        function duplicateSelectedLayers() {
+            if (selectedLayerIds.length === 0) return;
+            const newIds = [];
+            
+            // Replicar en orden visual
+            const layersToDuplicate = layers.filter(l => selectedLayerIds.includes(l.id)).reverse();
+            
+            let minTopIndex = layers.findIndex(l => selectedLayerIds.includes(l.id));
+            if(minTopIndex === -1) minTopIndex = 0;
+
+            const newLayers = [];
+            layersToDuplicate.forEach(l => {
+                const newLayer = JSON.parse(JSON.stringify(l));
+                newLayer.id = createId();
+                newLayer.name = l.name + " (Copia)";
+                newLayer.x += 20; newLayer.y += 20;
+                newLayer.content = l.content;
+                newLayer.processedCanvas = document.createElement('canvas');
+                newLayer.processedCanvas.width = newLayer.content.width;
+                newLayer.processedCanvas.height = newLayer.content.height;
+                newLayer.maskCanvas = document.createElement('canvas');
+                newLayer.maskCanvas.width = newLayer.content.width;
+                newLayer.maskCanvas.height = newLayer.content.height;
+                newLayer.maskCanvas.getContext('2d').drawImage(l.maskCanvas, 0, 0);
+                applyEffects(newLayer);
+                newLayers.unshift(newLayer);
+                newIds.push(newLayer.id);
+            });
+            
+            layers.splice(minTopIndex, 0, ...newLayers); 
+            selectedLayerIds = newIds;
+            activeLayerId = newIds[newIds.length - 1]; 
+            render();
+            updateUI();
+            showToast(newIds.length > 1 ? "Capas duplicadas" : "Capa duplicada");
         }
 
         function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('opacity-100'); setTimeout(() => t.classList.remove('opacity-100'), 2000); }
         function fitActiveLayerToCanvas() { const l = layers.find(lay => lay.id === activeLayerId); if (l) { if (l.aspectRatio > 1) { l.height = 1000; l.width = 1000 * l.aspectRatio; } else { l.width = 1000; l.height = 1000 / l.aspectRatio; } l.x = (1000 - l.width)/2; l.y = (1000 - l.height)/2; l.rotation = 0; syncScaleUI(l); render(); } }
-        function exportImage(format = 'png') { const oldId = activeLayerId, oldMaskMode = maskMode; activeLayerId = null; maskMode = false; selState.active = false; render(format); setTimeout(() => { const link = document.createElement('a'); link.download = `arelyshop-photo-${Date.now()}.${format}`; link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92); link.click(); showToast(`Exportado como ${format.toUpperCase()}`); activeLayerId = oldId; maskMode = oldMaskMode; render(); updateUI(); }, 100); }
+        
+        function exportImage(format = 'png') { 
+            const oldIds = [...selectedLayerIds], oldMaskMode = maskMode; 
+            selectedLayerIds = []; activeLayerId = null; maskMode = false; selState.active = false; 
+            render(format); 
+            setTimeout(() => { 
+                const link = document.createElement('a'); 
+                link.download = `arelyshop-photo-${Date.now()}.${format}`; 
+                link.href = canvas.toDataURL(format === 'jpeg' ? 'image/jpeg' : 'image/png', 0.92); 
+                link.click(); 
+                showToast(`Exportado como ${format.toUpperCase()}`); 
+                selectedLayerIds = oldIds; 
+                activeLayerId = selectedLayerIds.length > 0 ? selectedLayerIds[selectedLayerIds.length - 1] : null;
+                maskMode = oldMaskMode; 
+                render(); updateUI(); 
+            }, 100); 
+        }
 
         init();
     </script>
