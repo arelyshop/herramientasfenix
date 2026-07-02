@@ -257,6 +257,17 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="space-y-2 border-t border-slate-800 pt-4 pb-4">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest text-center">Utilidad WebP</p>
+                    <label class="block group cursor-pointer w-full">
+                        <div class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-indigo-500/50 hover:border-indigo-500 rounded-xl transition-all">
+                            <span class="text-[10px] font-bold text-indigo-400">Convertir a WebP</span>
+                            <span class="text-[8px] text-slate-500 uppercase tracking-tighter">Tamaño Original</span>
+                        </div>
+                        <input type="file" id="webpConverterInput" class="hidden" accept="image/png, image/jpeg, image/jpg" multiple>
+                    </label>
+                </div>
             </div>
         </aside>
 
@@ -1279,6 +1290,41 @@
             document.getElementById('prop-scale').oninput = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { const cx = l.x + l.width/2, cy = l.y + l.height/2, nw = CANVAS_WIDTH * (e.target.value/100); l.width = nw; l.height = nw / l.aspectRatio; l.x = cx - nw/2; l.y = cy - l.height/2; document.getElementById('scale-val').textContent = e.target.value + '%'; render(); } };
             document.getElementById('prop-blend').onchange = (e) => { const l = layers.find(l => l.id === activeLayerId); if(l) { l.blend = e.target.value; render(); saveHistory(); } };
             fileInput.onchange = (e) => { const files = Array.from(e.target.files); const imageFiles = files.filter(f => f.type.startsWith('image/')); if (imageFiles.length > 0) { showToast(`Cargando ${imageFiles.length} imágenes...`); imageFiles.forEach(file => { const reader = new FileReader(); reader.onload = (ev) => addLayer(ev.target.result, file.name); reader.readAsDataURL(file); }); } fileInput.value = ""; };
+
+            // Nueva función: Convertidor de imágenes a WebP (Mantiene el tamaño original)
+            document.getElementById('webpConverterInput').onchange = (e) => {
+                const files = Array.from(e.target.files);
+                const imageFiles = files.filter(f => f.type.startsWith('image/'));
+                if (imageFiles.length === 0) return;
+                
+                showToast(`Convirtiendo ${imageFiles.length} imagen(es) a WebP...`);
+                
+                imageFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            // Crear un lienzo temporal del tamaño exacto de la imagen original
+                            const tempCanvas = document.createElement('canvas');
+                            tempCanvas.width = img.width;
+                            tempCanvas.height = img.height;
+                            const tCtx = tempCanvas.getContext('2d');
+                            tCtx.drawImage(img, 0, 0);
+                            
+                            // Descargar automáticamente en WebP
+                            const originalName = file.name.replace(/\.[^/.]+$/, ""); // Quita la extensión original
+                            const link = document.createElement('a');
+                            link.download = `${originalName}.webp`;
+                            link.href = tempCanvas.toDataURL('image/webp', 0.95); // 0.95 de calidad
+                            link.click();
+                        };
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                e.target.value = ""; // Reiniciar el input para poder seleccionar la misma imagen otra vez
+            };
         }
 
         function handleLayerDragStart(e, index) { draggedLayerIdx = index; e.target.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', index); }
