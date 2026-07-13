@@ -5,13 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lector y Editor de Texto Limpio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <style>
         /* Estilos para el placeholder en contenteditable */
         [contenteditable]:empty:before {
             content: attr(data-placeholder);
             color: #9ca3af;
             pointer-events: none;
-            display: block; /* Para que el cursor se posicione correctamente */
+            display: block;
         }
         
         /* Ocultar barra de desplazamiento para un look más limpio, pero permitir scroll */
@@ -35,24 +40,41 @@
         }
     </style>
 </head>
-<body class="bg-[#fcfcfc] text-gray-800 antialiased min-h-screen flex flex-col selection:bg-blue-200 selection:text-blue-900 transition-colors duration-300" id="body">
+<body class="bg-[#fcfcfc] dark:bg-gray-900 text-gray-800 dark:text-gray-300 antialiased min-h-screen flex flex-col selection:bg-blue-200 selection:text-blue-900 transition-colors duration-300" id="body">
+
+    <!-- Audio silencioso para mantener la pestaña activa en segundo plano -->
+    <audio id="keepAliveAudio" loop>
+        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" type="audio/wav">
+    </audio>
 
     <!-- Barra de herramientas superior -->
-    <header class="sticky top-0 z-10 bg-[#fcfcfc]/90 backdrop-blur-md border-b border-gray-200 shadow-sm transition-colors duration-300" id="header">
+    <header class="sticky top-0 z-10 bg-[#fcfcfc]/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300" id="header">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
-                <h1 class="text-lg font-semibold text-gray-700 select-none">Lector Sin Límites</h1>
+                <h1 class="text-lg font-semibold text-gray-700 dark:text-gray-200 select-none">Lector Sin Límites</h1>
             </div>
 
             <div class="flex items-center space-x-3">
                 <!-- Contador de palabras -->
                 <span id="wordCount" class="text-xs text-gray-500 font-medium mr-2 select-none">0 palabras</span>
 
+                <!-- Botones Copiar / Pegar -->
+                <button id="copyBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors tooltip" title="Copiar texto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                </button>
+                <button id="pasteBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors tooltip" title="Pegar texto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </button>
+
                 <!-- Botón Modo Oscuro -->
-                <button id="themeBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors tooltip" title="Cambiar tema">
+                <button id="themeBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors tooltip" title="Cambiar tema">
                     <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
@@ -70,7 +92,7 @@
         </div>
     </header>
 
-    <!-- Área principal de edición. Usamos <article> para que Edge lo detecte como contenido principal -->
+    <!-- Área principal de edición. -->
     <main class="flex-grow flex flex-col justify-start max-w-4xl w-full mx-auto p-6 md:p-12">
         
         <!-- Instrucción sutil para usuarios de Edge -->
@@ -78,7 +100,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p><strong>Tip para Microsoft Edge:</strong> Pega tu texto aquí. Puedes usar el botón de arriba, o presionar <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs">Ctrl</kbd> + <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs">Shift</kbd> + <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs">U</kbd> para usar la excelente voz neuronal nativa de Edge.</p>
+            <p><strong>Tip para Microsoft Edge:</strong> Pega tu texto aquí. Puedes usar el botón de arriba, o presionar <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs text-gray-800">Ctrl</kbd> + <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs text-gray-800">Shift</kbd> + <kbd class="bg-gray-100 border border-gray-300 rounded px-1 text-xs text-gray-800">U</kbd> para usar la voz neuronal nativa.</p>
         </div>
 
         <article 
@@ -97,20 +119,26 @@
         const playText = document.getElementById('playText');
         const wordCount = document.getElementById('wordCount');
         const themeBtn = document.getElementById('themeBtn');
-        const body = document.getElementById('body');
-        const header = document.getElementById('header');
+        const themeIcon = document.getElementById('themeIcon');
+        const copyBtn = document.getElementById('copyBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const keepAliveAudio = document.getElementById('keepAliveAudio');
         
         let isPlaying = false;
-        let isDarkMode = false;
         let synth = window.speechSynthesis;
         let utterance = null;
+        let wakeLock = null;
+        let resumeInterval = null;
+        
+        // Estado del procesador de voz (TTS Chunking)
+        let chunks = [];
+        let currentChunkIndex = 0;
+        let spans = [];
 
-        // 1. Manejo de pegado (Paste) para asegurar que solo entre texto limpio (sin estilos raros)
+        // 1. Manejo de pegado limpio
         editor.addEventListener('paste', (e) => {
             e.preventDefault();
-            // Obtener solo el texto plano
             const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-            // Insertarlo en el editor
             document.execCommand('insertText', false, text);
         });
 
@@ -122,30 +150,150 @@
             wordCount.innerText = `${words.length} palabra${words.length !== 1 ? 's' : ''}`;
         }
 
-        // 3. Sistema básico de Texto a Voz (TTS) como alternativa
-        playBtn.addEventListener('click', () => {
-            const textToRead = editor.innerText.trim();
+        // 3. Botones de Copiar y Pegar
+        copyBtn.addEventListener('click', async () => {
+            try {
+                let textToCopy = editor.innerText;
+                await navigator.clipboard.writeText(textToCopy);
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = `<svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+                setTimeout(() => copyBtn.innerHTML = originalHTML, 2000);
+            } catch (err) {
+                alert('No se pudo copiar. Intenta seleccionarlo (Ctrl+A) y presionar Ctrl+C.');
+            }
+        });
+
+        pasteBtn.addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    editor.focus();
+                    document.execCommand('insertText', false, text);
+                }
+            } catch (err) {
+                alert('Por seguridad tu navegador requiere usar Ctrl+V para pegar.');
+            }
+        });
+
+        // 4. API de Wake Lock para evitar que la pantalla se apague
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('Wake Lock falló:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release()
+                    .then(() => wakeLock = null);
+            }
+        }
+
+        // 5. Sistema avanzado de TTS (Evita cortes en segundo plano)
+        function stopReading() {
+            isPlaying = false;
+            synth.cancel();
+            setPlayState(false);
             
-            if (!textToRead) {
-                alert("Por favor, introduce algún texto para leer.");
+            // Detener estrategias de fondo
+            keepAliveAudio.pause();
+            clearInterval(resumeInterval);
+            releaseWakeLock();
+            
+            // Restaurar texto limpio
+            if (spans.length > 0) {
+                const rawText = editor.innerText;
+                editor.innerHTML = '';
+                editor.innerText = rawText; 
+            }
+            editor.contentEditable = "true";
+        }
+
+        function playNextChunk() {
+            if (!isPlaying) return;
+            
+            if (currentChunkIndex >= chunks.length) {
+                stopReading();
                 return;
             }
 
+            spans.forEach(s => s.className = '');
+            const activeSpan = spans[currentChunkIndex];
+            const textToSpeak = chunks[currentChunkIndex];
+
+            if (textToSpeak.trim().length > 0) {
+                activeSpan.className = 'bg-yellow-200 dark:bg-yellow-600 text-black dark:text-white rounded px-1 transition-colors duration-200';
+                activeSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            if (textToSpeak.trim().length === 0) {
+                currentChunkIndex++;
+                playNextChunk();
+                return;
+            }
+
+            utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'es-ES'; 
+            
+            utterance.onend = () => {
+                currentChunkIndex++;
+                playNextChunk();
+            };
+            
+            utterance.onerror = (e) => {
+                console.warn('TTS Error:', e);
+                currentChunkIndex++;
+                playNextChunk();
+            };
+
+            synth.speak(utterance);
+        }
+
+        playBtn.addEventListener('click', async () => {
             if (isPlaying) {
-                // Detener lectura
-                synth.cancel();
-                setPlayState(false);
+                stopReading();
             } else {
-                // Iniciar lectura
-                utterance = new SpeechSynthesisUtterance(textToRead);
-                utterance.lang = 'es-ES'; // Intentar forzar español
+                const fullText = editor.innerText.trim();
                 
-                // Eventos para cambiar el botón cuando termine
-                utterance.onend = () => setPlayState(false);
-                utterance.onerror = () => setPlayState(false);
+                if (!fullText) {
+                    alert("Por favor, introduce algún texto para leer.");
+                    return;
+                }
+
+                // ESTRATEGIAS ANTISUSPENSIÓN (Activar al dar play)
+                // 1. Audio silencioso para engañar a los ahorradores de energía
+                try { await keepAliveAudio.play(); } catch(e) {}
                 
-                synth.speak(utterance);
+                // 2. Evitar que la pantalla se apague si el dispositivo está sobre la mesa
+                requestWakeLock();
+                
+                // 3. Forzar al motor de voz a recordar que está activo cada 5 segundos
+                // (Truco vital para navegadores basados en Chromium)
+                resumeInterval = setInterval(() => {
+                    if (synth.speaking) {
+                        synth.pause();
+                        synth.resume();
+                    }
+                }, 5000);
+
+                // Dividir el texto
+                chunks = editor.innerText.match(/[^.!?\n]+[.!?]*|\n+/g) || [editor.innerText];
+                editor.innerHTML = '';
+                spans = chunks.map(chunk => {
+                    const span = document.createElement('span');
+                    span.innerText = chunk;
+                    editor.appendChild(span);
+                    return span;
+                });
+
+                editor.contentEditable = "false"; 
                 setPlayState(true);
+                currentChunkIndex = 0;
+                playNextChunk();
             }
         });
 
@@ -164,39 +312,21 @@
             }
         }
 
-        // Cancelar síntesis si el usuario cierra la ventana o recarga
-        window.onbeforeunload = () => {
-            if (synth) synth.cancel();
-        };
+        // Cancelar síntesis si el usuario cierra la ventana
+        window.onbeforeunload = () => stopReading();
 
-        // 4. Modo Oscuro / Claro
+        // 6. Modo Oscuro / Claro
         themeBtn.addEventListener('click', () => {
-            isDarkMode = !isDarkMode;
-            if (isDarkMode) {
-                body.classList.replace('bg-[#fcfcfc]', 'bg-gray-900');
-                body.classList.replace('text-gray-800', 'text-gray-300');
-                header.classList.replace('bg-[#fcfcfc]/90', 'bg-gray-900/90');
-                header.classList.replace('border-gray-200', 'border-gray-800');
-                document.querySelector('h1').classList.replace('text-gray-700', 'text-gray-200');
-                themeBtn.classList.replace('hover:bg-gray-200', 'hover:bg-gray-700');
-                themeBtn.classList.replace('text-gray-600', 'text-gray-400');
-                document.getElementById('themeIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`; // Icono Sol
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                themeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />`;
             } else {
-                body.classList.replace('bg-gray-900', 'bg-[#fcfcfc]');
-                body.classList.replace('text-gray-300', 'text-gray-800');
-                header.classList.replace('bg-gray-900/90', 'bg-[#fcfcfc]/90');
-                header.classList.replace('border-gray-800', 'border-gray-200');
-                document.querySelector('h1').classList.replace('text-gray-200', 'text-gray-700');
-                themeBtn.classList.replace('hover:bg-gray-700', 'hover:bg-gray-200');
-                themeBtn.classList.replace('text-gray-400', 'text-gray-600');
-                document.getElementById('themeIcon').innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />`; // Icono Luna
+                themeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />`;
             }
         });
 
-        // Enfoque automático al abrir
-        window.onload = () => {
-            editor.focus();
-        };
+        window.onload = () => editor.focus();
     </script>
 </body>
 </html>
