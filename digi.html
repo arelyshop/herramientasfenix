@@ -1,0 +1,286 @@
+import React, { useState, useEffect } from 'react';
+import { Trash2, Plus, Eraser, FileX, Calculator, Save } from 'lucide-react';
+
+export default function App() {
+  // Estado principal de los items, cargando desde localStorage si existe
+  const [items, setItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cotizador_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error cargando datos del localStorage", e);
+      return [];
+    }
+  });
+
+  // Estados del formulario
+  const [sku, setSku] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [precio, setPrecio] = useState('');
+  const [cantidad, setCantidad] = useState(1);
+  const [impuesto, setImpuesto] = useState(0); // Porcentaje opcional (ej: 13% IVA)
+
+  // Guardar en localStorage cada vez que los items cambien
+  useEffect(() => {
+    localStorage.setItem('cotizador_items', JSON.stringify(items));
+  }, [items]);
+
+  // Manejador para agregar un producto
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!nombre || !precio) return;
+
+    const newItem = {
+      id: crypto.randomUUID(), // ID único
+      sku: sku.trim() || 'N/A',
+      nombre: nombre.trim(),
+      precio: parseFloat(precio),
+      cantidad: parseInt(cantidad) || 1,
+    };
+
+    setItems([...items, newItem]);
+    handleClearForm(); // Limpiar formulario tras agregar
+  };
+
+  // Manejador para limpiar solo los campos del formulario de forma manual
+  const handleClearForm = () => {
+    setSku('');
+    setNombre('');
+    setPrecio('');
+    setCantidad(1);
+  };
+
+  // Manejador para eliminar un ítem específico
+  const handleRemoveItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  // Manejador para vaciar toda la cotización
+  const handleClearAll = () => {
+    if (window.confirm('¿Estás seguro de que deseas vaciar toda la cotización? Esta acción no se puede deshacer.')) {
+      setItems([]);
+    }
+  };
+
+  // Cálculos
+  const subtotalGeneral = items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+  const montoImpuesto = subtotalGeneral * (impuesto / 100);
+  const totalGeneral = subtotalGeneral + montoImpuesto;
+
+  // Utilidad para formatear moneda
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('es-BO', {
+      style: 'currency',
+      currency: 'BOB', // Puedes cambiar 'BOB' por 'USD', 'MXN', 'EUR', etc.
+      minimumFractionDigits: 2
+    }).format(value);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-slate-800">
+      <div className="max-w-5xl mx-auto space-y-6">
+        
+        {/* Encabezado */}
+        <header className="flex items-center space-x-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="p-3 bg-blue-600 text-white rounded-xl">
+            <Calculator size={28} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Cotizador de Productos</h1>
+            <p className="text-sm text-gray-500">Los datos se guardan automáticamente en tu navegador.</p>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Panel Lateral: Formulario */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Agregar Producto</h2>
+              
+              <form onSubmit={handleAddItem} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Opcional)</label>
+                  <input
+                    type="text"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    placeholder="Ej: PROD-001"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    placeholder="Ej: Laptop Dell XPS"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={precio}
+                      onChange={(e) => setPrecio(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={cantidad}
+                      onChange={(e) => setCantidad(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex flex-col space-y-2">
+                  <button
+                    type="submit"
+                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+                  >
+                    <Plus size={18} />
+                    <span>Añadir a Cotización</span>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={handleClearForm}
+                    className="w-full flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors"
+                  >
+                    <Eraser size={18} />
+                    <span>Vaciar Formulario</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Ajustes de Cotización */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Ajustes</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Impuesto / IVA (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={impuesto}
+                  onChange={(e) => setImpuesto(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Panel Principal: Tabla de Cotización */}
+          <div className="lg:col-span-2 flex flex-col space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-grow flex flex-col">
+              
+              <div className="p-6 border-b flex justify-between items-center bg-gray-50/50">
+                <h2 className="text-xl font-bold text-gray-800">Detalle de Cotización</h2>
+                {items.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="flex items-center space-x-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 py-2 px-4 rounded-lg transition-colors font-medium"
+                  >
+                    <FileX size={16} />
+                    <span>Vaciar Todo</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto flex-grow">
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-16 text-gray-400">
+                    <Save size={48} className="mb-4 opacity-20" />
+                    <p className="text-lg">No hay productos en la cotización.</p>
+                    <p className="text-sm">Agrega productos usando el formulario.</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <th className="p-4 font-medium">SKU</th>
+                        <th className="p-4 font-medium">Nombre</th>
+                        <th className="p-4 font-medium text-right">Precio Un.</th>
+                        <th className="p-4 font-medium text-center">Cant.</th>
+                        <th className="p-4 font-medium text-right">Subtotal</th>
+                        <th className="p-4 font-medium text-center">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {items.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="p-4 text-sm text-gray-600">{item.sku}</td>
+                          <td className="p-4 text-sm font-medium text-gray-900">{item.nombre}</td>
+                          <td className="p-4 text-sm text-right text-gray-600">{formatCurrency(item.precio)}</td>
+                          <td className="p-4 text-sm text-center">
+                            <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">{item.cantidad}</span>
+                          </td>
+                          <td className="p-4 text-sm text-right font-medium text-gray-800">
+                            {formatCurrency(item.precio * item.cantidad)}
+                          </td>
+                          <td className="p-4 text-center">
+                            <button
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50"
+                              title="Eliminar producto"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            {/* Resumen de Totales */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="text-gray-500 text-sm">
+                Total de artículos: <span className="font-bold text-gray-800">{items.reduce((acc, item) => acc + item.cantidad, 0)}</span>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-gray-600">
+                  <span className="font-medium">Subtotal</span>
+                  <span>{formatCurrency(subtotalGeneral)}</span>
+                </div>
+                
+                {impuesto > 0 && (
+                  <div className="flex justify-between items-center text-gray-600">
+                    <span className="font-medium">Impuesto ({impuesto}%)</span>
+                    <span>{formatCurrency(montoImpuesto)}</span>
+                  </div>
+                )}
+                
+                <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
+                  <span className="text-xl font-bold text-gray-900">Total</span>
+                  <span className="text-2xl font-black text-blue-600">{formatCurrency(totalGeneral)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
