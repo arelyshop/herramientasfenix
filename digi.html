@@ -232,35 +232,35 @@
                 }
 
                 // Generar filas de la tabla
-                tablaBody.innerHTML = '';
-                let cantidadTotal = 0;
-                let subtotalGeneral = 0;
+            tablaBody.innerHTML = '';
+            let cantidadTotal = 0;
+            let subtotalGeneral = 0;
 
-                items.forEach(item => {
-                    const subtotalLinea = item.precio * item.cantidad;
-                    cantidadTotal += parseInt(item.cantidad);
-                    subtotalGeneral += subtotalLinea;
+            items.forEach(item => {
+                const subtotalLinea = item.precio * item.cantidad;
+                cantidadTotal += parseInt(item.cantidad);
+                subtotalGeneral += subtotalLinea;
 
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50/50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="p-4 text-sm text-gray-600">${item.sku || 'N/A'}</td>
-                        <td class="p-4 text-sm font-medium text-gray-900">${item.nombre}</td>
-                        <td class="p-4 text-sm text-right text-gray-600">${formatCurrency(item.precio)}</td>
-                        <td class="p-4 text-sm text-center">
-                            <span class="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">${item.cantidad}</span>
-                        </td>
-                        <td class="p-4 text-sm text-right font-medium text-gray-800">${formatCurrency(subtotalLinea)}</td>
-                        <td class="p-4 text-center">
-                            <button data-id="${item.id}" class="btn-eliminar text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50" title="Eliminar producto">
-                                <i class="ph ph-trash text-lg pointer-events-none"></i>
-                            </button>
-                        </td>
-                    `;
-                    tablaBody.appendChild(tr);
-                });
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 text-sm text-gray-600">${item.sku || 'N/A'}</td>
+                    <td class="p-4 text-sm font-medium text-gray-900">${item.nombre}</td>
+                    <td class="p-4 text-sm text-right text-gray-600">${formatCurrency(item.precio)}</td>
+                    <td class="p-4 text-sm text-center">
+                        <input type="number" min="1" data-id="${item.id}" value="${item.cantidad}" class="input-cantidad-tabla w-20 px-2 py-1 text-center border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white shadow-sm">
+                    </td>
+                    <td class="p-4 text-sm text-right font-medium text-gray-800">${formatCurrency(subtotalLinea)}</td>
+                    <td class="p-4 text-center">
+                        <button data-id="${item.id}" class="btn-eliminar text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50" title="Eliminar producto">
+                            <i class="ph ph-trash text-lg pointer-events-none"></i>
+                        </button>
+                    </td>
+                `;
+                tablaBody.appendChild(tr);
+            });
 
-                // Calcular totales e impuestos
+            // Calcular totales e impuestos
                 const porcentajeImpuesto = parseFloat(inputImpuesto.value) || 0;
                 const montoImpuesto = subtotalGeneral * (porcentajeImpuesto / 100);
                 const totalFinal = subtotalGeneral + montoImpuesto;
@@ -316,6 +316,26 @@
                     const id = btn.getAttribute('data-id');
                     items = items.filter(item => item.id !== id);
                     renderizar();
+                }
+            });
+
+            // Evento: Cambio de cantidad directamente en la tabla
+            tablaBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('input-cantidad-tabla')) {
+                    const id = e.target.getAttribute('data-id');
+                    let nuevaCantidad = parseInt(e.target.value);
+                    
+                    // Validar que la cantidad ingresada sea al menos 1
+                    if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+                        nuevaCantidad = 1;
+                    }
+                    
+                    // Actualizar la cantidad en nuestra memoria y recalcular
+                    const item = items.find(item => item.id === id);
+                    if (item) {
+                        item.cantidad = nuevaCantidad;
+                        renderizar(); // Esto actualiza automáticamente subtotales, totales y caché
+                    }
                 }
             });
 
