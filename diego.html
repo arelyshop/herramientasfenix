@@ -30,11 +30,17 @@
                 </h1>
                 <p class="text-blue-100 text-sm mt-1">Añade productos y genera un documento PDF nativo con imágenes.</p>
             </div>
-            <!-- Botón para descargar PDF -->
-            <button id="btnDescargarPDF" class="hidden bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
-                <i class="ph ph-file-pdf text-xl"></i>
-                Descargar PDF
-            </button>
+            <!-- Botones de Acción -->
+            <div class="flex items-center gap-2">
+                <button id="btnVaciar" class="hidden bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
+                    <i class="ph ph-trash text-xl"></i>
+                    <span class="hidden sm:inline">Vaciar</span>
+                </button>
+                <button id="btnDescargarPDF" class="hidden bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
+                    <i class="ph ph-file-pdf text-xl"></i>
+                    <span class="hidden sm:inline">Descargar PDF</span>
+                </button>
+            </div>
         </div>
 
         <div class="p-6">
@@ -115,14 +121,30 @@
         </div>
     </div>
 
+    <!-- Modal Confirmación Vaciar -->
+    <div id="modalConfirmar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-lg text-center transform transition-all">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="ph ph-warning-circle text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">¿Vaciar Cotización?</h3>
+            <p class="text-gray-600 mb-6 text-sm">Esta acción eliminará todos los productos actuales de la lista y no se puede deshacer.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="btnCancelarVaciar" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Cancelar</button>
+                <button id="btnConfirmarVaciar" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors">Sí, vaciar todo</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Variables de estado
-            let items = [];
+            // Variables de estado (Cargar desde LocalStorage si existe)
+            let items = JSON.parse(localStorage.getItem('cotizacion_items')) || [];
 
             // Referencias del DOM
             const form = document.getElementById('cotizadorForm');
             const btnDescargarPDF = document.getElementById('btnDescargarPDF');
+            const btnVaciar = document.getElementById('btnVaciar');
             const tablaCotizacion = document.getElementById('tablaCotizacion');
             const tablaBody = document.getElementById('tablaBody');
             const estadoVacio = document.getElementById('estadoVacio');
@@ -231,6 +253,9 @@
 
             // Función Principal de Renderizado
             const renderizarTabla = () => {
+                // Guardar estado en LocalStorage cada vez que se actualiza la tabla
+                localStorage.setItem('cotizacion_items', JSON.stringify(items));
+
                 tablaBody.innerHTML = '';
                 let cantidadTotal = 0;
                 let subtotalGeneral = 0;
@@ -239,6 +264,7 @@
                     tablaCotizacion.classList.add('hidden');
                     resumenTotales.classList.add('hidden');
                     btnDescargarPDF.classList.add('hidden');
+                    btnVaciar.classList.add('hidden');
                     estadoVacio.classList.remove('hidden');
                     return;
                 }
@@ -246,6 +272,7 @@
                 tablaCotizacion.classList.remove('hidden');
                 resumenTotales.classList.remove('hidden');
                 btnDescargarPDF.classList.remove('hidden');
+                btnVaciar.classList.remove('hidden');
                 estadoVacio.classList.add('hidden');
 
                 items.forEach(item => {
@@ -286,6 +313,28 @@
                 txtTotalItems.textContent = cantidadTotal;
                 txtTotalGeneral.textContent = formatCurrency(subtotalGeneral);
             };
+
+            // Eventos del Modal de Confirmación para Vaciar
+            const modalConfirmar = document.getElementById('modalConfirmar');
+            const btnCancelarVaciar = document.getElementById('btnCancelarVaciar');
+            const btnConfirmarVaciar = document.getElementById('btnConfirmarVaciar');
+
+            btnVaciar.addEventListener('click', () => {
+                modalConfirmar.classList.remove('hidden');
+            });
+
+            btnCancelarVaciar.addEventListener('click', () => {
+                modalConfirmar.classList.add('hidden');
+            });
+
+            btnConfirmarVaciar.addEventListener('click', () => {
+                items = [];
+                renderizarTabla();
+                modalConfirmar.classList.add('hidden');
+            });
+
+            // Renderizar la tabla al iniciar por si hay datos en caché
+            renderizarTabla();
 
             // ==========================================
             // LÓGICA PARA GENERAR PDF NATIVO (jsPDF)
