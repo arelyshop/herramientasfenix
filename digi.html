@@ -1,286 +1,365 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Eraser, FileX, Calculator, Save } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador de Productos</title>
+    <!-- Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons para los íconos (similar a Lucide) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-gray-50 text-slate-800 font-sans min-h-screen p-4 md:p-8">
 
-export default function App() {
-  // Estado principal de los items, cargando desde localStorage si existe
-  const [items, setItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem('cotizador_items');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.error("Error cargando datos del localStorage", e);
-      return [];
-    }
-  });
-
-  // Estados del formulario
-  const [sku, setSku] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [precio, setPrecio] = useState('');
-  const [cantidad, setCantidad] = useState(1);
-  const [impuesto, setImpuesto] = useState(0); // Porcentaje opcional (ej: 13% IVA)
-
-  // Guardar en localStorage cada vez que los items cambien
-  useEffect(() => {
-    localStorage.setItem('cotizador_items', JSON.stringify(items));
-  }, [items]);
-
-  // Manejador para agregar un producto
-  const handleAddItem = (e) => {
-    e.preventDefault();
-    if (!nombre || !precio) return;
-
-    const newItem = {
-      id: crypto.randomUUID(), // ID único
-      sku: sku.trim() || 'N/A',
-      nombre: nombre.trim(),
-      precio: parseFloat(precio),
-      cantidad: parseInt(cantidad) || 1,
-    };
-
-    setItems([...items, newItem]);
-    handleClearForm(); // Limpiar formulario tras agregar
-  };
-
-  // Manejador para limpiar solo los campos del formulario de forma manual
-  const handleClearForm = () => {
-    setSku('');
-    setNombre('');
-    setPrecio('');
-    setCantidad(1);
-  };
-
-  // Manejador para eliminar un ítem específico
-  const handleRemoveItem = (id) => {
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  // Manejador para vaciar toda la cotización
-  const handleClearAll = () => {
-    if (window.confirm('¿Estás seguro de que deseas vaciar toda la cotización? Esta acción no se puede deshacer.')) {
-      setItems([]);
-    }
-  };
-
-  // Cálculos
-  const subtotalGeneral = items.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
-  const montoImpuesto = subtotalGeneral * (impuesto / 100);
-  const totalGeneral = subtotalGeneral + montoImpuesto;
-
-  // Utilidad para formatear moneda
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-BO', {
-      style: 'currency',
-      currency: 'BOB', // Puedes cambiar 'BOB' por 'USD', 'MXN', 'EUR', etc.
-      minimumFractionDigits: 2
-    }).format(value);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans text-slate-800">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-6">
         
-        {/* Encabezado */}
-        <header className="flex items-center space-x-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="p-3 bg-blue-600 text-white rounded-xl">
-            <Calculator size={28} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Cotizador de Productos</h1>
-            <p className="text-sm text-gray-500">Los datos se guardan automáticamente en tu navegador.</p>
-          </div>
+        <!-- Encabezado -->
+        <header class="flex items-center space-x-3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="p-3 bg-blue-600 text-white rounded-xl">
+                <i class="ph ph-calculator text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Cotizador de Productos</h1>
+                <p class="text-sm text-gray-500">Los datos se guardan automáticamente en tu navegador.</p>
+            </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Panel Lateral: Formulario */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Agregar Producto</h2>
-              
-              <form onSubmit={handleAddItem} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU (Opcional)</label>
-                  <input
-                    type="text"
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    placeholder="Ej: PROD-001"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Agregar Producto</h2>
+                    
+                    <form id="cotizadorForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SKU (Opcional)</label>
+                            <input type="text" id="inputSku" placeholder="Ej: PROD-001" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    placeholder="Ej: Laptop Dell XPS"
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto <span class="text-red-500">*</span></label>
+                            <input type="text" id="inputNombre" required placeholder="Ej: Laptop Dell XPS" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                        </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Precio <span className="text-red-500">*</span></label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={precio}
-                      onChange={(e) => setPrecio(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={cantidad}
-                      onChange={(e) => setCantidad(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Precio <span class="text-red-500">*</span></label>
+                                <input type="number" id="inputPrecio" required min="0" step="0.01" placeholder="0.00" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                                <input type="number" id="inputCantidad" required min="1" value="1" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                            </div>
+                        </div>
 
-                <div className="pt-4 flex flex-col space-y-2">
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-                  >
-                    <Plus size={18} />
-                    <span>Añadir a Cotización</span>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={handleClearForm}
-                    className="w-full flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors"
-                  >
-                    <Eraser size={18} />
-                    <span>Vaciar Formulario</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Ajustes de Cotización */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Ajustes</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Impuesto / IVA (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={impuesto}
-                  onChange={(e) => setImpuesto(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Panel Principal: Tabla de Cotización */}
-          <div className="lg:col-span-2 flex flex-col space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-grow flex flex-col">
-              
-              <div className="p-6 border-b flex justify-between items-center bg-gray-50/50">
-                <h2 className="text-xl font-bold text-gray-800">Detalle de Cotización</h2>
-                {items.length > 0 && (
-                  <button
-                    onClick={handleClearAll}
-                    className="flex items-center space-x-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 py-2 px-4 rounded-lg transition-colors font-medium"
-                  >
-                    <FileX size={16} />
-                    <span>Vaciar Todo</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="overflow-x-auto flex-grow">
-                {items.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-gray-400">
-                    <Save size={48} className="mb-4 opacity-20" />
-                    <p className="text-lg">No hay productos en la cotización.</p>
-                    <p className="text-sm">Agrega productos usando el formulario.</p>
-                  </div>
-                ) : (
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                        <th className="p-4 font-medium">SKU</th>
-                        <th className="p-4 font-medium">Nombre</th>
-                        <th className="p-4 font-medium text-right">Precio Un.</th>
-                        <th className="p-4 font-medium text-center">Cant.</th>
-                        <th className="p-4 font-medium text-right">Subtotal</th>
-                        <th className="p-4 font-medium text-center">Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {items.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="p-4 text-sm text-gray-600">{item.sku}</td>
-                          <td className="p-4 text-sm font-medium text-gray-900">{item.nombre}</td>
-                          <td className="p-4 text-sm text-right text-gray-600">{formatCurrency(item.precio)}</td>
-                          <td className="p-4 text-sm text-center">
-                            <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">{item.cantidad}</span>
-                          </td>
-                          <td className="p-4 text-sm text-right font-medium text-gray-800">
-                            {formatCurrency(item.precio * item.cantidad)}
-                          </td>
-                          <td className="p-4 text-center">
-                            <button
-                              onClick={() => handleRemoveItem(item.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50"
-                              title="Eliminar producto"
-                            >
-                              <Trash2 size={18} />
+                        <div class="pt-4 flex flex-col space-y-2">
+                            <button type="submit" class="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors">
+                                <i class="ph ph-plus text-lg"></i>
+                                <span>Añadir a Cotización</span>
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+                            
+                            <button type="button" id="btnVaciarFormulario" class="w-full flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-colors">
+                                <i class="ph ph-eraser text-lg"></i>
+                                <span>Vaciar Formulario</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Ajustes de Cotización -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Ajustes</h2>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Impuesto / IVA (%)</label>
+                        <input type="number" id="inputImpuesto" min="0" max="100" value="0" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                </div>
             </div>
 
-            {/* Resumen de Totales */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="text-gray-500 text-sm">
-                Total de artículos: <span className="font-bold text-gray-800">{items.reduce((acc, item) => acc + item.cantidad, 0)}</span>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-gray-600">
-                  <span className="font-medium">Subtotal</span>
-                  <span>{formatCurrency(subtotalGeneral)}</span>
-                </div>
-                
-                {impuesto > 0 && (
-                  <div className="flex justify-between items-center text-gray-600">
-                    <span className="font-medium">Impuesto ({impuesto}%)</span>
-                    <span>{formatCurrency(montoImpuesto)}</span>
-                  </div>
-                )}
-                
-                <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-900">Total</span>
-                  <span className="text-2xl font-black text-blue-600">{formatCurrency(totalGeneral)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            <div class="lg:col-span-2 flex flex-col space-y-6">
+                <!-- Panel Principal: Tabla -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-grow flex flex-col">
+                    
+                    <div class="p-6 border-b flex justify-between items-center bg-gray-50/50">
+                        <h2 class="text-xl font-bold text-gray-800">Detalle de Cotización</h2>
+                        <button id="btnVaciarTodo" class="hidden flex items-center space-x-2 text-sm bg-red-50 hover:bg-red-100 text-red-600 py-2 px-4 rounded-lg transition-colors font-medium">
+                            <i class="ph ph-file-x text-lg"></i>
+                            <span>Vaciar Todo</span>
+                        </button>
+                    </div>
 
+                    <div class="overflow-x-auto flex-grow">
+                        <!-- Estado Vacío -->
+                        <div id="emptyState" class="flex flex-col items-center justify-center h-full py-16 text-gray-400">
+                            <i class="ph ph-floppy-disk text-5xl mb-4 opacity-20"></i>
+                            <p class="text-lg">No hay productos en la cotización.</p>
+                            <p class="text-sm">Agrega productos usando el formulario.</p>
+                        </div>
+
+                        <!-- Tabla -->
+                        <table id="tablaCotizacion" class="w-full text-left border-collapse hidden">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                    <th class="p-4 font-medium">SKU</th>
+                                    <th class="p-4 font-medium">Nombre</th>
+                                    <th class="p-4 font-medium text-right">Precio Un.</th>
+                                    <th class="p-4 font-medium text-center">Cant.</th>
+                                    <th class="p-4 font-medium text-right">Subtotal</th>
+                                    <th class="p-4 font-medium text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaBody" class="divide-y divide-gray-100">
+                                <!-- Las filas se insertan vía JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Resumen de Totales -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div class="text-gray-500 text-sm">
+                        Total de artículos: <span id="totalArticulos" class="font-bold text-gray-800">0</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-gray-600">
+                            <span class="font-medium">Subtotal</span>
+                            <span id="txtSubtotal">Bs 0.00</span>
+                        </div>
+                        
+                        <div id="contenedorImpuesto" class="hidden justify-between items-center text-gray-600">
+                            <span class="font-medium">Impuesto (<span id="txtPorcentajeImpuesto">0</span>%)</span>
+                            <span id="txtMontoImpuesto">Bs 0.00</span>
+                        </div>
+                        
+                        <div class="pt-3 border-t border-gray-200 flex justify-between items-center">
+                            <span class="text-xl font-bold text-gray-900">Total</span>
+                            <span id="txtTotal" class="text-2xl font-black text-blue-600">Bs 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  );
-}
+
+    <!-- Modal de Confirmación (Reemplaza al alert/confirm predeterminado) -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 transform scale-100 transition-transform">
+            <div class="flex items-center space-x-3 text-red-600 mb-4">
+                <div class="p-2 bg-red-100 rounded-full">
+                    <i class="ph ph-warning-circle text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Vaciar cotización</h3>
+            </div>
+            <p class="text-gray-600 text-sm mb-6">¿Estás seguro de que deseas vaciar toda la cotización? Esta acción eliminará todos los productos y no se puede deshacer.</p>
+            <div class="flex gap-3 justify-end">
+                <button id="btnCancelarModal" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">Cancelar</button>
+                <button id="btnConfirmarModal" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors shadow-sm">Sí, vaciar todo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos del DOM
+            const form = document.getElementById('cotizadorForm');
+            const inputSku = document.getElementById('inputSku');
+            const inputNombre = document.getElementById('inputNombre');
+            const inputPrecio = document.getElementById('inputPrecio');
+            const inputCantidad = document.getElementById('inputCantidad');
+            const inputImpuesto = document.getElementById('inputImpuesto');
+            
+            const tablaCotizacion = document.getElementById('tablaCotizacion');
+            const tablaBody = document.getElementById('tablaBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            const btnVaciarTodo = document.getElementById('btnVaciarTodo');
+            const btnVaciarFormulario = document.getElementById('btnVaciarFormulario');
+            
+            const totalArticulos = document.getElementById('totalArticulos');
+            const txtSubtotal = document.getElementById('txtSubtotal');
+            const contenedorImpuesto = document.getElementById('contenedorImpuesto');
+            const txtPorcentajeImpuesto = document.getElementById('txtPorcentajeImpuesto');
+            const txtMontoImpuesto = document.getElementById('txtMontoImpuesto');
+            const txtTotal = document.getElementById('txtTotal');
+
+            // Elementos del Modal
+            const confirmModal = document.getElementById('confirmModal');
+            const btnCancelarModal = document.getElementById('btnCancelarModal');
+            const btnConfirmarModal = document.getElementById('btnConfirmarModal');
+
+            // Estado de la aplicación
+            let items = [];
+
+            // Inicializar cargando datos de LocalStorage
+            function cargarDatos() {
+                try {
+                    const guardados = localStorage.getItem('cotizador_items_v2');
+                    if (guardados) {
+                        items = JSON.parse(guardados);
+                    }
+                } catch (e) {
+                    console.error("Error al leer el caché", e);
+                }
+                renderizar();
+            }
+
+            // Guardar datos en LocalStorage
+            function guardarDatos() {
+                localStorage.setItem('cotizador_items_v2', JSON.stringify(items));
+            }
+
+            // Formateador de moneda
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('es-BO', {
+                    style: 'currency',
+                    currency: 'BOB',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+
+            // Actualizar la interfaz (DOM)
+            function renderizar() {
+                // Controlar visibilidad de la tabla vs estado vacío
+                if (items.length === 0) {
+                    tablaCotizacion.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    btnVaciarTodo.classList.add('hidden');
+                } else {
+                    tablaCotizacion.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    btnVaciarTodo.classList.remove('hidden');
+                }
+
+                // Generar filas de la tabla
+                tablaBody.innerHTML = '';
+                let cantidadTotal = 0;
+                let subtotalGeneral = 0;
+
+                items.forEach(item => {
+                    const subtotalLinea = item.precio * item.cantidad;
+                    cantidadTotal += parseInt(item.cantidad);
+                    subtotalGeneral += subtotalLinea;
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-gray-50/50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-4 text-sm text-gray-600">${item.sku || 'N/A'}</td>
+                        <td class="p-4 text-sm font-medium text-gray-900">${item.nombre}</td>
+                        <td class="p-4 text-sm text-right text-gray-600">${formatCurrency(item.precio)}</td>
+                        <td class="p-4 text-sm text-center">
+                            <span class="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">${item.cantidad}</span>
+                        </td>
+                        <td class="p-4 text-sm text-right font-medium text-gray-800">${formatCurrency(subtotalLinea)}</td>
+                        <td class="p-4 text-center">
+                            <button data-id="${item.id}" class="btn-eliminar text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-full hover:bg-red-50" title="Eliminar producto">
+                                <i class="ph ph-trash text-lg pointer-events-none"></i>
+                            </button>
+                        </td>
+                    `;
+                    tablaBody.appendChild(tr);
+                });
+
+                // Calcular totales e impuestos
+                const porcentajeImpuesto = parseFloat(inputImpuesto.value) || 0;
+                const montoImpuesto = subtotalGeneral * (porcentajeImpuesto / 100);
+                const totalFinal = subtotalGeneral + montoImpuesto;
+
+                // Actualizar textos
+                totalArticulos.textContent = cantidadTotal;
+                txtSubtotal.textContent = formatCurrency(subtotalGeneral);
+                
+                if (porcentajeImpuesto > 0) {
+                    contenedorImpuesto.classList.remove('hidden');
+                    contenedorImpuesto.classList.add('flex');
+                    txtPorcentajeImpuesto.textContent = porcentajeImpuesto;
+                    txtMontoImpuesto.textContent = formatCurrency(montoImpuesto);
+                } else {
+                    contenedorImpuesto.classList.add('hidden');
+                    contenedorImpuesto.classList.remove('flex');
+                }
+
+                txtTotal.textContent = formatCurrency(totalFinal);
+                
+                // Guardar en caché después de cada render
+                guardarDatos();
+            }
+
+            // Evento: Agregar Producto
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const nombreVal = inputNombre.value.trim();
+                const precioVal = parseFloat(inputPrecio.value);
+                
+                if (!nombreVal || isNaN(precioVal)) return;
+
+                const nuevoItem = {
+                    id: Date.now().toString(), // ID único simple
+                    sku: inputSku.value.trim(),
+                    nombre: nombreVal,
+                    precio: precioVal,
+                    cantidad: parseInt(inputCantidad.value) || 1
+                };
+
+                items.push(nuevoItem);
+                renderizar();
+                form.reset();
+                inputCantidad.value = 1;
+                inputNombre.focus(); // Volver el foco al input principal
+            });
+
+            // Evento: Delegación para botones de eliminar
+            tablaBody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-eliminar');
+                if (btn) {
+                    const id = btn.getAttribute('data-id');
+                    items = items.filter(item => item.id !== id);
+                    renderizar();
+                }
+            });
+
+            // Evento: Vaciar formulario
+            btnVaciarFormulario.addEventListener('click', () => {
+                form.reset();
+                inputCantidad.value = 1;
+            });
+
+            // Evento: Cambio en el impuesto
+            inputImpuesto.addEventListener('input', () => {
+                renderizar();
+            });
+
+            // Lógica del Modal Personalizado
+            function abrirModal() {
+                confirmModal.classList.remove('hidden');
+            }
+
+            function cerrarModal() {
+                confirmModal.classList.add('hidden');
+            }
+
+            // Botón que abre el modal
+            btnVaciarTodo.addEventListener('click', abrirModal);
+
+            // Botón cancelar en el modal
+            btnCancelarModal.addEventListener('click', cerrarModal);
+
+            // Clic fuera del modal para cerrar
+            confirmModal.addEventListener('click', (e) => {
+                if(e.target === confirmModal) cerrarModal();
+            });
+
+            // Botón confirmar en el modal (Vaciar todo)
+            btnConfirmarModal.addEventListener('click', () => {
+                items = [];
+                renderizar();
+                cerrarModal();
+            });
+
+            // Arrancar la aplicación
+            cargarDatos();
+        });
+    </script>
+</body>
+</html>
