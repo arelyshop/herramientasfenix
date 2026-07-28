@@ -62,11 +62,11 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Formato de Salida</label>
                         <div class="flex space-x-4">
                             <label class="flex items-center cursor-pointer">
-                                <input type="radio" name="format" value="image/jpeg" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <input type="radio" name="format" value="image/jpeg" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
                                 <span class="ml-2 text-sm text-gray-700 font-medium">JPG</span>
                             </label>
                             <label class="flex items-center cursor-pointer">
-                                <input type="radio" name="format" value="image/png" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                <input type="radio" name="format" value="image/png" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
                                 <span class="ml-2 text-sm text-gray-700 font-medium">PNG</span>
                             </label>
                             <label class="flex items-center cursor-pointer">
@@ -79,10 +79,10 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Calidad (Solo JPG/WebP)</label>
                         <div class="flex items-center">
-                            <input type="range" id="qualitySlider" min="0.1" max="1.0" step="0.1" value="1.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                            <span id="qualityValue" class="ml-4 font-bold text-gray-700 min-w-[3rem]">100%</span>
+                            <input type="range" id="qualitySlider" min="0.1" max="1.0" step="0.1" value="0.9" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="qualityValue" class="ml-4 font-bold text-gray-700 min-w-[3rem]">90%</span>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">100% para máxima calidad (sin pérdida perceptible).</p>
+                        <p class="text-xs text-gray-500 mt-1">90% recomendado para reducir peso sin pérdida visual.</p>
                     </div>
                 </div>
 
@@ -347,10 +347,10 @@
                     const finalName = `${originalNameNoExt}.${outExt}`;
                     
                     actionsDiv.innerHTML = `
-                        <a href="${downloadUrl}" download="${finalName}" class="text-blue-600 hover:text-blue-800 mr-2" title="Descargar">
-                            <i class="fa-solid fa-download"></i>
+                        <a href="${downloadUrl}" download="${finalName}" class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded text-xs font-medium mr-1 transition-colors inline-flex items-center" title="Descargar imagen">
+                            <i class="fa-solid fa-download mr-1"></i> Bajar
                         </a>
-                        <button onclick="removeFile('${data.id}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+                        <button onclick="removeFile('${data.id}')" class="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium transition-colors inline-flex items-center" title="Eliminar">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     `;
