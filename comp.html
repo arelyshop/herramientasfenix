@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Imágenes Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+        /* Ocultar barra de desplazamiento para el área de previsualización */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 flex flex-col">
+
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-images text-blue-600 text-2xl mr-3"></i>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">ImageConv Pro</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-5xl">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Convierte Imágenes en Lotes
+            </h1>
+            <p class="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+                De PNG, JPG, WebP hacia cualquier formato. Sin perder calidad y 100% en tu navegador.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8 border border-gray-100">
+            <div class="p-6 sm:p-10">
+                
+                <!-- Área de controles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Formato de Salida</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="format" value="image/jpeg" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700 font-medium">JPG</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="format" value="image/png" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                <span class="ml-2 text-sm text-gray-700 font-medium">PNG</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="format" value="image/webp" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700 font-medium">WebP</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Calidad (Solo JPG/WebP)</label>
+                        <div class="flex items-center">
+                            <input type="range" id="qualitySlider" min="0.1" max="1.0" step="0.1" value="1.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="qualityValue" class="ml-4 font-bold text-gray-700 min-w-[3rem]">100%</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">100% para máxima calidad (sin pérdida perceptible).</p>
+                    </div>
+                </div>
+
+                <!-- Zona Drag & Drop -->
+                <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <input type="file" id="fileInput" multiple accept="image/png, image/jpeg, image/webp" class="hidden">
+                    <i class="fa-solid fa-cloud-arrow-up text-5xl text-gray-400 mb-4"></i>
+                    <h3 class="mt-2 text-lg font-medium text-gray-900">Haz clic o arrastra imágenes aquí</h3>
+                    <p class="mt-1 text-sm text-gray-500">Soporta PNG, JPG y WebP (Procesamiento en lote)</p>
+                    <button type="button" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="document.getElementById('fileInput').click()">
+                        Seleccionar Archivos
+                    </button>
+                </div>
+
+                <!-- Lista de imágenes seleccionadas -->
+                <div id="previewContainer" class="mt-8 hidden">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-lg font-medium text-gray-900">Imágenes Listas (<span id="fileCount">0</span>)</h3>
+                        <button id="clearAllBtn" class="text-sm text-red-600 hover:text-red-800 font-medium hidden">Limpiar todo</button>
+                    </div>
+                    
+                    <div id="imageList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto p-2 hide-scrollbar">
+                        <!-- Las imágenes se insertarán aquí dinámicamente -->
+                    </div>
+
+                    <!-- Botones de acción general -->
+                    <div id="actionButtons" class="mt-8 flex flex-col sm:flex-row gap-4 justify-center hidden">
+                        <button id="convertAllBtn" class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-md text-base font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full sm:w-auto">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                            Convertir Todas
+                        </button>
+                        <button id="downloadZipBtn" class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-md text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full sm:w-auto opacity-50 cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-file-zipper mr-2"></i>
+                            Descargar en ZIP
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+            <div class="mt-8 md:mt-0 md:order-1 text-center sm:text-left">
+                <p class="text-center text-sm text-gray-400">
+                    &copy; 2026 ImageConv Pro. Conversión segura en tu navegador.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Variables globales
+        let filesData = []; // Almacena { id, file, status, resultDataUrl }
+        let currentId = 0;
+        const jszip = new JSZip();
+
+        // Elementos del DOM
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const imageList = document.getElementById('imageList');
+        const fileCount = document.getElementById('fileCount');
+        const convertAllBtn = document.getElementById('convertAllBtn');
+        const downloadZipBtn = document.getElementById('downloadZipBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValue = document.getElementById('qualityValue');
+
+        // Actualizar etiqueta de calidad
+        qualitySlider.addEventListener('input', (e) => {
+            qualityValue.textContent = `${Math.round(e.target.value * 100)}%`;
+        });
+
+        // Eventos Drag and Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFileSelect, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+            // Reset input para permitir seleccionar los mismos archivos de nuevo si se borran
+            fileInput.value = ''; 
+        }
+
+        function handleFiles(files) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            let newFilesAdded = false;
+
+            [...files].forEach(file => {
+                if (validTypes.includes(file.type)) {
+                    const id = `img_${currentId++}`;
+                    filesData.push({
+                        id: id,
+                        file: file,
+                        status: 'pending', // pending, converting, done, error
+                        resultBlob: null,
+                        resultExtension: ''
+                    });
+                    
+                    renderPreviewItem(id, file);
+                    newFilesAdded = true;
+                } else {
+                    alert(`El archivo ${file.name} no es un formato soportado (PNG, JPG, WebP).`);
+                }
+            });
+
+            if (newFilesAdded) {
+                updateUI();
+            }
+        }
+
+        function renderPreviewItem(id, file) {
+            const reader = new FileReader();
+            
+            reader.readAsDataURL(file);
+            reader.onloadend = function() {
+                const itemHtml = `
+                    <div id="${id}" class="relative group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-48">
+                        <div class="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
+                            <img src="${reader.result}" class="object-cover w-full h-full" alt="Preview">
+                        </div>
+                        <div class="p-2 flex-grow flex flex-col justify-between bg-white z-10">
+                            <p class="text-xs font-semibold text-gray-700 truncate" title="${file.name}">${file.name}</p>
+                            <div class="flex justify-between items-center mt-1">
+                                <span class="status-badge text-[10px] px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 font-medium">Pendiente</span>
+                                <div class="actions">
+                                    <button onclick="removeFile('${id}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Overlay de conversión -->
+                        <div class="conversion-overlay absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center hidden z-20">
+                            <i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
+                            <span class="text-xs font-medium text-gray-700">Convirtiendo...</span>
+                        </div>
+                    </div>
+                `;
+                imageList.insertAdjacentHTML('beforeend', itemHtml);
+            }
+        }
+
+        function removeFile(id) {
+            const index = filesData.findIndex(f => f.id === id);
+            if (index > -1) {
+                filesData.splice(index, 1);
+                document.getElementById(id).remove();
+                updateUI();
+            }
+        }
+
+        clearAllBtn.addEventListener('click', () => {
+            filesData = [];
+            imageList.innerHTML = '';
+            updateUI();
+        });
+
+        function updateUI() {
+            const count = filesData.length;
+            fileCount.textContent = count;
+            
+            if (count > 0) {
+                previewContainer.classList.remove('hidden');
+                document.getElementById('actionButtons').classList.remove('hidden');
+                clearAllBtn.classList.remove('hidden');
+                
+                // Resetear el botón ZIP si añadimos archivos nuevos
+                const allDone = filesData.every(f => f.status === 'done');
+                if(!allDone) {
+                     disableZipButton();
+                }
+            } else {
+                previewContainer.classList.add('hidden');
+                document.getElementById('actionButtons').classList.add('hidden');
+                clearAllBtn.classList.add('hidden');
+                disableZipButton();
+            }
+        }
+
+        function disableZipButton() {
+            downloadZipBtn.disabled = true;
+            downloadZipBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            downloadZipBtn.classList.remove('hover:bg-indigo-700');
+        }
+
+        function enableZipButton() {
+            downloadZipBtn.disabled = false;
+            downloadZipBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            downloadZipBtn.classList.add('hover:bg-indigo-700');
+        }
+
+        convertAllBtn.addEventListener('click', async () => {
+            if (filesData.length === 0) return;
+
+            const targetFormat = document.querySelector('input[name="format"]:checked').value;
+            const quality = parseFloat(qualitySlider.value);
+            
+            // Extensión de salida
+            let outExt = 'png';
+            if(targetFormat === 'image/jpeg') outExt = 'jpg';
+            if(targetFormat === 'image/webp') outExt = 'webp';
+
+            // Deshabilitar botones durante proceso
+            convertAllBtn.disabled = true;
+            convertAllBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Procesando...';
+            
+            for (let i = 0; i < filesData.length; i++) {
+                const data = filesData[i];
+                
+                // Omitir si ya está convertido con éxito (opcional, pero útil si añaden más sobre la marcha)
+                // if (data.status === 'done') continue; 
+
+                const el = document.getElementById(data.id);
+                const overlay = el.querySelector('.conversion-overlay');
+                const badge = el.querySelector('.status-badge');
+                
+                overlay.classList.remove('hidden');
+                data.status = 'converting';
+
+                try {
+                    const blob = await convertImage(data.file, targetFormat, quality);
+                    data.resultBlob = blob;
+                    data.resultExtension = outExt;
+                    data.status = 'done';
+                    
+                    // Actualizar UI del ítem
+                    overlay.classList.add('hidden');
+                    badge.textContent = '¡Listo!';
+                    badge.className = 'status-badge text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium';
+                    
+                    // Actualizar acciones para permitir descarga individual
+                    const actionsDiv = el.querySelector('.actions');
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const originalNameNoExt = data.file.name.substring(0, data.file.name.lastIndexOf('.')) || data.file.name;
+                    const finalName = `${originalNameNoExt}.${outExt}`;
+                    
+                    actionsDiv.innerHTML = `
+                        <a href="${downloadUrl}" download="${finalName}" class="text-blue-600 hover:text-blue-800 mr-2" title="Descargar">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                        <button onclick="removeFile('${data.id}')" class="text-red-500 hover:text-red-700" title="Eliminar">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+
+                } catch (error) {
+                    console.error("Error convirtiendo", data.file.name, error);
+                    data.status = 'error';
+                    overlay.classList.add('hidden');
+                    badge.textContent = 'Error';
+                    badge.className = 'status-badge text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-medium';
+                }
+            }
+
+            // Restaurar botón principal y habilitar ZIP
+            convertAllBtn.disabled = false;
+            convertAllBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Convertir Todas';
+            
+            // Si al menos una tuvo éxito, habilitar ZIP
+            if (filesData.some(f => f.status === 'done')) {
+                enableZipButton();
+            }
+        });
+
+        function convertImage(file, format, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Si se convierte a JPG (que no soporta transparencia), rellenar fondo con blanco
+                        if (format === 'image/jpeg') {
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                        
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Exportar a Blob
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                reject(new Error('Fallo en toBlob'));
+                            }
+                        }, format, quality);
+                    };
+                    img.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
+            });
+        }
+
+        downloadZipBtn.addEventListener('click', async () => {
+            if (downloadZipBtn.disabled) return;
+            
+            const zip = new JSZip();
+            let addedFiles = 0;
+
+            // Cambiar estado del botón
+            const originalBtnHtml = downloadZipBtn.innerHTML;
+            downloadZipBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Creando ZIP...';
+            downloadZipBtn.disabled = true;
+
+            try {
+                filesData.forEach(data => {
+                    if (data.status === 'done' && data.resultBlob) {
+                        const originalNameNoExt = data.file.name.substring(0, data.file.name.lastIndexOf('.')) || data.file.name;
+                        const finalName = `${originalNameNoExt}_convertida.${data.resultExtension}`;
+                        zip.file(finalName, data.resultBlob);
+                        addedFiles++;
+                    }
+                });
+
+                if (addedFiles > 0) {
+                    const content = await zip.generateAsync({ type: "blob" });
+                    
+                    // Crear enlace invisible para descargar
+                    const url = URL.createObjectURL(content);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'imagenes_convertidas.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Limpieza
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }
+            } catch (error) {
+                console.error("Error creando el ZIP:", error);
+                alert("Hubo un error al crear el archivo ZIP.");
+            } finally {
+                // Restaurar botón
+                downloadZipBtn.innerHTML = originalBtnHtml;
+                downloadZipBtn.disabled = false;
+            }
+        });
+
+    </script>
+</body>
+</html>
