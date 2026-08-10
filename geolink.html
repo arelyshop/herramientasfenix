@@ -122,6 +122,26 @@
             transform: scale(0.98);
         }
 
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
         /* Estilos para el mensaje de notificación (Toast) */
         #toast {
             visibility: hidden;
@@ -161,15 +181,16 @@
         </div>
         
         <h2>Ir al Destino</h2>
-        <p class="subtitle">Ingresa las coordenadas y selecciona tu app de mapas preferida.</p>
+        <p class="subtitle">Ingresa coordenadas o <strong>pega un enlace de Maps</strong> para abrir en tu app preferida.</p>
 
         <div class="input-group">
-            <input type="text" id="destino" placeholder="-17.7833, -63.1821" autocomplete="off">
+            <input type="text" id="destino" placeholder="Ej: -17.78, -63.18 o https://maps..." autocomplete="off">
         </div>
 
-        <button onclick="abrirNavegacion()">
-            Abrir Navegación
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button id="btn-nav" onclick="abrirNavegacion()">
+            <span class="spinner" id="spinner"></span>
+            <span id="btn-text">Abrir Navegación</span>
+            <svg id="btn-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
@@ -195,27 +216,96 @@
             }, 3000);
         }
 
-        function abrirNavegacion() {
-            // Obtenemos el valor y quitamos espacios en blanco
-            let destino = document.getElementById('destino').value.trim();
-            destino = destino.replace(/\s+/g, '');
+        function extraerCoordenadas(texto) {
+            // 1. Buscar Formato de Google Maps /@lat,lng (común en links de navegador)
+            let match = texto.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (match) return `${match[1]},${match[2]}`;
+
+            // 2. Buscar Parámetros q= o ll= (común en URLs de búsqueda)
+            match = texto.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (match) return `${match[1]},${match[2]}`;
+
+            // 3. Patrón genérico: Coordenadas puras (ej. -17.783, -63.182)
+            match = texto.match(/(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)/);
+            if (match) return `${match[1]},${match[2]}`;
+
+            return null; // No se encontró nada que parezcan coordenadas
+        }
+
+        async function resolverEnlaceCorto(url) {
+            try {
+                // Usamos un proxy público (AllOrigins) para evitar bloqueos de seguridad y poder leer el HTML real
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (data && data.contents) {
+                    const html = data.contents;
+                    
+                    // 1. Buscar la URL canónica real (og:url) dentro del código de la web final
+                    let match = html.match(/<meta property="og:url" content="([^"]+)"/);
+                    if (match && match[1]) {
+                        const coords = extraerCoordenadas(match[1]);
+                        if (coords) return coords;
+                    }
+
+                    // 2. Buscar en la imagen estática de previsualización (frecuente en app.goo.gl)
+                    match = html.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/); // %2C es la coma codificada
+                    if (match) return `${match[1]},${match[2]}`;
+                    
+                    // 3. Buscar cualquier coincidencia pura de coordenadas en el código
+                    match = html.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                    if (match) return `${match[1]},${match[2]}`;
+                }
+                return null;
+            } catch (error) {
+                console.error("Error al resolver URL:", error);
+                return null;
+            }
+        }
+
+        async function abrirNavegacion() {
+            let input = document.getElementById('destino').value.trim();
+            const btn = document.getElementById('btn-nav');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+
+            if (!input) {
+                mostrarMensaje('Por favor, ingresa un enlace o coordenadas.');
+                return;
+            }
+
+            let destino = null;
+
+            // Detectar si es un enlace acortado
+            if (input.includes('maps.app.goo.gl') || input.includes('goo.gl/maps')) {
+                // UI: Iniciar animación de carga
+                btn.disabled = true;
+                spinner.style.display = 'inline-block';
+                btnText.textContent = 'Extrayendo coordenadas...';
+                btnIcon.style.display = 'none';
+
+                // Llamar al proxy (tarda aprox 1-2 segundos)
+                destino = await resolverEnlaceCorto(input);
+
+                // UI: Restaurar el botón original
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Abrir Navegación';
+                btnIcon.style.display = 'inline-block';
+            } else {
+                // Extracción inmediata si son coordenadas o un enlace completo ya revelado
+                destino = extraerCoordenadas(input);
+            }
 
             if (!destino) {
-                mostrarMensaje('Por favor, ingresa las coordenadas de destino.');
+                mostrarMensaje('No pudimos detectar coordenadas válidas en este enlace.');
                 return;
             }
 
-            // Validar de forma básica que parece una coordenada (contiene una coma)
-            if (!destino.includes(',')) {
-                mostrarMensaje('Formato inválido. Usa latitud, longitud (Ej: -17.78, -63.18)');
-                return;
-            }
-
-            // Generamos el GeoLink
-            // Al usar q=lat,lng nos aseguramos de que la app ponga un pin exacto
+            // Generamos el enlace nativo e invocamos el GPS (Waze, Maps, etc.)
             const geoUrl = `geo:${destino}?q=${destino}`;
-            
-            // Redirigimos a la app
             window.location.href = geoUrl;
         }
     </script>
