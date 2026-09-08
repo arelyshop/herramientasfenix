@@ -60,7 +60,6 @@
             max-width: 100%;  
             height: auto;
             width: auto;
-            /* Se removió "aspect-ratio: 1 / 1;" para permitir cambios dinámicos */
             object-fit: contain;
             transition: aspect-ratio 0.2s ease-in-out;
         }
@@ -151,7 +150,7 @@
                 <div class="absolute inset-0 bg-[image:radial-gradient(#475569_1px,transparent_1px)] bg-[size:10px_10px] opacity-20 z-0 rounded-lg"></div>
                 <img id="webpPreviewImage" src="" alt="Vista previa" class="max-w-full max-h-[300px] object-contain z-10 relative rounded-lg shadow-md">
             </div>
-            <p class="text-[10px] text-slate-500 mb-4 text-center italic">La imagen se guardará con su tamaño original.</p>
+            <p class="text-[10px] text-slate-500 mb-4 text-center italic">La imagen se guardará con su tamaño original optimizado.</p>
             <div class="flex space-x-2 w-full">
                 <button id="cancelWebP" class="flex-1 px-4 py-2 bg-slate-800 text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">Cancelar</button>
                 <button id="downloadWebP" class="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-xl font-bold text-sm hover:bg-indigo-600 transition-all">Descargar WebP</button>
@@ -261,9 +260,17 @@
                 </label>
                 
                 <div class="space-y-2 border-t border-slate-800 pt-4 pb-4">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest text-center">Tamaño del Lienzo</p>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1 tracking-widest text-center">Mesa de Trabajo</p>
                     <div class="grid grid-cols-2 gap-2 mb-4">
-                        <button onclick="setCanvasSize(1000, 1000)" id="btn-size-1000" class="flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all">
+                        <button onclick="setCanvasSize(1500, 1500)" id="btn-size-1500" class="flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all">
+                            <span class="text-[10px] font-bold text-white">1:1 HD</span>
+                            <span class="text-[8px] text-slate-500 uppercase tracking-tighter">1500x1500</span>
+                        </button>
+                        <button onclick="setCanvasSize(1125, 1500)" id="btn-size-1125" class="flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all">
+                            <span class="text-[10px] font-bold text-white">3:4 HD</span>
+                            <span class="text-[8px] text-slate-500 uppercase tracking-tighter">1125x1500</span>
+                        </button>
+                        <button onclick="setCanvasSize(1000, 1000)" id="btn-size-1000" class="flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all">
                             <span class="text-[10px] font-bold text-white">1:1</span>
                             <span class="text-[8px] text-slate-500 uppercase tracking-tighter">1000x1000</span>
                         </button>
@@ -272,7 +279,6 @@
                             <span class="text-[8px] text-slate-500 uppercase tracking-tighter">750x1000</span>
                         </button>
                     </div>
-                    <!-- Modificado a 3 columnas para incluir WebP -->
                     <div class="grid grid-cols-3 gap-2">
                         <button onclick="exportImage('png')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
                             <span class="text-[10px] font-bold text-rose-400">PNG</span>
@@ -280,9 +286,8 @@
                         </button>
                         <button onclick="exportImage('jpeg')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
                             <span class="text-[10px] font-bold text-emerald-400">JPG</span>
-                            <span class="text-[8px] text-slate-500 uppercase tracking-tighter">Blanco</span>
+                            <span class="text-[8px] text-slate-500 uppercase tracking-tighter">Ligero</span>
                         </button>
-                        <!-- Nuevo botón WebP -->
                         <button onclick="exportImage('webp')" class="flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-all">
                             <span class="text-[10px] font-bold text-indigo-400">WebP</span>
                             <span class="text-[8px] text-slate-500 uppercase tracking-tighter">Optim.</span>
@@ -306,7 +311,7 @@
         <!-- Área Central -->
         <main id="canvas-dropzone" class="canvas-area relative">
             <div id="canvas-wrapper">
-                <canvas id="mainCanvas" width="1000" height="1000"></canvas>
+                <canvas id="mainCanvas" width="1500" height="1500"></canvas>
                 <div id="selection-guide"></div>
             </div>
         </main>
@@ -471,6 +476,7 @@
         </aside>
     </div>
 
+    <!-- Mensaje Toast -->
     <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 px-6 py-3 rounded-full text-sm font-medium shadow-2xl transition-all opacity-0 pointer-events-none z-50">Mensaje</div>
 
     <script>
@@ -494,8 +500,9 @@
         const maskBuffer = document.createElement('canvas');
         const mbfCtx = maskBuffer.getContext('2d');
 
-        let CANVAS_WIDTH = 1000;
-        let CANVAS_HEIGHT = 1000;
+        // VALORES POR DEFECTO ACTUALIZADOS A 1500x1500
+        let CANVAS_WIDTH = 1500;
+        let CANVAS_HEIGHT = 1500;
 
         let layers = [];
         let selectedLayerIds = []; // Array para selección múltiple
@@ -562,8 +569,13 @@
             layers = state.layers.map(cloneLayer); CANVAS_WIDTH = state.width; CANVAS_HEIGHT = state.height;
             canvas.width = CANVAS_WIDTH; canvas.height = CANVAS_HEIGHT; canvas.style.aspectRatio = `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`;
             activeLayerId = state.activeLayerId; selectedLayerIds = [...state.selectedLayerIds];
-            document.getElementById('btn-size-1000').className = CANVAS_WIDTH === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
-            document.getElementById('btn-size-750').className = CANVAS_WIDTH === 750 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            
+            // Actualización de estilos de botones de tamaño
+            document.getElementById('btn-size-1500').className = CANVAS_WIDTH === 1500 && CANVAS_HEIGHT === 1500 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-1125').className = CANVAS_WIDTH === 1125 && CANVAS_HEIGHT === 1500 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-1000').className = CANVAS_WIDTH === 1000 && CANVAS_HEIGHT === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-750').className = CANVAS_WIDTH === 750 && CANVAS_HEIGHT === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            
             updateUI(); render(); updateHistoryUI();
         }
 
@@ -673,8 +685,10 @@
             canvas.height = h;
             canvas.style.aspectRatio = `${w} / ${h}`; // Fuerza al CSS a mostrar la nueva proporción
 
-            document.getElementById('btn-size-1000').className = w === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
-            document.getElementById('btn-size-750').className = w === 750 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-1500').className = w === 1500 && h === 1500 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-1125').className = w === 1125 && h === 1500 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-1000').className = w === 1000 && h === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
+            document.getElementById('btn-size-750').className = w === 750 && h === 1000 ? 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-rose-500 rounded-xl transition-all' : 'flex flex-col items-center justify-center p-2 bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl transition-all';
 
             render();
             showToast(`Lienzo ajustado a ${w}x${h}`);
@@ -1495,7 +1509,8 @@
                             tCtx.imageSmoothingQuality = 'high';
                             tCtx.drawImage(img, 0, 0);
                             
-                            const webpDataUrl = tempCanvas.toDataURL('image/webp', 1.0); // Calidad 100%
+                            // Ajustado a 0.92 (92%) para optimizar sin perder calidad
+                            const webpDataUrl = tempCanvas.toDataURL('image/webp', 0.92); 
                             const originalName = file.name.replace(/\.[^/.]+$/, "");
                             
                             // Mostrar modal
@@ -1526,7 +1541,8 @@
                                 const originalName = file.name.replace(/\.[^/.]+$/, "");
                                 const link = document.createElement('a');
                                 link.download = `${originalName}.webp`;
-                                link.href = tempCanvas.toDataURL('image/webp', 1.0); // Calidad 100%
+                                // Ajustado a 0.92 (92%) para optimizar sin perder calidad
+                                link.href = tempCanvas.toDataURL('image/webp', 0.92); 
                                 link.click();
                             };
                             img.src = ev.target.result;
@@ -1697,7 +1713,10 @@
             setTimeout(() => { 
                 const link = document.createElement('a'); 
                 const mimeType = format === 'jpeg' ? 'image/jpeg' : (format === 'webp' ? 'image/webp' : 'image/png');
-                const quality = 1.0; // Calidad al 100% sin compresión destructiva
+                
+                // AJUSTE CLAVE: Reducimos la "pesadez" del archivo configurando a 0.92 (92%)
+                // PNG ignora esto, pero para JPEG y WebP significa un archivo súper ligero sin que el ojo note compresión.
+                const quality = 0.92; 
 
                 link.download = `arelyshop-photo-${Date.now()}.${format}`; 
                 link.href = canvas.toDataURL(mimeType, quality); 
