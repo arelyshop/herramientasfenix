@@ -34,7 +34,6 @@
             .note-section {
                 height: 93.133mm !important;
                 width: 215.9mm !important;
-                border-bottom: 1px dashed #ccc;
                 padding: 5mm;
                 box-sizing: border-box;
                 display: flex;
@@ -44,7 +43,9 @@
                 page-break-inside: avoid;
                 overflow: hidden;
             }
-            .note-section:last-child { border-bottom: none; }
+            /* Lógica de Líneas Divisorias en Impresión */
+            .show-lines .note-section { border-bottom: 1px dashed #ccc; }
+            .note-section:last-child, .show-lines .note-section:last-child { border-bottom: none !important; }
             .inner-box { width: 88% !important; max-height: 85mm !important; }
         }
 
@@ -62,7 +63,6 @@
         .note-preview {
             height: 33.3333%;
             width: 100%;
-            border-bottom: 1px dashed #eee;
             padding: 1rem;
             position: relative;
             box-sizing: border-box;
@@ -70,6 +70,10 @@
             justify-content: center;
             align-items: center;
         }
+        /* Lógica de Líneas Divisorias en Pantalla */
+        .show-lines .note-preview { border-bottom: 1px dashed #eee; }
+        .note-preview:last-child, .show-lines .note-preview:last-child { border-bottom: none !important; }
+
         .inner-box { 
             width: 88%; 
             height: auto; 
@@ -82,7 +86,6 @@
         .pdf-section {
             height: 93.133mm; 
             width: 215.9mm;
-            border-bottom: 1px dashed #ccc;
             padding: 5mm;
             box-sizing: border-box;
             display: flex;
@@ -91,6 +94,9 @@
             align-items: center;
             background: white;
         }
+        /* Lógica de Líneas Divisorias en PDF */
+        .show-lines .pdf-section { border-bottom: 1px dashed #ccc; }
+        .pdf-section:last-child, .show-lines .pdf-section:last-child { border-bottom: none !important; }
 
         /* Menú de destinos */
         .dropdown-content {
@@ -114,7 +120,7 @@
         .dropdown-content button:hover { background-color: #f3f4f6; }
         .show { display: block; }
 
-        /* Interruptor de visibilidad */
+        /* Interruptor de visibilidad y líneas */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
@@ -138,14 +144,28 @@
         </header>
 
         <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-800">
+            <!-- Contenedor dinámico de envíos -->
             <div id="inputsContainer" class="space-y-6"></div>
 
             <div class="flex flex-wrap items-center justify-between gap-4 border-t mt-8 pt-6">
-                <button onclick="addNoteSlot()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-                    Añadir otro envío
-                </button>
+                <!-- Zona izquierda de la barra de acciones -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <button onclick="addNoteSlot()" id="btnAdd" class="bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold py-2.5 px-6 rounded-lg flex items-center gap-2 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+                        Añadir otro envío
+                    </button>
+                    
+                    <!-- NUEVO INTERRUPTOR: Líneas de Corte -->
+                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 shadow-sm">
+                        <span class="text-xs font-bold text-gray-600 uppercase">Líneas de corte</span>
+                        <label class="switch">
+                            <input type="checkbox" id="toggleLines" checked onchange="updatePreview()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
 
+                <!-- Zona derecha de la barra de acciones -->
                 <div class="flex gap-4">
                     <button onclick="downloadPDF()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-md transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-280 160-160-56-56-64 62v-166h-80v166l-64-62-56 56 160 160ZM240-80q-33 0-56.5-23.5T160-160v-480l240-240h320q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80H240Zm0-80h480v-640H434L240-606v446Zm0 0h480-480Z"/></svg>
@@ -161,10 +181,11 @@
     </div>
 
     <div class="preview-container flex justify-center py-10 no-print">
-        <div class="page-shadow" id="printableArea"></div>
+        <!-- El contenedor tendrá la clase "show-lines" si el interruptor está activado -->
+        <div class="page-shadow show-lines" id="printableArea"></div>
     </div>
 
-    <div id="printLayout" class="hidden"></div>
+    <div id="printLayout" class="hidden show-lines"></div>
 
     <script>
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
@@ -224,6 +245,7 @@
             return div;
         }
 
+        // Funciones de control de estado y botones
         function addNoteSlot() {
             if (slotsCount < 3) { slotsCount++; renderAll(); updatePreview(); }
             updateAddButton();
@@ -332,6 +354,18 @@
 
         function updatePreview() {
             const container = document.getElementById('printableArea');
+            const layout = document.getElementById('printLayout');
+            
+            // Verificamos si las líneas están habilitadas
+            const showLines = document.getElementById('toggleLines').checked;
+            if (showLines) {
+                container.classList.add('show-lines');
+                layout.classList.add('show-lines');
+            } else {
+                container.classList.remove('show-lines');
+                layout.classList.remove('show-lines');
+            }
+
             container.innerHTML = "";
             const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
@@ -344,7 +378,6 @@
                 container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, isHidden);
             }
 
-            const layout = document.getElementById('printLayout');
             layout.innerHTML = container.innerHTML;
             layout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
         }
@@ -355,7 +388,14 @@
             const element = document.createElement('div');
             element.style.width = '215.9mm';
             element.innerHTML = layout.innerHTML;
+            
+            // Re-asignamos las clases PDF y si es necesario las líneas
+            const showLines = document.getElementById('toggleLines').checked;
+            if (showLines) {
+                element.classList.add('show-lines');
+            }
             element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
+            
             const opt = { 
                 margin: 0, filename: 'encomiendas_arelyshop.pdf', image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true }, 
