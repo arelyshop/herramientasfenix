@@ -44,8 +44,7 @@
                 overflow: hidden;
             }
             /* Lógica de Líneas Divisorias en Impresión */
-            .show-lines .note-section { border-bottom: 1px dashed #ccc; }
-            .note-section:last-child, .show-lines .note-section:last-child { border-bottom: none !important; }
+            .note-section.has-cut-line { border-bottom: 1px dashed #ccc !important; }
             .inner-box { width: 88% !important; max-height: 85mm !important; }
         }
 
@@ -71,8 +70,7 @@
             align-items: center;
         }
         /* Lógica de Líneas Divisorias en Pantalla */
-        .show-lines .note-preview { border-bottom: 1px dashed #eee; }
-        .note-preview:last-child, .show-lines .note-preview:last-child { border-bottom: none !important; }
+        .note-preview.has-cut-line { border-bottom: 1px dashed #ccc; }
 
         .inner-box { 
             width: 88%; 
@@ -95,8 +93,7 @@
             background: white;
         }
         /* Lógica de Líneas Divisorias en PDF */
-        .show-lines .pdf-section { border-bottom: 1px dashed #ccc; }
-        .pdf-section:last-child, .show-lines .pdf-section:last-child { border-bottom: none !important; }
+        .pdf-section.has-cut-line { border-bottom: 1px dashed #ccc !important; }
 
         /* Menú de destinos */
         .dropdown-content {
@@ -154,15 +151,6 @@
                         <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                         Añadir otro envío
                     </button>
-                    
-                    <!-- NUEVO INTERRUPTOR: Líneas de Corte -->
-                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 shadow-sm">
-                        <span class="text-xs font-bold text-gray-600 uppercase">Líneas de corte</span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggleLines" checked onchange="updatePreview()">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
                 </div>
 
                 <!-- Zona derecha de la barra de acciones -->
@@ -181,11 +169,10 @@
     </div>
 
     <div class="preview-container flex justify-center py-10 no-print">
-        <!-- El contenedor tendrá la clase "show-lines" si el interruptor está activado -->
-        <div class="page-shadow show-lines" id="printableArea"></div>
+        <div class="page-shadow" id="printableArea"></div>
     </div>
 
-    <div id="printLayout" class="hidden show-lines"></div>
+    <div id="printLayout" class="hidden"></div>
 
     <script>
         const departamentos = ["LA PAZ", "SANTA CRUZ", "COCHABAMBA", "ORURO", "POTOSÍ", "TARIJA", "SUCRE", "BENI", "PANDO"];
@@ -193,9 +180,9 @@
         
         let slotsCount = 1;
         let states = [
-            { id: 0, visible: true },
-            { id: 1, visible: true },
-            { id: 2, visible: true }
+            { id: 0, visible: true, line: true },
+            { id: 1, visible: true, line: true },
+            { id: 2, visible: true, line: true }
         ];
 
         function createInputGroup(id) {
@@ -209,12 +196,21 @@
                         <span class="${active ? 'bg-blue-800' : 'bg-gray-400'} text-white text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">ENVÍO #${id + 1}</span>
                         ${id > 0 ? `<button onclick="removeSlot(${id})" class="text-red-400 hover:text-red-600 text-[10px] font-bold uppercase underline">Eliminar</button>` : ''}
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'En hoja' : 'Oculto'}</span>
-                        <label class="switch">
-                            <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
-                            <span class="slider"></span>
-                        </label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">Corte 👇</span>
+                            <label class="switch">
+                                <input type="checkbox" id="l-${id}" ${states[id].line ? 'checked' : ''} onchange="toggleLine(${id})">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">${active ? 'En hoja' : 'Oculto'}</span>
+                            <label class="switch">
+                                <input type="checkbox" id="v-${id}" ${active ? 'checked' : ''} onchange="toggleV(${id})">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 ${active ? '' : 'pointer-events-none grayscale opacity-40'}">
@@ -266,6 +262,11 @@
             updatePreview();
         }
 
+        function toggleLine(id) {
+            states[id].line = document.getElementById(`l-${id}`).checked;
+            updatePreview();
+        }
+
         function toggleD(e, id) {
             e.stopPropagation();
             const list = document.getElementById(`drop-${id}`);
@@ -307,9 +308,11 @@
             }
         }
 
-        function generateNoteHTML(nombre, cel, ci, destino, fecha, isHidden) {
+        function generateNoteHTML(nombre, cel, ci, destino, fecha, isHidden, hasLine) {
+            const lineClass = hasLine ? 'has-cut-line' : '';
+
             if (isHidden) {
-                return `<div class="note-preview"><div class="inner-box border-4 border-transparent"></div></div>`;
+                return `<div class="note-preview ${lineClass}"><div class="inner-box border-4 border-transparent"></div></div>`;
             }
 
             const n = nombre.trim() || "N/A";
@@ -318,7 +321,7 @@
             const l = destino.trim() || "N/A";
 
             return `
-                <div class="note-preview">
+                <div class="note-preview ${lineClass}">
                     <div class="inner-box border-4 border-blue-900 p-5 flex flex-col justify-between rounded-xl bg-white shadow-sm">
                         <div class="flex justify-between items-start mb-1">
                             <h2 class="text-3xl font-black text-blue-900 italic uppercase tracking-tighter">Arelyshop.com</h2>
@@ -356,16 +359,6 @@
             const container = document.getElementById('printableArea');
             const layout = document.getElementById('printLayout');
             
-            // Verificamos si las líneas están habilitadas
-            const showLines = document.getElementById('toggleLines').checked;
-            if (showLines) {
-                container.classList.add('show-lines');
-                layout.classList.add('show-lines');
-            } else {
-                container.classList.remove('show-lines');
-                layout.classList.remove('show-lines');
-            }
-
             container.innerHTML = "";
             const fecha = new Date().toLocaleDateString('es-BO', {day: '2-digit', month: '2-digit', year: 'numeric'});
             
@@ -375,11 +368,15 @@
                 const ic = document.getElementById(`c-${i}`)?.value.toUpperCase() || "";
                 const l = document.getElementById(`d-${i}`)?.value.toUpperCase() || "";
                 const isHidden = (i >= slotsCount) || !states[i].visible;
-                container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, isHidden);
+                const hasLine = (i < slotsCount) ? states[i].line : false; // Por defecto sin línea si no se usa el slot
+                container.innerHTML += generateNoteHTML(n, t, ic, l, fecha, isHidden, hasLine);
             }
 
             layout.innerHTML = container.innerHTML;
-            layout.querySelectorAll('.note-preview').forEach(div => div.className = 'note-section');
+            layout.querySelectorAll('.note-preview').forEach(div => {
+                const hasCut = div.classList.contains('has-cut-line') ? ' has-cut-line' : '';
+                div.className = 'note-section' + hasCut;
+            });
         }
 
         function downloadPDF() {
@@ -389,12 +386,10 @@
             element.style.width = '215.9mm';
             element.innerHTML = layout.innerHTML;
             
-            // Re-asignamos las clases PDF y si es necesario las líneas
-            const showLines = document.getElementById('toggleLines').checked;
-            if (showLines) {
-                element.classList.add('show-lines');
-            }
-            element.querySelectorAll('.note-section').forEach(s => s.className = 'pdf-section');
+            element.querySelectorAll('.note-section').forEach(s => {
+                const hasCut = s.classList.contains('has-cut-line') ? ' has-cut-line' : '';
+                s.className = 'pdf-section' + hasCut;
+            });
             
             const opt = { 
                 margin: 0, filename: 'encomiendas_arelyshop.pdf', image: { type: 'jpeg', quality: 0.98 }, 
