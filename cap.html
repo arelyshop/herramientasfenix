@@ -1,0 +1,315 @@
+```html
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapSub Studio — Subtítulos Tipo CapCut con IA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter para UI y fuentes populares de CapCut para subtítulos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Inter:wght@400;500;600;700&family=Montserrat:wght@800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        studio: {
+                            bg: '#0B0D12',
+                            panel: '#131620',
+                            card: '#1A1E2B',
+                            border: '#262C3D',
+                            accent: '#00E5FF',
+                            purple: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos personalizados para scrollbars y controles deslizantes */
+        body {
+            background-color: #0B0D12;
+            color: #F3F4F6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131620;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D3548;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #262C3D;
+            height: 6px;
+            border-radius: 9999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00E5FF;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .preset-active {
+            border-color: #00E5FF !important;
+            box-shadow: 0 0 0 1px #00E5FF, 0 4px 20px rgba(0, 229, 255, 0.15);
+        }
+
+        .glass-overlay {
+            background: rgba(11, 13, 18, 0.85);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- Barra de Navegación Superior -->
+    <header class="sticky top-0 z-40 bg-studio-panel/95 backdrop-blur border-b border-studio-border px-4 py-3">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Logo -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-closed-captioning text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-none">CapSub <span class="text-cyan-400">Studio</span></h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Subtítulos dinámicos con IA</p>
+                </div>
+            </div>
+
+            <!-- Acciones principales -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <label for="videoInput" class="cursor-pointer inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-xs sm:text-sm font-medium text-slate-200 transition">
+                    <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
+                    <span>Subir Video</span>
+                </label>
+                <input type="file" id="videoInput" accept="video/*" class="hidden">
+
+                <button id="btnDemo" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-xs sm:text-sm font-medium text-slate-300 transition" title="Cargar un video de prueba con subtítulos">
+                    <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i>
+                    <span class="hidden md:inline">Probar Demo</span>
+                </button>
+
+                <button id="btnExportSRT" disabled class="disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-xs sm:text-sm font-medium text-slate-200 transition">
+                    <i class="fa-solid fa-file-lines text-emerald-400"></i>
+                    <span class="hidden sm:inline">.SRT</span>
+                </button>
+
+                <button id="btnExportVideo" disabled class="disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Exportar Video</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Selector de Pestañas para Móviles -->
+    <div class="lg:hidden flex border-b border-studio-border bg-studio-panel sticky top-[61px] z-30">
+        <button data-tab="subtitles" class="mobile-tab-btn flex-1 py-3 text-xs font-semibold text-cyan-400 border-b-2 border-cyan-400 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-align-left"></i> Subtítulos & IA
+        </button>
+        <button data-tab="styles" class="mobile-tab-btn flex-1 py-3 text-xs font-semibold text-slate-400 border-b-2 border-transparent flex items-center justify-center gap-2">
+            <i class="fa-solid fa-palette"></i> Estilo CapCut
+        </button>
+    </div>
+
+    <!-- Área Principal del Editor -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        <!-- COLUMNA CENTRAL (en móvil va primero para ver siempre el video): Vista Previa y Controles -->
+        <section class="lg:col-span-5 lg:order-2 flex flex-col gap-3">
+            <!-- Contenedor del Lienzo (Canvas) -->
+            <div id="dropZone" class="relative w-full bg-black rounded-2xl border-2 border-dashed border-studio-border overflow-hidden flex items-center justify-center min-h-[360px] sm:min-h-[460px] lg:h-[600px] shadow-2xl transition-colors">
+                
+                <!-- Estado Vacío (Sin Video) -->
+                <div id="emptyState" class="text-center p-6 max-w-sm">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-studio-card border border-studio-border flex items-center justify-center text-cyan-400 text-2xl shadow-inner">
+                        <i class="fa-solid fa-film"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-white mb-1">Sube tu video aquí</h2>
+                    <p class="text-xs sm:text-sm text-slate-400 mb-5">Arrastra y suelta un archivo MP4, MOV o WebM, o prueba nuestra demostración interactiva.</p>
+                    <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+                        <label for="videoInput" class="cursor-pointer px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Elegir Archivo
+                        </label>
+                        <button id="btnDemoEmpty" class="px-4 py-2.5 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-white font-medium text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play text-violet-400"></i> Ver Demo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Elemento de video oculto (fuente) y Canvas visible -->
+                <video id="sourceVideo" class="hidden" playsinline crossorigin="anonymous"></video>
+                <canvas id="previewCanvas" class="hidden max-w-full max-h-full object-contain cursor-pointer rounded-xl"></canvas>
+
+                <!-- Overlay de Exportación -->
+                <div id="exportOverlay" class="hidden absolute inset-0 glass-overlay z-20 flex flex-col items-center justify-center p-6 text-center">
+                    <div class="w-14 h-14 rounded-full border-4 border-studio-border border-t-cyan-400 animate-spin mb-4"></div>
+                    <h3 class="text-lg font-bold text-white mb-1">Renderizando Video...</h3>
+                    <p class="text-xs text-slate-400 mb-4 max-w-xs">Estamos grabando tus subtítulos tipo CapCut sobre el video en tiempo real. No cierres esta pestaña.</p>
+                    <div class="w-full max-w-xs bg-studio-card rounded-full h-2.5 overflow-hidden border border-studio-border">
+                        <div id="exportProgressBar" class="bg-gradient-to-r from-cyan-400 to-violet-500 h-full w-0 transition-all duration-150"></div>
+                    </div>
+                    <span id="exportProgressText" class="text-xs font-mono text-cyan-400 mt-2">0%</span>
+                    <button id="btnCancelExport" class="mt-5 px-4 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium border border-red-500/30 transition">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controles de Reproducción y Línea de Tiempo -->
+            <div class="bg-studio-panel border border-studio-border rounded-2xl p-3.5 flex flex-col gap-3">
+                <!-- Barra de progreso interactiva -->
+                <div class="flex items-center gap-3">
+                    <span id="currentTimeLabel" class="text-xs font-mono text-cyan-400 w-11 text-right">00:00</span>
+                    <div class="relative flex-1 flex items-center">
+                        <input type="range" id="seekBar" min="0" max="100" step="0.01" value="0" disabled class="w-full cursor-pointer disabled:opacity-40">
+                    </div>
+                    <span id="durationLabel" class="text-xs font-mono text-slate-400 w-11">00:00</span>
+                </div>
+
+                <!-- Botones de transporte -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <button id="btnPlayPause" disabled class="disabled:opacity-40 w-10 h-10 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center transition shadow-md shadow-cyan-500/20">
+                            <i class="fa-solid fa-play text-sm"></i>
+                        </button>
+                        <button id="btnSkipBack" disabled class="disabled:opacity-40 w-9 h-9 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-slate-300 flex items-center justify-center transition" title="-3 segundos">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                        </button>
+                        <button id="btnSkipFwd" disabled class="disabled:opacity-40 w-9 h-9 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-slate-300 flex items-center justify-center transition" title="+3 segundos">
+                            <i class="fa-solid fa-rotate-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button id="btnMute" disabled class="disabled:opacity-40 w-9 h-9 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-slate-300 flex items-center justify-center transition">
+                            <i class="fa-solid fa-volume-high text-xs"></i>
+                        </button>
+                        <span id="videoInfoBadge" class="hidden sm:inline-block text-[11px] font-mono px-2.5 py-1 rounded-lg bg-studio-card border border-studio-border text-slate-400">
+                            Sin video
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLUMNA IZQUIERDA: Generador IA y Lista de Subtítulos -->
+        <section id="panel-subtitles" class="lg:col-span-4 lg:order-1 bg-studio-panel border border-studio-border rounded-2xl flex flex-col lg:h-[710px] overflow-hidden">
+            <!-- Cabecera IA -->
+            <div class="p-4 border-b border-studio-border bg-gradient-to-b from-studio-card/80 to-transparent">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-sparkles text-cyan-400"></i> Subtítulos Automáticos IA
+                    </h2>
+                    <span id="subCountBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-studio-card border border-studio-border text-slate-400">0 bloques</span>
+                </div>
+
+                <!-- Opciones de IA -->
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <select id="aiLanguage" class="bg-studio-bg border border-studio-border rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-400">
+                        <option value="auto">Idioma: Auto-detectar</option>
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="pt">Portugués</option>
+                    </select>
+                    <label class="flex items-center justify-center gap-2 bg-studio-bg border border-studio-border rounded-xl px-3 py-2 text-xs text-slate-300 cursor-pointer select-none">
+                        <input type="checkbox" id="aiEmojis" checked class="accent-cyan-400 rounded">
+                        <span>Incluir Emojis 🔥</span>
+                    </label>
+                </div>
+
+                <button id="btnGenerateAI" disabled class="w-full disabled:opacity-40 disabled:cursor-not-allowed py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-semibold text-xs sm:text-sm shadow-lg shadow-violet-500/20 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span id="btnGenerateAIText">Auto-generar Subtítulos con IA</span>
+                </button>
+                <p id="aiStatusText" class="hidden text-[11px] text-cyan-300 text-center mt-2 animate-pulse"></p>
+            </div>
+
+            <!-- Lista de Subtítulos Editables -->
+            <div id="subtitlesList" class="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[260px]">
+                <div class="text-center py-10 px-4 text-slate-500 text-xs">
+                    <i class="fa-regular fa-closed-captioning text-3xl mb-2 opacity-40 block"></i>
+                    Sube un video y presiona <strong>"Auto-generar Subtítulos con IA"</strong> o añade subtítulos manualmente abajo.
+                </div>
+            </div>
+
+            <!-- Footer para añadir subtítulo manual -->
+            <div class="p-3 border-t border-studio-border bg-studio-card/50 flex gap-2">
+                <button id="btnAddSub" disabled class="disabled:opacity-40 flex-1 py-2 px-3 rounded-xl bg-studio-card hover:bg-slate-800 border border-studio-border text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus text-cyan-400"></i> Añadir Bloque
+                </button>
+                <button id="btnClearSubs" disabled class="disabled:opacity-40 py-2 px-3 rounded-xl bg-studio-card hover:bg-red-500/20 border border-studio-border hover:border-red-500/40 text-xs font-medium text-slate-400 hover:text-red-300 transition" title="Borrar todos los subtítulos">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- COLUMNA DERECHA: Estilos Tipo CapCut -->
+        <section id="panel-styles" class="hidden lg:flex lg:col-span-3 lg:order-3 bg-studio-panel border border-studio-border rounded-2xl flex-col lg:h-[710px] overflow-hidden">
+            <div class="p-4 border-b border-studio-border">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-palette text-violet-400"></i> Plantillas Tipo CapCut
+                </h2>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-5">
+                <!-- Presets Visuales -->
+                <div>
+                    <label class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block mb-2.5">Estilos Virales</label>
+                    <div class="grid grid-cols-2 gap-2" id="presetsGrid">
+                        <!-- Hormozi Viral -->
+                        <button data-preset="hormozi" class="preset-btn preset-active p-3 rounded-xl bg-studio-card border border-studio-border hover:border-slate-500 text-center transition">
+                            <div class="text-sm font-black uppercase tracking-tight" style="font-family: 'Montserrat', sans-serif; color: #FACC15; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;">HORMOZI</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Viral Amarillo</div>
+                        </button>
+                        <!-- CapCut Pop Box -->
+                        <button data-preset="capcut_box" class="preset-btn p-3 rounded-xl bg-studio-card border border-studio-border hover:border-slate-500 text-center transition">
+                            <div class="inline-block px-2 py-0.5 rounded-md bg-violet-600 text-white text-xs font-extrabold uppercase" style="font-family: 'Poppins', sans-serif;">CAPCUT</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Caja Dinámica</div>
+                        </button>
+                        <!-- Neón TikTok -->
+                        <button data-preset="neon" class="preset-btn p-3 rounded-xl bg-studio-card border border-studio-border hover:border-slate-500 text-center transition">
+                            <div class="text-sm font-black uppercase" style="font-family: 'Montserrat', sans-serif; color: #00E5FF; text-shadow: 0 0 10px #00E5FF;">NEÓN PRO</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Brillo Cyber</div>
+                        </button>
+                        <!-- MrBeast / Comic -->
+                        <button data-preset="comic" class="preset-btn p-3 rounded-xl bg-studio-card border border-studio-border hover:border-slate-500 text-center transition">
+                            <div class="text-bas
