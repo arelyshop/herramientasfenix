@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ArelyShop Studio — Recortador 1500x1500</title>
+  <title>ArelyShop Studio — Recortador 1500x1500 y 1125x1500</title>
   <style>
     :root {
       --bg: #0f1115;
@@ -39,10 +39,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     header h1 {
-      font-size: 1rem;
+      font-size: 0.98rem;
       margin: 0;
       font-weight: 600;
       letter-spacing: 0.3px;
@@ -56,6 +57,7 @@
       border-radius: 6px;
       border: 1px solid rgba(99, 102, 241, 0.3);
       font-weight: 600;
+      white-space: nowrap;
     }
 
     main {
@@ -64,19 +66,66 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px;
-      gap: 16px;
+      padding: 14px 16px 24px;
+      gap: 12px;
       max-width: 640px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* Zona de carga / lienzo */
+    /* Selector de formato (2 paneles) */
+    .format-tabs {
+      width: 100%;
+      max-width: 460px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--panel);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .format-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .format-tab span {
+      font-size: 0.7rem;
+      font-weight: 400;
+      opacity: 0.85;
+    }
+
+    .format-tab.active {
+      background: #232836;
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Contenedor del lienzo para mantener altura cómoda en móvil */
+    .stage-wrapper {
+      width: 100%;
+      max-width: 460px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .workspace {
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      max-width: 480px;
+      max-height: 440px;
       background: #14171f;
       background-image:
         linear-gradient(45deg, #1c202b 25%, transparent 25%),
@@ -91,6 +140,13 @@
       touch-action: none;
       user-select: none;
       transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .workspace.vertical {
+      aspect-ratio: 3 / 4;
+      width: auto;
+      height: 440px;
+      max-width: 100%;
     }
 
     .workspace.dragover {
@@ -114,7 +170,6 @@
       display: block;
     }
 
-    /* Placeholder inicial */
     .drop-prompt {
       position: absolute;
       inset: 0;
@@ -123,9 +178,9 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 24px;
-      gap: 12px;
-      background: rgba(15, 17, 21, 0.75);
+      padding: 20px;
+      gap: 10px;
+      background: rgba(15, 17, 21, 0.78);
       backdrop-filter: blur(4px);
     }
 
@@ -135,13 +190,13 @@
 
     .drop-prompt p {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       color: var(--text);
     }
 
     .drop-prompt small {
       color: var(--muted);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       line-height: 1.4;
     }
 
@@ -153,17 +208,17 @@
       margin-top: 4px;
     }
 
-    /* Controles */
+    /* Panel de controles */
     .controls {
       width: 100%;
-      max-width: 480px;
+      max-width: 460px;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 14px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 11px;
     }
 
     .slider-row {
@@ -175,7 +230,7 @@
     .slider-row label {
       font-size: 0.8rem;
       color: var(--muted);
-      min-width: 44px;
+      min-width: 42px;
     }
 
     input[type="range"] {
@@ -183,12 +238,6 @@
       accent-color: var(--accent);
       height: 6px;
       cursor: pointer;
-    }
-
-    .btn-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
     }
 
     .btn-grid-3 {
@@ -202,9 +251,9 @@
       border: 1px solid var(--border);
       background: #222631;
       color: var(--text);
-      padding: 10px 12px;
+      padding: 9px 10px;
       border-radius: 9px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -212,6 +261,7 @@
       justify-content: center;
       gap: 6px;
       transition: background 0.15s, border-color 0.15s, transform 0.05s;
+      user-select: none;
     }
 
     button:hover, .file-btn:hover {
@@ -219,11 +269,11 @@
     }
 
     button:active, .file-btn:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
 
     button:disabled {
-      opacity: 0.45;
+      opacity: 0.42;
       pointer-events: none;
     }
 
@@ -243,19 +293,83 @@
       color: #6ee7b7;
     }
 
-    .download-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    /* Desplazador de precisión px a px */
+    .nudge-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #13161c;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
       gap: 8px;
-      padding-top: 4px;
-      border-top: 1px solid var(--border);
     }
+
+    .nudge-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nudge-title {
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .coords-readout {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      color: #a5b4fc;
+    }
+
+    .step-toggle {
+      display: inline-flex;
+      background: #1e222d;
+      border-radius: 7px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .step-btn {
+      padding: 3px 8px;
+      font-size: 0.7rem;
+      border: none;
+      background: transparent;
+      border-radius: 5px;
+      color: var(--muted);
+    }
+
+    .step-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 38px);
+      grid-template-rows: repeat(2, 34px);
+      gap: 4px;
+    }
+
+    .dpad button {
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      border-radius: 7px;
+    }
+
+    .dpad-up { grid-column: 2; grid-row: 1; }
+    .dpad-left { grid-column: 1; grid-row: 2; }
+    .dpad-down { grid-column: 2; grid-row: 2; }
+    .dpad-right { grid-column: 3; grid-row: 2; }
 
     .bg-picker {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
     }
 
@@ -279,6 +393,14 @@
       transform: scale(1.1);
     }
 
+    .download-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+
     .toast {
       position: fixed;
       bottom: 20px;
@@ -288,7 +410,7 @@
       color: #fff;
       padding: 10px 16px;
       border-radius: 999px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       border: 1px solid var(--border);
       box-shadow: 0 10px 25px rgba(0,0,0,0.4);
       opacity: 0;
@@ -307,22 +429,36 @@
 
   <header>
     <h1>ArelyShop Crop Studio</h1>
-    <span class="badge">1500 × 1500 px</span>
+    <span class="badge" id="dimBadge">1500 × 1500 px</span>
   </header>
 
   <main>
-    <div class="workspace" id="workspace">
-      <canvas id="previewCanvas" width="900" height="900"></canvas>
+    <!-- Selector de 2 paneles -->
+    <div class="format-tabs" role="tablist">
+      <button type="button" class="format-tab active" data-w="1500" data-h="1500" id="tabSquare">
+        Cuadrado (1:1)
+        <span>1500 × 1500 px</span>
+      </button>
+      <button type="button" class="format-tab" data-w="1125" data-h="1500" id="tabVertical">
+        Vertical (3:4)
+        <span>1125 × 1500 px</span>
+      </button>
+    </div>
 
-      <div class="drop-prompt" id="dropPrompt">
-        <p><strong>Arrastra y suelta tu imagen aquí</strong></p>
-        <small>También puedes pegar con <b>Ctrl+V</b> o seleccionar desde tu galería</small>
-        <div class="upload-actions">
-          <label class="file-btn btn-primary">
-            Subir imagen
-            <input type="file" id="fileInput" accept="image/*" hidden />
-          </label>
-          <button type="button" id="pasteBtn">Pegar imagen</button>
+    <div class="stage-wrapper">
+      <div class="workspace" id="workspace">
+        <canvas id="previewCanvas" width="900" height="900"></canvas>
+
+        <div class="drop-prompt" id="dropPrompt">
+          <p><strong>Arrastra y suelta tu imagen aquí</strong></p>
+          <small>Pega con <b>Ctrl+V</b> o selecciona desde tu galería</small>
+          <div class="upload-actions">
+            <label class="file-btn btn-primary">
+              Subir imagen
+              <input type="file" id="fileInput" accept="image/*" hidden />
+            </label>
+            <button type="button" id="pasteBtn">Pegar imagen</button>
+          </div>
         </div>
       </div>
     </div>
@@ -331,11 +467,11 @@
       <div class="slider-row">
         <label for="zoomSlider">Zoom</label>
         <input type="range" id="zoomSlider" min="0.1" max="5" step="0.005" value="1" disabled />
-        <span id="zoomLabel" style="font-size:0.8rem; min-width:42px; text-align:right;">100%</span>
+        <span id="zoomLabel" style="font-size:0.78rem; min-width:42px; text-align:right;">100%</span>
       </div>
 
       <div class="btn-grid-3">
-        <button type="button" id="fillBtn" disabled title="Rellenar todo el cuadrado sin bordes">
+        <button type="button" id="fillBtn" disabled title="Rellenar pantalla completa sin espacios">
           Rellenar todo
         </button>
         <button type="button" id="fitBtn" disabled title="Encajar imagen completa dentro del cuadro">
@@ -346,8 +482,27 @@
         </button>
       </div>
 
+      <!-- Desplazador de precisión px a px -->
+      <div class="nudge-box">
+        <div class="nudge-info">
+          <span class="nudge-title">Mover precisión (flechas):</span>
+          <div class="step-toggle">
+            <button type="button" class="step-btn active" data-step="1" id="step1Btn">1 px</button>
+            <button type="button" class="step-btn" data-step="10" id="step10Btn">10 px</button>
+          </div>
+          <span class="coords-readout" id="coordsReadout">X: 0 px | Y: 0 px</span>
+        </div>
+
+        <div class="dpad">
+          <button type="button" class="dpad-up" data-dx="0" data-dy="-1" disabled aria-label="Mover arriba">▲</button>
+          <button type="button" class="dpad-left" data-dx="-1" data-dy="0" disabled aria-label="Mover izquierda">◀</button>
+          <button type="button" class="dpad-down" data-dx="0" data-dy="1" disabled aria-label="Mover abajo">▼</button>
+          <button type="button" class="dpad-right" data-dx="1" data-dy="0" disabled aria-label="Mover derecha">▶</button>
+        </div>
+      </div>
+
       <div class="bg-picker">
-        <span>Fondo (si sobra espacio):</span>
+        <span>Fondo:</span>
         <div class="swatches">
           <button type="button" class="swatch active" data-bg="#ffffff" style="background:#ffffff" title="Blanco"></button>
           <button type="button" class="swatch" data-bg="#000000" style="background:#000000" title="Negro"></button>
@@ -361,10 +516,10 @@
 
       <div class="download-row">
         <button type="button" id="dlWebp" class="btn-primary" disabled>
-          Descargar WebP (Sin pérdida)
+          WebP (Sin pérdida)
         </button>
         <button type="button" id="dlJpg" disabled>
-          Descargar JPG (Máx. calidad)
+          JPG (Máx. calidad)
         </button>
       </div>
     </div>
@@ -373,14 +528,17 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const OUTPUT_SIZE = 1500;
-    const PREVIEW_SIZE = 900;
-    const SNAP_THRESHOLD = 14; // píxeles en escala de vista previa
+    let outputW = 1500;
+    let outputH = 1500;
+    let previewW = 900;
+    let previewH = 900;
+    const SNAP_THRESHOLD = 14;
 
     const workspace = document.getElementById('workspace');
     const dropPrompt = document.getElementById('dropPrompt');
     const canvas = document.getElementById('previewCanvas');
     const ctx = canvas.getContext('2d');
+    const dimBadge = document.getElementById('dimBadge');
 
     const fileInput = document.getElementById('fileInput');
     const replaceInput = document.getElementById('replaceInput');
@@ -392,15 +550,19 @@
     const snapToggle = document.getElementById('snapToggle');
     const dlWebp = document.getElementById('dlWebp');
     const dlJpg = document.getElementById('dlJpg');
+    const coordsReadout = document.getElementById('coordsReadout');
+    const dpadButtons = document.querySelectorAll('.dpad button');
     const toast = document.getElementById('toast');
 
     let img = null;
+    // Coordenadas guardadas en píxeles reales de salida (1500x1500 o 1125x1500)
     let imgX = 0;
     let imgY = 0;
-    let scale = 1;
+    let scale = 1; // escala relativa a outputW/outputH
     let baseCoverScale = 1;
     let snapEnabled = true;
     let bgColor = '#ffffff';
+    let nudgeStep = 1;
 
     let activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
 
@@ -410,6 +572,34 @@
       clearTimeout(toast._t);
       toast._t = setTimeout(() => toast.classList.remove('show'), 2400);
     }
+
+    function updateCoordsReadout() {
+      coordsReadout.textContent = `X: ${Math.round(imgX)} px | Y: ${Math.round(imgY)} px`;
+    }
+
+    // Cambio entre panel 1500x1500 y 1125x1500
+    document.querySelectorAll('.format-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        outputW = parseInt(tab.dataset.w, 10);
+        outputH = parseInt(tab.dataset.h, 10);
+        previewH = 900;
+        previewW = Math.round(900 * (outputW / outputH));
+
+        canvas.width = previewW;
+        canvas.height = previewH;
+        workspace.classList.toggle('vertical', outputW !== outputH);
+        dimBadge.textContent = `${outputW} × ${outputH} px`;
+
+        if (img) {
+          fillCanvas();
+        } else {
+          render();
+        }
+      });
+    });
 
     function loadImageFromBlob(blob) {
       if (!blob || !blob.type.startsWith('image/')) {
@@ -428,6 +618,7 @@
         fitBtn.disabled = false;
         dlWebp.disabled = false;
         dlJpg.disabled = false;
+        dpadButtons.forEach(b => b.disabled = false);
 
         fillCanvas();
         URL.revokeObjectURL(url);
@@ -435,13 +626,13 @@
       image.src = url;
     }
 
-    // Rellenar pantalla completa (1500x1500 sin espacios vacíos)
+    // Rellenar pantalla completa sin espacios vacíos
     function fillCanvas() {
       if (!img) return;
-      baseCoverScale = Math.max(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      baseCoverScale = Math.max(outputW / img.width, outputH / img.height);
       scale = baseCoverScale;
-      imgX = (PREVIEW_SIZE - img.width * scale) / 2;
-      imgY = (PREVIEW_SIZE - img.height * scale) / 2;
+      imgX = (outputW - img.width * scale) / 2;
+      imgY = (outputH - img.height * scale) / 2;
       syncSlider();
       clearGuides();
       render();
@@ -450,17 +641,17 @@
     // Encajar imagen completa dentro del cuadro
     function fitCanvas() {
       if (!img) return;
-      const fitScale = Math.min(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      const fitScale = Math.min(outputW / img.width, outputH / img.height);
       scale = fitScale;
-      imgX = (PREVIEW_SIZE - img.width * scale) / 2;
-      imgY = (PREVIEW_SIZE - img.height * scale) / 2;
+      imgX = (outputW - img.width * scale) / 2;
+      imgY = (outputH - img.height * scale) / 2;
       syncSlider();
       clearGuides();
       render();
     }
 
     function syncSlider() {
-      const minS = Math.min(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height) * 0.5;
+      const minS = Math.min(outputW / img.width, outputH / img.height) * 0.4;
       const maxS = Math.max(baseCoverScale * 4, 3);
       zoomSlider.min = minS.toFixed(4);
       zoomSlider.max = maxS.toFixed(4);
@@ -472,43 +663,34 @@
       activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
     }
 
-    // Lógica de imán magnético a bordes y centro
+    // Imán magnético en espacio de salida (1500 / 1125 px)
     function applySnapping(x, y, w, h) {
       clearGuides();
       if (!snapEnabled) return { x, y };
 
+      const thresh = SNAP_THRESHOLD * (outputH / previewH);
       let snappedX = x;
       let snappedY = y;
 
-      // Borde izquierdo (0)
-      if (Math.abs(x) < SNAP_THRESHOLD) {
+      if (Math.abs(x) < thresh) {
         snappedX = 0;
         activeGuides.left = true;
-      }
-      // Borde derecho (PREVIEW_SIZE)
-      else if (Math.abs((x + w) - PREVIEW_SIZE) < SNAP_THRESHOLD) {
-        snappedX = PREVIEW_SIZE - w;
+      } else if (Math.abs((x + w) - outputW) < thresh) {
+        snappedX = outputW - w;
         activeGuides.right = true;
-      }
-      // Centro horizontal
-      else if (Math.abs((x + w / 2) - PREVIEW_SIZE / 2) < SNAP_THRESHOLD) {
-        snappedX = (PREVIEW_SIZE - w) / 2;
+      } else if (Math.abs((x + w / 2) - outputW / 2) < thresh) {
+        snappedX = (outputW - w) / 2;
         activeGuides.vCenter = true;
       }
 
-      // Borde superior (0)
-      if (Math.abs(y) < SNAP_THRESHOLD) {
+      if (Math.abs(y) < thresh) {
         snappedY = 0;
         activeGuides.top = true;
-      }
-      // Borde inferior (PREVIEW_SIZE)
-      else if (Math.abs((y + h) - PREVIEW_SIZE) < SNAP_THRESHOLD) {
-        snappedY = PREVIEW_SIZE - h;
+      } else if (Math.abs((y + h) - outputH) < thresh) {
+        snappedY = outputH - h;
         activeGuides.bottom = true;
-      }
-      // Centro vertical
-      else if (Math.abs((y + h / 2) - PREVIEW_SIZE / 2) < SNAP_THRESHOLD) {
-        snappedY = (PREVIEW_SIZE - h) / 2;
+      } else if (Math.abs((y + h / 2) - outputH / 2) < thresh) {
+        snappedY = (outputH - h) / 2;
         activeGuides.hCenter = true;
       }
 
@@ -516,18 +698,28 @@
     }
 
     function render() {
-      ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+      ctx.clearRect(0, 0, previewW, previewH);
 
       if (bgColor !== 'transparent') {
         ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+        ctx.fillRect(0, 0, previewW, previewH);
       }
 
       if (!img) return;
 
+      const pRatio = previewH / outputH;
+
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, imgX, imgY, img.width * scale, img.height * scale);
+      ctx.drawImage(
+        img,
+        imgX * pRatio,
+        imgY * pRatio,
+        img.width * scale * pRatio,
+        img.height * scale * pRatio
+      );
+
+      updateCoordsReadout();
 
       // Guías visuales de alineación magnética
       ctx.save();
@@ -536,33 +728,89 @@
 
       if (activeGuides.vCenter) {
         ctx.beginPath();
-        ctx.moveTo(PREVIEW_SIZE / 2, 0);
-        ctx.lineTo(PREVIEW_SIZE / 2, PREVIEW_SIZE);
+        ctx.moveTo(previewW / 2, 0);
+        ctx.lineTo(previewW / 2, previewH);
         ctx.stroke();
       }
       if (activeGuides.hCenter) {
         ctx.beginPath();
-        ctx.moveTo(0, PREVIEW_SIZE / 2);
-        ctx.lineTo(PREVIEW_SIZE, PREVIEW_SIZE / 2);
+        ctx.moveTo(0, previewH / 2);
+        ctx.lineTo(previewW, previewH / 2);
         ctx.stroke();
       }
-      if (activeGuides.left) {
-        ctx.strokeRect(1.5, 1.5, 0, PREVIEW_SIZE - 3);
-      }
-      if (activeGuides.right) {
-        ctx.strokeRect(PREVIEW_SIZE - 1.5, 1.5, 0, PREVIEW_SIZE - 3);
-      }
-      if (activeGuides.top) {
-        ctx.strokeRect(1.5, 1.5, PREVIEW_SIZE - 3, 0);
-      }
-      if (activeGuides.bottom) {
-        ctx.strokeRect(1.5, PREVIEW_SIZE - 1.5, PREVIEW_SIZE - 3, 0);
-      }
+      if (activeGuides.left) ctx.strokeRect(1.5, 1.5, 0, previewH - 3);
+      if (activeGuides.right) ctx.strokeRect(previewW - 1.5, 1.5, 0, previewH - 3);
+      if (activeGuides.top) ctx.strokeRect(1.5, 1.5, previewW - 3, 0);
+      if (activeGuides.bottom) ctx.strokeRect(1.5, previewH - 1.5, previewW - 3, 0);
       ctx.restore();
     }
 
+    // Desplazamiento exacto px a px (sin imán para control milimétrico)
+    function nudgeImage(dx, dy) {
+      if (!img) return;
+      imgX = Math.round(imgX) + dx;
+      imgY = Math.round(imgY) + dy;
+      clearGuides();
+      render();
+    }
+
+    // Selector de paso 1px / 10px
+    document.querySelectorAll('.step-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        nudgeStep = parseInt(btn.dataset.step, 10);
+      });
+    });
+
+    // Botones de flecha con repetición continua al mantener presionado
+    dpadButtons.forEach(btn => {
+      let holdTimer = null;
+      let holdInterval = null;
+
+      const stepMove = () => {
+        const dx = parseInt(btn.dataset.dx, 10) * nudgeStep;
+        const dy = parseInt(btn.dataset.dy, 10) * nudgeStep;
+        nudgeImage(dx, dy);
+      };
+
+      const startHold = (e) => {
+        e.preventDefault();
+        if (btn.disabled) return;
+        stepMove();
+        holdTimer = setTimeout(() => {
+          holdInterval = setInterval(stepMove, 45);
+        }, 320);
+      };
+
+      const stopHold = () => {
+        clearTimeout(holdTimer);
+        clearInterval(holdInterval);
+      };
+
+      btn.addEventListener('mousedown', startHold);
+      btn.addEventListener('touchstart', startHold, { passive: false });
+      btn.addEventListener('mouseup', stopHold);
+      btn.addEventListener('mouseleave', stopHold);
+      btn.addEventListener('touchend', stopHold);
+      btn.addEventListener('touchcancel', stopHold);
+    });
+
+    // Flechas del teclado físico (1 px normal, 10 px con Shift)
+    window.addEventListener('keydown', (e) => {
+      if (!img) return;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const mult = e.shiftKey ? 10 : nudgeStep;
+        if (e.key === 'ArrowUp') nudgeImage(0, -mult);
+        if (e.key === 'ArrowDown') nudgeImage(0, mult);
+        if (e.key === 'ArrowLeft') nudgeImage(-mult, 0);
+        if (e.key === 'ArrowRight') nudgeImage(mult, 0);
+      }
+    });
+
     // Zoom centrado
-    function setZoomAt(newScale, centerX = PREVIEW_SIZE / 2, centerY = PREVIEW_SIZE / 2) {
+    function setZoomAt(newScale, centerX = outputW / 2, centerY = outputH / 2) {
       if (!img) return;
       const minS = parseFloat(zoomSlider.min);
       const maxS = parseFloat(zoomSlider.max);
@@ -582,32 +830,32 @@
       render();
     }
 
-    // Eventos de ratón y gestos táctiles (arrastre + pinch-to-zoom)
+    // Eventos de ratón y gestos táctiles
     let isDragging = false;
     let startX = 0;
     let startY = 0;
     let initialPinchDist = 0;
     let initialPinchScale = 1;
 
-    function getCanvasCoords(clientX, clientY) {
+    function getOutputCoords(clientX, clientY) {
       const rect = canvas.getBoundingClientRect();
       return {
-        x: (clientX - rect.left) * (PREVIEW_SIZE / rect.width),
-        y: (clientY - rect.top) * (PREVIEW_SIZE / rect.height)
+        x: (clientX - rect.left) * (outputW / rect.width),
+        y: (clientY - rect.top) * (outputH / rect.height)
       };
     }
 
     workspace.addEventListener('mousedown', (e) => {
       if (!img) return;
       isDragging = true;
-      const pt = getCanvasCoords(e.clientX, e.clientY);
+      const pt = getOutputCoords(e.clientX, e.clientY);
       startX = pt.x - imgX;
       startY = pt.y - imgY;
     });
 
     window.addEventListener('mousemove', (e) => {
       if (!isDragging || !img) return;
-      const pt = getCanvasCoords(e.clientX, e.clientY);
+      const pt = getOutputCoords(e.clientX, e.clientY);
       const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
       imgX = snapped.x;
       imgY = snapped.y;
@@ -625,17 +873,16 @@
     workspace.addEventListener('wheel', (e) => {
       if (!img) return;
       e.preventDefault();
-      const pt = getCanvasCoords(e.clientX, e.clientY);
+      const pt = getOutputCoords(e.clientX, e.clientY);
       const factor = e.deltaY < 0 ? 1.07 : 0.93;
       setZoomAt(scale * factor, pt.x, pt.y);
     }, { passive: false });
 
-    // Soporte táctil móvil (1 dedo arrastra, 2 dedos hacen zoom)
     workspace.addEventListener('touchstart', (e) => {
       if (!img) return;
       if (e.touches.length === 1) {
         isDragging = true;
-        const pt = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        const pt = getOutputCoords(e.touches[0].clientX, e.touches[0].clientY);
         startX = pt.x - imgX;
         startY = pt.y - imgY;
       } else if (e.touches.length === 2) {
@@ -652,7 +899,7 @@
       if (!img) return;
       e.preventDefault();
       if (e.touches.length === 1 && isDragging) {
-        const pt = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        const pt = getOutputCoords(e.touches[0].clientX, e.touches[0].clientY);
         const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
         imgX = snapped.x;
         imgY = snapped.y;
@@ -664,7 +911,7 @@
         );
         const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
         const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        const pt = getCanvasCoords(midX, midY);
+        const pt = getOutputCoords(midX, midY);
         setZoomAt(initialPinchScale * (dist / initialPinchDist), pt.x, pt.y);
       }
     }, { passive: false });
@@ -675,7 +922,7 @@
       render();
     });
 
-    // Drag & Drop de archivos
+    // Drag & Drop
     ['dragenter', 'dragover'].forEach(evt => {
       workspace.addEventListener(evt, (e) => {
         e.preventDefault();
@@ -695,7 +942,7 @@
       if (file) loadImageFromBlob(file);
     });
 
-    // Copiar y Pegar (Ctrl+V y botón móvil)
+    // Copiar y Pegar
     window.addEventListener('paste', (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -726,7 +973,7 @@
       }
     });
 
-    // Inputs y botones de control
+    // Controles generales
     fileInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
     replaceInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
     zoomSlider.addEventListener('input', (e) => setZoomAt(parseFloat(e.target.value)));
@@ -748,43 +995,40 @@
       });
     });
 
-    // Exportación exacta a 1500x1500 px sin pérdida
+    // Exportación exacta en el formato activo (1500x1500 o 1125x1500)
     function exportImage(format) {
       if (!img) return;
       const outCanvas = document.createElement('canvas');
-      outCanvas.width = OUTPUT_SIZE;
-      outCanvas.height = OUTPUT_SIZE;
+      outCanvas.width = outputW;
+      outCanvas.height = outputH;
       const outCtx = outCanvas.getContext('2d');
-
-      const ratio = OUTPUT_SIZE / PREVIEW_SIZE;
 
       if (format === 'image/jpeg' || bgColor !== 'transparent') {
         outCtx.fillStyle = bgColor === 'transparent' ? '#ffffff' : bgColor;
-        outCtx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+        outCtx.fillRect(0, 0, outputW, outputH);
       }
 
       outCtx.imageSmoothingEnabled = true;
       outCtx.imageSmoothingQuality = 'high';
       outCtx.drawImage(
         img,
-        imgX * ratio,
-        imgY * ratio,
-        img.width * scale * ratio,
-        img.height * scale * ratio
+        imgX,
+        imgY,
+        img.width * scale,
+        img.height * scale
       );
 
       const ext = format === 'image/webp' ? 'webp' : 'jpg';
       const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
       const filename = `arelyshop-photo-${timestamp}.${ext}`;
 
-      // Calidad 1.0 (máxima fidelidad / sin pérdida)
       outCanvas.toBlob((blob) => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = filename;
         link.click();
         URL.revokeObjectURL(link.href);
-        showToast(`Descargado: ${filename}`);
+        showToast(`Descargado (${outputW}×${outputH}): ${filename}`);
       }, format, 1.0);
     }
 
