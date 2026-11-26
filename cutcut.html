@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ArelyShop Studio — Recortador 1500x1500</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #181b22;
+      --border: #2a2f3a;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --snap: #10b981;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1rem;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-weight: 600;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      gap: 16px;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Zona de carga / lienzo */
+    .workspace {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 480px;
+      background: #14171f;
+      background-image:
+        linear-gradient(45deg, #1c202b 25%, transparent 25%),
+        linear-gradient(-45deg, #1c202b 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1c202b 75%),
+        linear-gradient(-45deg, transparent 75%, #1c202b 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .workspace.dragover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
+    }
+
+    .workspace.has-image {
+      border-style: solid;
+      border-color: var(--border);
+      cursor: grab;
+    }
+
+    .workspace.has-image:active {
+      cursor: grabbing;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Placeholder inicial */
+    .drop-prompt {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 12px;
+      background: rgba(15, 17, 21, 0.75);
+      backdrop-filter: blur(4px);
+    }
+
+    .drop-prompt.hidden {
+      display: none;
+    }
+
+    .drop-prompt p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .drop-prompt small {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    /* Controles */
+    .controls {
+      width: 100%;
+      max-width: 480px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-row label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-width: 44px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 6px;
+      cursor: pointer;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .btn-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    button, .file-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #222631;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, transform 0.05s;
+    }
+
+    button:hover, .file-btn:hover {
+      background: #2b303e;
+    }
+
+    button:active, .file-btn:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-toggle.active {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: var(--snap);
+      color: #6ee7b7;
+    }
+
+    .download-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .bg-picker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .swatches {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .swatch.active {
+      border-color: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1f2937;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>ArelyShop Crop Studio</h1>
+    <span class="badge">1500 × 1500 px</span>
+  </header>
+
+  <main>
+    <div class="workspace" id="workspace">
+      <canvas id="previewCanvas" width="900" height="900"></canvas>
+
+      <div class="drop-prompt" id="dropPrompt">
+        <p><strong>Arrastra y suelta tu imagen aquí</strong></p>
+        <small>También puedes pegar con <b>Ctrl+V</b> o seleccionar desde tu galería</small>
+        <div class="upload-actions">
+          <label class="file-btn btn-primary">
+            Subir imagen
+            <input type="file" id="fileInput" accept="image/*" hidden />
+          </label>
+          <button type="button" id="pasteBtn">Pegar imagen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="slider-row">
+        <label for="zoomSlider">Zoom</label>
+        <input type="range" id="zoomSlider" min="0.1" max="5" step="0.005" value="1" disabled />
+        <span id="zoomLabel" style="font-size:0.8rem; min-width:42px; text-align:right;">100%</span>
+      </div>
+
+      <div class="btn-grid-3">
+        <button type="button" id="fillBtn" disabled title="Rellenar todo el cuadrado sin bordes">
+          Rellenar todo
+        </button>
+        <button type="button" id="fitBtn" disabled title="Encajar imagen completa dentro del cuadro">
+          Ajustar dentro
+        </button>
+        <button type="button" id="snapToggle" class="btn-toggle active" title="Imán inteligente a los bordes y centro">
+          Imán: ON
+        </button>
+      </div>
+
+      <div class="bg-picker">
+        <span>Fondo (si sobra espacio):</span>
+        <div class="swatches">
+          <button type="button" class="swatch active" data-bg="#ffffff" style="background:#ffffff" title="Blanco"></button>
+          <button type="button" class="swatch" data-bg="#000000" style="background:#000000" title="Negro"></button>
+          <button type="button" class="swatch" data-bg="transparent" style="background:linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%);background-size:8px 8px;" title="Transparente (solo WebP)"></button>
+          <label class="file-btn" style="padding:5px 9px; font-size:0.75rem;">
+            Cambiar foto
+            <input type="file" id="replaceInput" accept="image/*" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="download-row">
+        <button type="button" id="dlWebp" class="btn-primary" disabled>
+          Descargar WebP (Sin pérdida)
+        </button>
+        <button type="button" id="dlJpg" disabled>
+          Descargar JPG (Máx. calidad)
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const OUTPUT_SIZE = 1500;
+    const PREVIEW_SIZE = 900;
+    const SNAP_THRESHOLD = 14; // píxeles en escala de vista previa
+
+    const workspace = document.getElementById('workspace');
+    const dropPrompt = document.getElementById('dropPrompt');
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const fileInput = document.getElementById('fileInput');
+    const replaceInput = document.getElementById('replaceInput');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomLabel = document.getElementById('zoomLabel');
+    const fillBtn = document.getElementById('fillBtn');
+    const fitBtn = document.getElementById('fitBtn');
+    const snapToggle = document.getElementById('snapToggle');
+    const dlWebp = document.getElementById('dlWebp');
+    const dlJpg = document.getElementById('dlJpg');
+    const toast = document.getElementById('toast');
+
+    let img = null;
+    let imgX = 0;
+    let imgY = 0;
+    let scale = 1;
+    let baseCoverScale = 1;
+    let snapEnabled = true;
+    let bgColor = '#ffffff';
+
+    let activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function loadImageFromBlob(blob) {
+      if (!blob || !blob.type.startsWith('image/')) {
+        showToast('Por favor selecciona una imagen válida.');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        img = image;
+        dropPrompt.classList.add('hidden');
+        workspace.classList.add('has-image');
+
+        zoomSlider.disabled = false;
+        fillBtn.disabled = false;
+        fitBtn.disabled = false;
+        dlWebp.disabled = false;
+        dlJpg.disabled = false;
+
+        fillCanvas();
+        URL.revokeObjectURL(url);
+      };
+      image.src = url;
+    }
+
+    // Rellenar pantalla completa (1500x1500 sin espacios vacíos)
+    function fillCanvas() {
+      if (!img) return;
+      baseCoverScale = Math.max(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      scale = baseCoverScale;
+      imgX = (PREVIEW_SIZE - img.width * scale) / 2;
+      imgY = (PREVIEW_SIZE - img.height * scale) / 2;
+      syncSlider();
+      clearGuides();
+      render();
+    }
+
+    // Encajar imagen completa dentro del cuadro
+    function fitCanvas() {
+      if (!img) return;
+      const fitScale = Math.min(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+      scale = fitScale;
+      imgX = (PREVIEW_SIZE - img.width * scale) / 2;
+      imgY = (PREVIEW_SIZE - img.height * scale) / 2;
+      syncSlider();
+      clearGuides();
+      render();
+    }
+
+    function syncSlider() {
+      const minS = Math.min(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height) * 0.5;
+      const maxS = Math.max(baseCoverScale * 4, 3);
+      zoomSlider.min = minS.toFixed(4);
+      zoomSlider.max = maxS.toFixed(4);
+      zoomSlider.value = scale;
+      zoomLabel.textContent = Math.round((scale / baseCoverScale) * 100) + '%';
+    }
+
+    function clearGuides() {
+      activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
+    }
+
+    // Lógica de imán magnético a bordes y centro
+    function applySnapping(x, y, w, h) {
+      clearGuides();
+      if (!snapEnabled) return { x, y };
+
+      let snappedX = x;
+      let snappedY = y;
+
+      // Borde izquierdo (0)
+      if (Math.abs(x) < SNAP_THRESHOLD) {
+        snappedX = 0;
+        activeGuides.left = true;
+      }
+      // Borde derecho (PREVIEW_SIZE)
+      else if (Math.abs((x + w) - PREVIEW_SIZE) < SNAP_THRESHOLD) {
+        snappedX = PREVIEW_SIZE - w;
+        activeGuides.right = true;
+      }
+      // Centro horizontal
+      else if (Math.abs((x + w / 2) - PREVIEW_SIZE / 2) < SNAP_THRESHOLD) {
+        snappedX = (PREVIEW_SIZE - w) / 2;
+        activeGuides.vCenter = true;
+      }
+
+      // Borde superior (0)
+      if (Math.abs(y) < SNAP_THRESHOLD) {
+        snappedY = 0;
+        activeGuides.top = true;
+      }
+      // Borde inferior (PREVIEW_SIZE)
+      else if (Math.abs((y + h) - PREVIEW_SIZE) < SNAP_THRESHOLD) {
+        snappedY = PREVIEW_SIZE - h;
+        activeGuides.bottom = true;
+      }
+      // Centro vertical
+      else if (Math.abs((y + h / 2) - PREVIEW_SIZE / 2) < SNAP_THRESHOLD) {
+        snappedY = (PREVIEW_SIZE - h) / 2;
+        activeGuides.hCenter = true;
+      }
+
+      return { x: snappedX, y: snappedY };
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+
+      if (bgColor !== 'transparent') {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
+      }
+
+      if (!img) return;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, imgX, imgY, img.width * scale, img.height * scale);
+
+      // Guías visuales de alineación magnética
+      ctx.save();
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 3;
+
+      if (activeGuides.vCenter) {
+        ctx.beginPath();
+        ctx.moveTo(PREVIEW_SIZE / 2, 0);
+        ctx.lineTo(PREVIEW_SIZE / 2, PREVIEW_SIZE);
+        ctx.stroke();
+      }
+      if (activeGuides.hCenter) {
+        ctx.beginPath();
+        ctx.moveTo(0, PREVIEW_SIZE / 2);
+        ctx.lineTo(PREVIEW_SIZE, PREVIEW_SIZE / 2);
+        ctx.stroke();
+      }
+      if (activeGuides.left) {
+        ctx.strokeRect(1.5, 1.5, 0, PREVIEW_SIZE - 3);
+      }
+      if (activeGuides.right) {
+        ctx.strokeRect(PREVIEW_SIZE - 1.5, 1.5, 0, PREVIEW_SIZE - 3);
+      }
+      if (activeGuides.top) {
+        ctx.strokeRect(1.5, 1.5, PREVIEW_SIZE - 3, 0);
+      }
+      if (activeGuides.bottom) {
+        ctx.strokeRect(1.5, PREVIEW_SIZE - 1.5, PREVIEW_SIZE - 3, 0);
+      }
+      ctx.restore();
+    }
+
+    // Zoom centrado
+    function setZoomAt(newScale, centerX = PREVIEW_SIZE / 2, centerY = PREVIEW_SIZE / 2) {
+      if (!img) return;
+      const minS = parseFloat(zoomSlider.min);
+      const maxS = parseFloat(zoomSlider.max);
+      newScale = Math.max(minS, Math.min(maxS, newScale));
+
+      const ratio = newScale / scale;
+      let nextX = centerX - (centerX - imgX) * ratio;
+      let nextY = centerY - (centerY - imgY) * ratio;
+      scale = newScale;
+
+      const snapped = applySnapping(nextX, nextY, img.width * scale, img.height * scale);
+      imgX = snapped.x;
+      imgY = snapped.y;
+
+      zoomSlider.value = scale;
+      zoomLabel.textContent = Math.round((scale / baseCoverScale) * 100) + '%';
+      render();
+    }
+
+    // Eventos de ratón y gestos táctiles (arrastre + pinch-to-zoom)
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialPinchDist = 0;
+    let initialPinchScale = 1;
+
+    function getCanvasCoords(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) * (PREVIEW_SIZE / rect.width),
+        y: (clientY - rect.top) * (PREVIEW_SIZE / rect.height)
+      };
+    }
+
+    workspace.addEventListener('mousedown', (e) => {
+      if (!img) return;
+      isDragging = true;
+      const pt = getCanvasCoords(e.clientX, e.clientY);
+      startX = pt.x - imgX;
+      startY = pt.y - imgY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging || !img) return;
+      const pt = getCanvasCoords(e.clientX, e.clientY);
+      const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
+      imgX = snapped.x;
+      imgY = snapped.y;
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        clearGuides();
+        render();
+      }
+    });
+
+    workspace.addEventListener('wheel', (e) => {
+      if (!img) return;
+      e.preventDefault();
+      const pt = getCanvasCoords(e.clientX, e.clientY);
+      const factor = e.deltaY < 0 ? 1.07 : 0.93;
+      setZoomAt(scale * factor, pt.x, pt.y);
+    }, { passive: false });
+
+    // Soporte táctil móvil (1 dedo arrastra, 2 dedos hacen zoom)
+    workspace.addEventListener('touchstart', (e) => {
+      if (!img) return;
+      if (e.touches.length === 1) {
+        isDragging = true;
+        const pt = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        startX = pt.x - imgX;
+        startY = pt.y - imgY;
+      } else if (e.touches.length === 2) {
+        isDragging = false;
+        initialPinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialPinchScale = scale;
+      }
+    }, { passive: false });
+
+    workspace.addEventListener('touchmove', (e) => {
+      if (!img) return;
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging) {
+        const pt = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+        const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
+        imgX = snapped.x;
+        imgY = snapped.y;
+        render();
+      } else if (e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const pt = getCanvasCoords(midX, midY);
+        setZoomAt(initialPinchScale * (dist / initialPinchDist), pt.x, pt.y);
+      }
+    }, { passive: false });
+
+    workspace.addEventListener('touchend', () => {
+      isDragging = false;
+      clearGuides();
+      render();
+    });
+
+    // Drag & Drop de archivos
+    ['dragenter', 'dragover'].forEach(evt => {
+      workspace.addEventListener(evt, (e) => {
+        e.preventDefault();
+        workspace.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      workspace.addEventListener(evt, (e) => {
+        e.preventDefault();
+        workspace.classList.remove('dragover');
+      });
+    });
+
+    workspace.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) loadImageFromBlob(file);
+    });
+
+    // Copiar y Pegar (Ctrl+V y botón móvil)
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          loadImageFromBlob(item.getAsFile());
+          showToast('Imagen pegada desde el portapapeles');
+          break;
+        }
+      }
+    });
+
+    pasteBtn.addEventListener('click', async () => {
+      try {
+        const clipboardItems = await navigator.clipboard.read();
+        for (const item of clipboardItems) {
+          const imgType = item.types.find(t => t.startsWith('image/'));
+          if (imgType) {
+            const blob = await item.getType(imgType);
+            loadImageFromBlob(blob);
+            showToast('Imagen pegada');
+            return;
+          }
+        }
+        showToast('No hay ninguna imagen copiada en el portapapeles.');
+      } catch {
+        showToast('Usa Ctrl+V (o mantén presionado y selecciona Pegar).');
+      }
+    });
+
+    // Inputs y botones de control
+    fileInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
+    replaceInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
+    zoomSlider.addEventListener('input', (e) => setZoomAt(parseFloat(e.target.value)));
+    fillBtn.addEventListener('click', fillCanvas);
+    fitBtn.addEventListener('click', fitCanvas);
+
+    snapToggle.addEventListener('click', () => {
+      snapEnabled = !snapEnabled;
+      snapToggle.classList.toggle('active', snapEnabled);
+      snapToggle.textContent = snapEnabled ? 'Imán: ON' : 'Imán: OFF';
+    });
+
+    document.querySelectorAll('.swatch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.swatch').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        bgColor = btn.dataset.bg;
+        render();
+      });
+    });
+
+    // Exportación exacta a 1500x1500 px sin pérdida
+    function exportImage(format) {
+      if (!img) return;
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = OUTPUT_SIZE;
+      outCanvas.height = OUTPUT_SIZE;
+      const outCtx = outCanvas.getContext('2d');
+
+      const ratio = OUTPUT_SIZE / PREVIEW_SIZE;
+
+      if (format === 'image/jpeg' || bgColor !== 'transparent') {
+        outCtx.fillStyle = bgColor === 'transparent' ? '#ffffff' : bgColor;
+        outCtx.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
+      }
+
+      outCtx.imageSmoothingEnabled = true;
+      outCtx.imageSmoothingQuality = 'high';
+      outCtx.drawImage(
+        img,
+        imgX * ratio,
+        imgY * ratio,
+        img.width * scale * ratio,
+        img.height * scale * ratio
+      );
+
+      const ext = format === 'image/webp' ? 'webp' : 'jpg';
+      const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+      const filename = `arelyshop-photo-${timestamp}.${ext}`;
+
+      // Calidad 1.0 (máxima fidelidad / sin pérdida)
+      outCanvas.toBlob((blob) => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showToast(`Descargado: ${filename}`);
+      }, format, 1.0);
+    }
+
+    dlWebp.addEventListener('click', () => exportImage('image/webp'));
+    dlJpg.addEventListener('click', () => exportImage('image/jpeg'));
+  </script>
+</body>
+</html>
