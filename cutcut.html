@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ArelyShop Studio — Recortador 1500x1500 y 1125x1500</title>
+  <title>ArelyShop Studio — Recortador Multi-Formato</title>
   <style>
     :root {
       --bg: #0f1115;
@@ -65,21 +65,20 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 14px 16px 24px;
+      padding: 14px 16px 28px;
       gap: 12px;
       max-width: 640px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* Selector de formato (2 paneles) */
+    /* Selector de 3 paneles */
     .format-tabs {
       width: 100%;
       max-width: 460px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
       background: var(--panel);
       padding: 5px;
       border-radius: 12px;
@@ -90,9 +89,9 @@
       background: transparent;
       border: 1px solid transparent;
       color: var(--muted);
-      padding: 8px 10px;
+      padding: 8px 6px;
       border-radius: 8px;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: flex;
       flex-direction: column;
@@ -101,9 +100,10 @@
     }
 
     .format-tab span {
-      font-size: 0.7rem;
+      font-size: 0.67rem;
       font-weight: 400;
       opacity: 0.85;
+      white-space: nowrap;
     }
 
     .format-tab.active {
@@ -112,7 +112,6 @@
       color: #fff;
     }
 
-    /* Contenedor del lienzo para mantener altura cómoda en móvil */
     .stage-wrapper {
       width: 100%;
       max-width: 460px;
@@ -125,7 +124,7 @@
       position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
-      max-height: 440px;
+      max-height: 410px;
       background: #14171f;
       background-image:
         linear-gradient(45deg, #1c202b 25%, transparent 25%),
@@ -143,9 +142,8 @@
     }
 
     .workspace.vertical {
-      aspect-ratio: 3 / 4;
       width: auto;
-      height: 440px;
+      height: 410px;
       max-width: 100%;
     }
 
@@ -228,16 +226,18 @@
     }
 
     .slider-row label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
-      min-width: 42px;
+      min-width: 58px;
     }
 
+    /* Deslizadores táctiles amplios para móvil */
     input[type="range"] {
       flex: 1;
       accent-color: var(--accent);
-      height: 6px;
+      height: 24px;
       cursor: pointer;
+      margin: 0;
     }
 
     .btn-grid-3 {
@@ -291,6 +291,45 @@
       background: rgba(16, 185, 129, 0.16);
       border-color: var(--snap);
       color: #6ee7b7;
+    }
+
+    /* Caja de Recorte Manual con deslizadores */
+    .crop-box {
+      background: #13161c;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .crop-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .crop-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .crop-reset {
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      border-radius: 6px;
+      background: #1f2430;
+    }
+
+    .crop-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.72rem;
+      color: #a5b4fc;
+      min-width: 54px;
+      text-align: right;
     }
 
     /* Desplazador de precisión px a px */
@@ -433,15 +472,19 @@
   </header>
 
   <main>
-    <!-- Selector de 2 paneles -->
+    <!-- Selector de 3 paneles -->
     <div class="format-tabs" role="tablist">
       <button type="button" class="format-tab active" data-w="1500" data-h="1500" id="tabSquare">
-        Cuadrado (1:1)
+        Cuadrado
         <span>1500 × 1500 px</span>
       </button>
-      <button type="button" class="format-tab" data-w="1125" data-h="1500" id="tabVertical">
-        Vertical (3:4)
+      <button type="button" class="format-tab" data-w="1125" data-h="1500" id="tabVertical1">
+        Vertical 3:4
         <span>1125 × 1500 px</span>
+      </button>
+      <button type="button" class="format-tab" data-w="1200" data-h="1450" id="tabVertical2">
+        Vertical
+        <span>1200 × 1450 px</span>
       </button>
     </div>
 
@@ -467,7 +510,7 @@
       <div class="slider-row">
         <label for="zoomSlider">Zoom</label>
         <input type="range" id="zoomSlider" min="0.1" max="5" step="0.005" value="1" disabled />
-        <span id="zoomLabel" style="font-size:0.78rem; min-width:42px; text-align:right;">100%</span>
+        <span id="zoomLabel" class="crop-val">100%</span>
       </div>
 
       <div class="btn-grid-3">
@@ -482,10 +525,42 @@
         </button>
       </div>
 
+      <!-- Herramienta de Recorte Manual con Deslizadores Precisos -->
+      <div class="crop-box">
+        <div class="crop-header">
+          <span class="crop-title">Recorte manual (bordes de la foto):</span>
+          <button type="button" id="resetCropBtn" class="crop-reset" disabled>Restaurar</button>
+        </div>
+
+        <div class="slider-row">
+          <label for="cropLeft">Izquierda</label>
+          <input type="range" id="cropLeft" min="0" max="90" step="0.2" value="0" disabled />
+          <span class="crop-val" id="valLeft">0 px</span>
+        </div>
+
+        <div class="slider-row">
+          <label for="cropRight">Derecha</label>
+          <input type="range" id="cropRight" min="0" max="90" step="0.2" value="0" disabled />
+          <span class="crop-val" id="valRight">0 px</span>
+        </div>
+
+        <div class="slider-row">
+          <label for="cropTop">Arriba</label>
+          <input type="range" id="cropTop" min="0" max="90" step="0.2" value="0" disabled />
+          <span class="crop-val" id="valTop">0 px</span>
+        </div>
+
+        <div class="slider-row">
+          <label for="cropBottom">Abajo</label>
+          <input type="range" id="cropBottom" min="0" max="90" step="0.2" value="0" disabled />
+          <span class="crop-val" id="valBottom">0 px</span>
+        </div>
+      </div>
+
       <!-- Desplazador de precisión px a px -->
       <div class="nudge-box">
         <div class="nudge-info">
-          <span class="nudge-title">Mover precisión (flechas):</span>
+          <span class="nudge-title">Mover posición (flechas):</span>
           <div class="step-toggle">
             <button type="button" class="step-btn active" data-step="1" id="step1Btn">1 px</button>
             <button type="button" class="step-btn" data-step="10" id="step10Btn">10 px</button>
@@ -554,15 +629,27 @@
     const dpadButtons = document.querySelectorAll('.dpad button');
     const toast = document.getElementById('toast');
 
+    // Controles de recorte manual
+    const cropLeftInput = document.getElementById('cropLeft');
+    const cropRightInput = document.getElementById('cropRight');
+    const cropTopInput = document.getElementById('cropTop');
+    const cropBottomInput = document.getElementById('cropBottom');
+    const resetCropBtn = document.getElementById('resetCropBtn');
+    const valLeft = document.getElementById('valLeft');
+    const valRight = document.getElementById('valRight');
+    const valTop = document.getElementById('valTop');
+    const valBottom = document.getElementById('valBottom');
+
     let img = null;
-    // Coordenadas guardadas en píxeles reales de salida (1500x1500 o 1125x1500)
+    let trim = { left: 0, right: 0, top: 0, bottom: 0 };
     let imgX = 0;
     let imgY = 0;
-    let scale = 1; // escala relativa a outputW/outputH
+    let scale = 1;
     let baseCoverScale = 1;
     let snapEnabled = true;
     let bgColor = '#ffffff';
     let nudgeStep = 1;
+    let fitMode = 'fill';
 
     let activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
 
@@ -573,11 +660,40 @@
       toast._t = setTimeout(() => toast.classList.remove('show'), 2400);
     }
 
+    function getCroppedSource() {
+      if (!img) return { sx: 0, sy: 0, sw: 1, sh: 1 };
+      const sx = trim.left;
+      const sy = trim.top;
+      const sw = Math.max(10, img.width - trim.left - trim.right);
+      const sh = Math.max(10, img.height - trim.top - trim.bottom);
+      return { sx, sy, sw, sh };
+    }
+
+    function updateCropLabels() {
+      if (!img) return;
+      valLeft.textContent = `${Math.round(trim.left)} px`;
+      valRight.textContent = `${Math.round(trim.right)} px`;
+      valTop.textContent = `${Math.round(trim.top)} px`;
+      valBottom.textContent = `${Math.round(trim.bottom)} px`;
+    }
+
+    function resetManualCrop(recenter = true) {
+      trim = { left: 0, right: 0, top: 0, bottom: 0 };
+      cropLeftInput.value = 0;
+      cropRightInput.value = 0;
+      cropTopInput.value = 0;
+      cropBottomInput.value = 0;
+      updateCropLabels();
+      if (img && recenter) {
+        fitMode === 'fill' ? fillCanvas() : fitCanvas();
+      }
+    }
+
     function updateCoordsReadout() {
       coordsReadout.textContent = `X: ${Math.round(imgX)} px | Y: ${Math.round(imgY)} px`;
     }
 
-    // Cambio entre panel 1500x1500 y 1125x1500
+    // Cambio entre los 3 paneles (1500x1500, 1125x1500, 1200x1450)
     document.querySelectorAll('.format-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
@@ -590,11 +706,12 @@
 
         canvas.width = previewW;
         canvas.height = previewH;
+        workspace.style.aspectRatio = `${outputW} / ${outputH}`;
         workspace.classList.toggle('vertical', outputW !== outputH);
         dimBadge.textContent = `${outputW} × ${outputH} px`;
 
         if (img) {
-          fillCanvas();
+          fitMode === 'fill' ? fillCanvas() : fitCanvas();
         } else {
           render();
         }
@@ -618,40 +735,49 @@
         fitBtn.disabled = false;
         dlWebp.disabled = false;
         dlJpg.disabled = false;
+        cropLeftInput.disabled = false;
+        cropRightInput.disabled = false;
+        cropTopInput.disabled = false;
+        cropBottomInput.disabled = false;
+        resetCropBtn.disabled = false;
         dpadButtons.forEach(b => b.disabled = false);
 
+        resetManualCrop(false);
         fillCanvas();
         URL.revokeObjectURL(url);
       };
       image.src = url;
     }
 
-    // Rellenar pantalla completa sin espacios vacíos
     function fillCanvas() {
       if (!img) return;
-      baseCoverScale = Math.max(outputW / img.width, outputH / img.height);
+      fitMode = 'fill';
+      const { sw, sh } = getCroppedSource();
+      baseCoverScale = Math.max(outputW / sw, outputH / sh);
       scale = baseCoverScale;
-      imgX = (outputW - img.width * scale) / 2;
-      imgY = (outputH - img.height * scale) / 2;
+      imgX = (outputW - sw * scale) / 2;
+      imgY = (outputH - sh * scale) / 2;
       syncSlider();
       clearGuides();
       render();
     }
 
-    // Encajar imagen completa dentro del cuadro
     function fitCanvas() {
       if (!img) return;
-      const fitScale = Math.min(outputW / img.width, outputH / img.height);
-      scale = fitScale;
-      imgX = (outputW - img.width * scale) / 2;
-      imgY = (outputH - img.height * scale) / 2;
+      fitMode = 'fit';
+      const { sw, sh } = getCroppedSource();
+      baseCoverScale = Math.max(outputW / sw, outputH / sh);
+      scale = Math.min(outputW / sw, outputH / sh);
+      imgX = (outputW - sw * scale) / 2;
+      imgY = (outputH - sh * scale) / 2;
       syncSlider();
       clearGuides();
       render();
     }
 
     function syncSlider() {
-      const minS = Math.min(outputW / img.width, outputH / img.height) * 0.4;
+      const { sw, sh } = getCroppedSource();
+      const minS = Math.min(outputW / sw, outputH / sh) * 0.4;
       const maxS = Math.max(baseCoverScale * 4, 3);
       zoomSlider.min = minS.toFixed(4);
       zoomSlider.max = maxS.toFixed(4);
@@ -659,11 +785,55 @@
       zoomLabel.textContent = Math.round((scale / baseCoverScale) * 100) + '%';
     }
 
+    function handleCropSlider() {
+      if (!img) return;
+      let leftPct = parseFloat(cropLeftInput.value);
+      let rightPct = parseFloat(cropRightInput.value);
+      let topPct = parseFloat(cropTopInput.value);
+      let bottomPct = parseFloat(cropBottomInput.value);
+
+      if (leftPct + rightPct > 95) {
+        if (this === cropLeftInput) {
+          leftPct = 95 - rightPct;
+          cropLeftInput.value = leftPct;
+        } else {
+          rightPct = 95 - leftPct;
+          cropRightInput.value = rightPct;
+        }
+      }
+
+      if (topPct + bottomPct > 95) {
+        if (this === cropTopInput) {
+          topPct = 95 - bottomPct;
+          cropTopInput.value = topPct;
+        } else {
+          bottomPct = 95 - topPct;
+          cropBottomInput.value = bottomPct;
+        }
+      }
+
+      trim.left = (leftPct / 100) * img.width;
+      trim.right = (rightPct / 100) * img.width;
+      trim.top = (topPct / 100) * img.height;
+      trim.bottom = (bottomPct / 100) * img.height;
+
+      updateCropLabels();
+      fitMode === 'fill' ? fillCanvas() : fitCanvas();
+    }
+
+    [cropLeftInput, cropRightInput, cropTopInput, cropBottomInput].forEach(slider => {
+      slider.addEventListener('input', handleCropSlider);
+    });
+
+    resetCropBtn.addEventListener('click', () => {
+      resetManualCrop(true);
+      showToast('Recorte manual restaurado');
+    });
+
     function clearGuides() {
       activeGuides = { vCenter: false, hCenter: false, left: false, right: false, top: false, bottom: false };
     }
 
-    // Imán magnético en espacio de salida (1500 / 1125 px)
     function applySnapping(x, y, w, h) {
       clearGuides();
       if (!snapEnabled) return { x, y };
@@ -707,21 +877,22 @@
 
       if (!img) return;
 
+      const { sx, sy, sw, sh } = getCroppedSource();
       const pRatio = previewH / outputH;
 
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(
         img,
+        sx, sy, sw, sh,
         imgX * pRatio,
         imgY * pRatio,
-        img.width * scale * pRatio,
-        img.height * scale * pRatio
+        sw * scale * pRatio,
+        sh * scale * pRatio
       );
 
       updateCoordsReadout();
 
-      // Guías visuales de alineación magnética
       ctx.save();
       ctx.strokeStyle = '#10b981';
       ctx.lineWidth = 3;
@@ -745,7 +916,6 @@
       ctx.restore();
     }
 
-    // Desplazamiento exacto px a px (sin imán para control milimétrico)
     function nudgeImage(dx, dy) {
       if (!img) return;
       imgX = Math.round(imgX) + dx;
@@ -754,7 +924,6 @@
       render();
     }
 
-    // Selector de paso 1px / 10px
     document.querySelectorAll('.step-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
@@ -763,7 +932,6 @@
       });
     });
 
-    // Botones de flecha con repetición continua al mantener presionado
     dpadButtons.forEach(btn => {
       let holdTimer = null;
       let holdInterval = null;
@@ -796,7 +964,6 @@
       btn.addEventListener('touchcancel', stopHold);
     });
 
-    // Flechas del teclado físico (1 px normal, 10 px con Shift)
     window.addEventListener('keydown', (e) => {
       if (!img) return;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -809,9 +976,9 @@
       }
     });
 
-    // Zoom centrado
     function setZoomAt(newScale, centerX = outputW / 2, centerY = outputH / 2) {
       if (!img) return;
+      const { sw, sh } = getCroppedSource();
       const minS = parseFloat(zoomSlider.min);
       const maxS = parseFloat(zoomSlider.max);
       newScale = Math.max(minS, Math.min(maxS, newScale));
@@ -821,7 +988,7 @@
       let nextY = centerY - (centerY - imgY) * ratio;
       scale = newScale;
 
-      const snapped = applySnapping(nextX, nextY, img.width * scale, img.height * scale);
+      const snapped = applySnapping(nextX, nextY, sw * scale, sh * scale);
       imgX = snapped.x;
       imgY = snapped.y;
 
@@ -830,7 +997,6 @@
       render();
     }
 
-    // Eventos de ratón y gestos táctiles
     let isDragging = false;
     let startX = 0;
     let startY = 0;
@@ -855,8 +1021,9 @@
 
     window.addEventListener('mousemove', (e) => {
       if (!isDragging || !img) return;
+      const { sw, sh } = getCroppedSource();
       const pt = getOutputCoords(e.clientX, e.clientY);
-      const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
+      const snapped = applySnapping(pt.x - startX, pt.y - startY, sw * scale, sh * scale);
       imgX = snapped.x;
       imgY = snapped.y;
       render();
@@ -899,8 +1066,9 @@
       if (!img) return;
       e.preventDefault();
       if (e.touches.length === 1 && isDragging) {
+        const { sw, sh } = getCroppedSource();
         const pt = getOutputCoords(e.touches[0].clientX, e.touches[0].clientY);
-        const snapped = applySnapping(pt.x - startX, pt.y - startY, img.width * scale, img.height * scale);
+        const snapped = applySnapping(pt.x - startX, pt.y - startY, sw * scale, sh * scale);
         imgX = snapped.x;
         imgY = snapped.y;
         render();
@@ -922,7 +1090,6 @@
       render();
     });
 
-    // Drag & Drop
     ['dragenter', 'dragover'].forEach(evt => {
       workspace.addEventListener(evt, (e) => {
         e.preventDefault();
@@ -942,7 +1109,6 @@
       if (file) loadImageFromBlob(file);
     });
 
-    // Copiar y Pegar
     window.addEventListener('paste', (e) => {
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -973,7 +1139,6 @@
       }
     });
 
-    // Controles generales
     fileInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
     replaceInput.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
     zoomSlider.addEventListener('input', (e) => setZoomAt(parseFloat(e.target.value)));
@@ -995,7 +1160,7 @@
       });
     });
 
-    // Exportación exacta en el formato activo (1500x1500 o 1125x1500)
+    // Exportación exacta en el formato activo (1500x1500, 1125x1500 o 1200x1450)
     function exportImage(format) {
       if (!img) return;
       const outCanvas = document.createElement('canvas');
@@ -1008,14 +1173,17 @@
         outCtx.fillRect(0, 0, outputW, outputH);
       }
 
+      const { sx, sy, sw, sh } = getCroppedSource();
+
       outCtx.imageSmoothingEnabled = true;
       outCtx.imageSmoothingQuality = 'high';
       outCtx.drawImage(
         img,
+        sx, sy, sw, sh,
         imgX,
         imgY,
-        img.width * scale,
-        img.height * scale
+        sw * scale,
+        sh * scale
       );
 
       const ext = format === 'image/webp' ? 'webp' : 'jpg';
